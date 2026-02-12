@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, make_response, redirect
 import requests
 from datetime import datetime, timedelta
-import sqlite3
 import os
 
 app = Flask(__name__)
+
+# --- FILTERS FOR CALENDAR ---
 @app.template_filter('to_datetime')
 def format_datetime(value):
     return datetime.strptime(value, '%Y-%m-%d')
@@ -14,11 +15,12 @@ def format_datetime_month(value):
     return value.strftime('%B %Y')
 
 # --- CONFIGURATION ---
+# REMEMBER: Update this if you do a "New Deployment" in Google
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
 
 def get_taken_dates():
     try:
-        response = requests.get(GOOGLE_SCRIPT_URL)
+        response = requests.get(GOOGLE_SCRIPT_URL, timeout=5)
         if response.status_code == 200:
             return response.json()
         return []
@@ -36,8 +38,8 @@ def index():
     today = datetime.now()
     first_of_month = today.replace(day=1)
     
-    # Generate 31 days to ensure we cover the whole month
-    for i in range(31):
+    # Generate 35 days to ensure a full grid view
+    for i in range(35):
         day = first_of_month + timedelta(days=i)
         date_str = day.strftime('%Y-%m-%d')
         dates.append({
@@ -58,7 +60,7 @@ def book(date_raw):
             "date": date_raw,
             "contact_name": request.form.get("contact_name"),
             "school_name": request.form.get("school_name"),
-            "address": request.form.get("address"), # NEW LINE
+            "address": request.form.get("address"),
             "staff_count": request.form.get("staff_count"),
             "lunch_time": request.form.get("lunch_time"),
             "delivery_notes": request.form.get("delivery_notes")
@@ -74,12 +76,7 @@ def book(date_raw):
         return resp
 
     return render_template('form.html', date_display=date_raw, raw_date=date_raw)
-    
+
 if __name__ == '__main__':
-    # Initialize DB if it doesn't exist
-    conn = sqlite3.connect('bookings.db')
-    conn.execute('CREATE TABLE IF NOT EXISTS taken_dates (date TEXT PRIMARY KEY)')
-    conn.close()
-    
     port = int(os.environ.get("PORT", 5001))
     app.run(host='0.0.0.0', port=port)
