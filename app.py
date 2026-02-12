@@ -1,10 +1,9 @@
-from flask import Flask, render_template, request, make_response, redirect
+from flask import Flask, render_template, request, make_response, redirect, url_for
 import requests
 from datetime import datetime, timedelta
 import os
 import calendar
 
-# Initialize the Flask app (Fixes NameError: name 'app' is not defined)
 app = Flask(__name__)
 
 # --- FILTERS ---
@@ -14,7 +13,6 @@ def is_past_filter(date_str):
     return date_obj < datetime.now().date()
 
 # --- CONFIGURATION ---
-# Replace with your actual Google Script URL from the 'Manage Deployments' menu
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
 
 def get_taken_dates():
@@ -32,32 +30,34 @@ def get_taken_dates():
 @app.route('/')
 def index():
     user_booking = request.cookies.get('user_booked_date')
+    already_booked_error = request.args.get('error') == 'already_booked'
     taken = get_taken_dates()
     
-    # Navigation logic for horizontal scrolling
     now = datetime.now()
-    month = int(request.args.get('m', now.month))
-    year = int(request.args.get('y', now.year))
+    current_m = now.month
+    current_y = now.year
     
-    # Math for the Prev/Next arrow links
-    prev_m = 12 if month == 1 else month - 1
-    prev_y = year - 1 if month == 1 else year
-    next_m = 1 if month == 12 else month + 1
-    next_y = year + 1 if month == 12 else year
+    next_m = 1 if current_m == 12 else current_m + 1
+    next_y = current_y + 1 if current_m == 12 else current_y
 
-    # Filtered List: Only Mon (0), Tue (1), Wed (2)
+    view_m = int(request.args.get('m', current_m))
+    view_y = int(request.args.get('y', current_y))
+
+    is_viewing_next = (view_m == next_m)
+    prev_url = url_for('index', m=current_m, y=current_y) if is_viewing_next else None
+    next_url = url_for('index', m=next_m, y=next_y) if not is_viewing_next else None
+
     valid_dates = []
     slots_available = 0
-    num_days = calendar.monthrange(year, month)[1]
+    num_days = calendar.monthrange(view_y, view_m)[1]
     
     for d in range(1, num_days + 1):
-        date_obj = datetime(year, month, d)
-        if date_obj.weekday() < 3:  # Monday, Tuesday, Wednesday only
+        date_obj = datetime(view_y, view_m, d)
+        if date_obj.weekday() < 3:
             date_str = date_obj.strftime('%Y-%m-%d')
             is_taken = date_str in taken
             is_past = date_obj.date() < now.date()
             
-            # Count how many slots are actually bookable for the header
             if not is_taken and not is_past:
                 slots_available += 1
                 
@@ -65,25 +65,30 @@ def index():
                 'raw_date': date_str,
                 'display': date_obj.strftime('%A, %b %d'),
                 'taken': is_taken,
-                'past': is_past
+                'past': is_past,
+                'is_user_date': date_str == user_booking 
             })
 
     return render_template('index.html', 
                            dates=valid_dates, 
-                           month_name=calendar.month_name[month],
-                           year=year,
+                           month_name=calendar.month_name[view_m],
+                           year=view_y,
                            slots=slots_available,
-                           prev_url=f"/?m={prev_m}&y={prev_y}",
-                           next_url=f"/?m={next_m}&y={next_y}")
+                           prev_url=prev_url,
+                           next_url=next_url,
+                           user_booked_date=user_booking,
+                           already_booked_error=already_booked_error)
 
 @app.route('/book/<date_raw>', methods=['GET', 'POST'])
 def book(date_raw):
-    # Prevent users from booking twice if they have the cookie
+    # RESTORED: Check if user already has a booking before showing form
     if request.cookies.get('user_booked_date'):
-        return redirect('/')
+        return redirect(url_for('index', error='already_booked'))
+
+    if request.method == 'GET':
+        return render_template('form.html', date_display=date_raw, raw_date=date_raw)
 
     if request.method == 'POST':
-        # Data sent to Google Sheets (Matches Column A through G)
         data = {
             "date": date_raw,
             "contact_name": request.form.get("contact_name"),
@@ -93,22 +98,15 @@ def book(date_raw):
             "lunch_time": request.form.get("lunch_time"),
             "delivery_notes": request.form.get("delivery_notes")
         }
-        
         try:
             requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=5)
         except:
-            print("Google Sync failed.")
+            pass
 
-        # Show the success screen
         resp = make_response(render_template('success.html'))
-        # Save a cookie so they don't book multiple dates
         resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
         return resp
 
-    # GET request: Load the booking form (Triggered by the 'Select' button)
-    return render_template('form.html', date_display=date_raw, raw_date=date_raw)
-
 if __name__ == '__main__':
-    # Render binds to the PORT environment variable automatically
     port = int(os.environ.get("PORT", 5001))
     app.run(host='0.0.0.0', port=port)
