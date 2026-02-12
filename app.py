@@ -2,81 +2,59 @@ from flask import Flask, render_template, request, make_response, redirect
 import requests
 from datetime import datetime, timedelta
 import os
+import calendar
 
 app = Flask(__name__)
 
-# --- FILTERS FOR CALENDAR ---
-@app.template_filter('to_datetime')
-def format_datetime(value):
-    return datetime.strptime(value, '%Y-%m-%d')
-
-@app.template_filter('format_datetime_month')
-def format_datetime_month(value):
-    return value.strftime('%B %Y')
+# --- FILTERS ---
+@app.template_filter('is_past')
+def is_past_filter(date_str):
+    date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+    return date_obj < datetime.now().date()
 
 # --- CONFIGURATION ---
-# REMEMBER: Update this if you do a "New Deployment" in Google
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
+GOOGLE_SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE"
 
 def get_taken_dates():
     try:
         response = requests.get(GOOGLE_SCRIPT_URL, timeout=5)
-        if response.status_code == 200:
-            return response.json()
-        return []
-    except Exception as e:
-        print(f"Error fetching from Google: {e}")
+        return response.json() if response.status_code == 200 else []
+    except:
         return []
 
 @app.route('/')
 def index():
     user_booking = request.cookies.get('user_booked_date')
     taken = get_taken_dates()
-    dates = []
     
-    # Start the calendar at the beginning of the current month
-    today = datetime.now()
-    first_of_month = today.replace(day=1)
+    # Get month/year from URL, default to current
+    now = datetime.now()
+    month = int(request.args.get('m', now.month))
+    year = int(request.args.get('y', now.year))
     
-    # Generate 35 days to ensure a full grid view
-    for i in range(35):
-        day = first_of_month + timedelta(days=i)
-        date_str = day.strftime('%Y-%m-%d')
-        dates.append({
+    # Logic for scroller arrows
+    prev_m = 12 if month == 1 else month - 1
+    prev_y = year - 1 if month == 1 else year
+    next_m = 1 if month == 12 else month + 1
+    next_y = year + 1 if month == 12 else year
+
+    month_dates = []
+    # Calculate days for the selected month
+    num_days = calendar.monthrange(year, month)[1]
+    for day_num in range(1, num_days + 1):
+        date_obj = datetime(year, month, day_num)
+        date_str = date_obj.strftime('%Y-%m-%d')
+        month_dates.append({
             'raw_date': date_str,
-            'taken': date_str in taken,
-            'is_user_date': date_str == user_booking
+            'day_num': day_num,
+            'weekday': date_obj.weekday(),
+            'taken': date_str in taken
         })
-    
-    return render_template('index.html', dates=dates, user_booking=user_booking)
 
-@app.route('/book/<date_raw>', methods=['GET', 'POST'])
-def book(date_raw):
-    if request.cookies.get('user_booked_date'):
-        return redirect('/')
-
-    if request.method == 'POST':
-        data = {
-            "date": date_raw,
-            "contact_name": request.form.get("contact_name"),
-            "school_name": request.form.get("school_name"),
-            "address": request.form.get("address"),
-            "staff_count": request.form.get("staff_count"),
-            "lunch_time": request.form.get("lunch_time"),
-            "delivery_notes": request.form.get("delivery_notes")
-        }
-        
-        try:
-            requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=5)
-        except:
-            print("Google Sync timed out.")
-
-        resp = make_response(render_template('success.html'))
-        resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
-        return resp
-
-    return render_template('form.html', date_display=date_raw, raw_date=date_raw)
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5001))
-    app.run(host='0.0.0.0', port=port)
+    return render_template('index.html', 
+                           dates=month_dates, 
+                           month_name=calendar.month_name[month],
+                           year=year,
+                           prev_url=f"/?m={prev_m}&y={prev_y}",
+                           next_url=f"/?m={next_m}&y={next_y}",
+                           user_booking=user_booking)
