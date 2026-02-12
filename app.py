@@ -11,12 +11,13 @@ GOOGLE_SCRIPT_URL = "https://script.google.com/a/macros/eatbetterday.ca/s/AKfycb
 
 def get_taken_dates():
     try:
-        conn = sqlite3.connect('bookings.db')
-        cursor = conn.execute('SELECT date FROM taken_dates')
-        dates = [row[0] for row in cursor.fetchall()]
-        conn.close()
-        return dates
-    except:
+        # The app now "calls" Google to see what is booked
+        response = requests.get(GOOGLE_SCRIPT_URL)
+        if response.status_code == 200:
+            return response.json() # Returns the list of dates from the Sheet
+        return []
+    except Exception as e:
+        print(f"Error fetching from Google: {e}")
         return []
 
 @app.route('/')
