@@ -5,6 +5,9 @@ import sqlite3
 import os
 
 app = Flask(__name__)
+@app.template_filter('to_datetime')
+def format_datetime(value):
+    return datetime.strptime(value, '%Y-%m-%d')
 
 # --- CONFIGURATION ---
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
@@ -21,24 +24,23 @@ def get_taken_dates():
 
 @app.route('/')
 def index():
-    # Check if this user already has a booking cookie
     user_booking = request.cookies.get('user_booked_date')
-    
     taken = get_taken_dates()
     dates = []
-    current = datetime.now()
     
-    # Generate 4 weeks, but ONLY include Mon (0), Tue (1), and Wed (2)
-    for i in range(28):
-        day = current + timedelta(days=i)
-        if day.weekday() < 3: # Monday, Tuesday, Wednesday only
-            date_str = day.strftime('%Y-%m-%d')
-            dates.append({
-                'raw_date': date_str,
-                'display': day.strftime('%A, %b %d'),
-                'taken': date_str in taken,
-                'is_user_date': date_str == user_booking
-            })
+    # Start the calendar at the beginning of the current month
+    today = datetime.now()
+    first_of_month = today.replace(day=1)
+    
+    # Generate 31 days to ensure we cover the whole month
+    for i in range(31):
+        day = first_of_month + timedelta(days=i)
+        date_str = day.strftime('%Y-%m-%d')
+        dates.append({
+            'raw_date': date_str,
+            'taken': date_str in taken,
+            'is_user_date': date_str == user_booking
+        })
     
     return render_template('index.html', dates=dates, user_booking=user_booking)
 
