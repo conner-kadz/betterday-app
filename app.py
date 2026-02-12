@@ -3,6 +3,8 @@ import requests
 from datetime import datetime, timedelta
 import os
 import calendar
+import re  # Added for the scraper
+from bs4 import BeautifulSoup  # Added for the scraper
 
 app = Flask(__name__)
 
@@ -79,39 +81,4 @@ def index():
                            user_booked_date=user_booking,
                            already_booked_error=already_booked_error)
 
-@app.route('/book/<date_raw>', methods=['GET', 'POST'])
-def book(date_raw):
-    # Prevent double booking
-    if request.cookies.get('user_booked_date'):
-        return redirect(url_for('index', error='already_booked'))
-
-    # Convert raw date (2026-02-24) to friendly date (Tuesday, Feb 24)
-    date_obj = datetime.strptime(date_raw, '%Y-%m-%d')
-    date_formatted = date_obj.strftime('%A, %b %d')
-
-    if request.method == 'GET':
-        # Pass the friendly date to form.html
-        return render_template('form.html', date_display=date_formatted, raw_date=date_raw)
-
-    if request.method == 'POST':
-        data = {
-            "date": date_raw,
-            "contact_name": request.form.get("contact_name"),
-            "school_name": request.form.get("school_name"),
-            "address": request.form.get("address"),
-            "staff_count": request.form.get("staff_count"),
-            "lunch_time": request.form.get("lunch_time"),
-            "delivery_notes": request.form.get("delivery_notes")
-        }
-        try:
-            requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=5)
-        except:
-            pass
-
-        resp = make_response(render_template('success.html'))
-        resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
-        return resp
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5001))
-    app.run(host='0.0.0.0', port=port)
+@app.route('/book/
