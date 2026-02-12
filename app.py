@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 
 # --- CONFIGURATION ---
-GOOGLE_SCRIPT_URL = "https://script.google.com/a/macros/eatbetterday.ca/s/AKfycbyVfWwPx3Mwmf5cQWQvHiks2sX_N6csATBJYbap8NIhBaJuW12wN_ZfdO67GsSd10sxnA/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
 
 def get_taken_dates():
     try:
