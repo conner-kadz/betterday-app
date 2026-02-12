@@ -11,9 +11,9 @@ GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-
 
 def get_taken_dates():
     try:
-        # The app now "calls" Google to see what is booked
-response = requests.get(GOOGLE_SCRIPT_URL)        if response.status_code == 200:
-            return response.json() # Returns the list of dates from the Sheet
+        response = requests.get(GOOGLE_SCRIPT_URL)
+        if response.status_code == 200:
+            return response.json()
         return []
     except Exception as e:
         print(f"Error fetching from Google: {e}")
