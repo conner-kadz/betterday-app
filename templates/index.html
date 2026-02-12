@@ -3,87 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BetterDay Bookings</title>
+    <title>BetterDay School Lunch</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        :root { --primary: #ff4d4d; --bg: #f8f9fa; }
-        body { background: var(--bg); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important; }
+        body { background-color: #fef5e7; color: #333; margin: 0; }
         
+        .brand-header {
+            background-color: #5da9ff; color: white;
+            padding: 15px 30px; font-weight: bold; font-size: 1.5rem;
+        }
+
         .calendar-card {
-            background: white; border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 25px;
-            margin-top: 30px; max-width: 900px; margin-inline: auto;
+            background: white; border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            padding: 30px; max-width: 950px; margin: 30px auto;
         }
 
         .calendar-grid {
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px;
         }
 
         .weekday-header {
-            text-align: center; font-weight: 700; font-size: 0.8rem;
+            text-align: center; font-weight: 800; font-size: 0.75rem;
             text-transform: uppercase; color: #adb5bd; padding-bottom: 10px;
         }
 
         .day-box {
-            aspect-ratio: 1/1; border-radius: 12px; border: 2px solid #f1f3f5;
+            min-height: 130px; border-radius: 16px; border: 2px solid #f1f3f5;
             display: flex; flex-direction: column; align-items: center; 
             justify-content: center; text-decoration: none; transition: 0.2s;
-            position: relative;
+            background: white;
         }
 
-        /* Available Mon-Wed */
-        .day-box.available { background: white; border-color: #e9ecef; color: #495057; }
-        .day-box.available:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(255,77,77,0.15); }
+        .day-box.available:hover { border-color: #5da9ff; transform: translateY(-3px); }
+        .day-box.taken { background: #fff5f5; border-color: #ffc9c9; pointer-events: none; }
+        .day-box.unavailable { background: #f8f9fa; border-color: #f8f9fa; opacity: 0.5; pointer-events: none; }
 
-        /* Taken/Sold Out */
-        .day-box.taken { background: #fff5f5; border-color: #ffc9c9; color: #fa5252; pointer-events: none; }
-        .day-box.taken::after { content: "Sold"; font-size: 0.6rem; font-weight: bold; position: absolute; bottom: 5px; }
-
-        /* Unavailable Thu-Sun */
-        .day-box.unavailable { background: #f1f3f5; border-color: #f1f3f5; color: #dee2e6; pointer-events: none; }
-
-        .day-num { font-size: 1.2rem; font-weight: 600; }
+        .day-num { font-size: 1.3rem; font-weight: 700; color: #2d3436; }
         
-        .header-section { text-align: center; margin-bottom: 30px; }
-        .apple-logo { font-size: 3rem; }
+        .badge-status { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin: 5px 0; }
+        .badge-status.available { background: #e8f5e9; color: #2e7d32; }
+        .badge-status.scooped { background: #ffebee; color: #c62828; }
+
+        .btn-action {
+            width: 85%; font-size: 0.7rem; font-weight: 800; padding: 6px 0;
+            border-radius: 8px; border: none; text-transform: uppercase;
+        }
+        .btn-book { background: #5da9ff; color: white; }
+        .btn-disabled { background: #e9ecef; color: #adb5bd; }
     </style>
 </head>
 <body>
 
+<div class="brand-header">BetterDay</div>
+
 <div class="container">
-    <div class="calendar-card">
-        <div class="header-section">
-            <div class="apple-logo">🍎</div>
-            <h1 class="fw-bold">School Lunch Drop-off</h1>
-            <p class="text-muted">Monday, Tuesday, and Wednesdays available</p>
-            <h3 class="mt-4">{{ dates[0].raw_date | to_datetime | format_datetime_month }}</h3>
-        </div>
+    <div class="calendar-card text-center">
+        <h1 class="fw-bold">School Lunch Drop-off 🍎</h1>
+        <p class="text-muted">Choose a date below to lock in your school's lunch delivery.</p>
+        <h3 class="mb-4">{{ dates[0].raw_date | to_datetime | format_datetime_month }}</h3>
 
         <div class="calendar-grid">
-            <div class="weekday-header">Mon</div>
-            <div class="weekday-header">Tue</div>
-            <div class="weekday-header">Wed</div>
-            <div class="weekday-header)Header">Thu</div>
-            <div class="weekday-header">Fri</div>
-            <div class="weekday-header">Sat</div>
+            <div class="weekday-header">Mon</div><div class="weekday-header">Tue</div>
+            <div class="weekday-header">Wed</div><div class="weekday-header">Thu</div>
+            <div class="weekday-header">Fri</div><div class="weekday-header">Sat</div>
             <div class="weekday-header">Sun</div>
 
             {% for date in dates %}
                 {% set d = date.raw_date | to_datetime %}
-                {# weekday() 0=Mon, 1=Tue, 2=Wed, 3=Thu... #}
                 {% set is_valid_day = d.weekday() < 3 %}
                 
                 <a href="/book/{{ date.raw_date }}" 
-                   class="day-box 
-                   {{ 'taken' if date.taken else '' }} 
-                   {{ 'available' if not date.taken and is_valid_day else '' }} 
-                   {{ 'unavailable' if not is_valid_day else '' }}">
+                   class="day-box {{ 'taken' if date.taken else '' }} {{ 'available' if not date.taken and is_valid_day else 'unavailable' }}">
                     <span class="day-num">{{ d.day }}</span>
+                    
+                    {% if date.taken %}
+                        <span class="badge-status scooped">All Scooped Up! 🍎</span>
+                        <button class="btn-action btn-disabled">Unavailable</button>
+                    {% elif is_valid_day %}
+                        <span class="badge-status available">Available</span>
+                        <button class="btn-action btn-book">Book Now</button>
+                    {% else %}
+                        <span class="badge-status">-</span>
+                        <button class="btn-action btn-disabled">Unavailable</button>
+                    {% endif %}
                 </a>
             {% endfor %}
         </div>
     </div>
 </div>
-
 </body>
 </html>
