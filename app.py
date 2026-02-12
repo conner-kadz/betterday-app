@@ -5,6 +5,13 @@ import os
 import calendar
 import re
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 app = Flask(__name__)
 
@@ -79,65 +86,4 @@ def index():
                            prev_url=prev_url,
                            next_url=next_url,
                            user_booked_date=user_booking,
-                           already_booked_error=already_booked_error)
-
-@app.route('/book/<date_raw>', methods=['GET', 'POST'])
-def book(date_raw):
-    if request.cookies.get('user_booked_date'):
-        return redirect(url_for('index', error='already_booked'))
-
-    date_obj = datetime.strptime(date_raw, '%Y-%m-%d')
-    date_formatted = date_obj.strftime('%A, %b %d')
-
-    if request.method == 'GET':
-        return render_template('form.html', date_display=date_formatted, raw_date=date_raw)
-
-    if request.method == 'POST':
-        data = {
-            "date": date_raw,
-            "contact_name": request.form.get("contact_name"),
-            "school_name": request.form.get("school_name"),
-            "address": request.form.get("address"),
-            "staff_count": request.form.get("staff_count"),
-            "lunch_time": request.form.get("lunch_time"),
-            "delivery_notes": request.form.get("delivery_notes")
-        }
-        try:
-            requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=5)
-        except:
-            pass
-
-        resp = make_response(render_template('success.html'))
-        resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
-        return resp
-
-@app.route('/harvest')
-def harvest_menu():
-    target_date = request.args.get('date')
-    if not target_date:
-        return "⚠️ Please add a date to the URL, e.g., /harvest?date=2026-02-15"
-
-    url = f"https://eatbetterday.ca/currentmenu/?dd={target_date}"
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        selectors = soup.find_all('div', id=re.compile('^mealSelector'))
-        
-        if not selectors:
-            return f"No meals found for {target_date}. The page might be hidden or structure changed."
-
-        found_meals = []
-        for box in selectors:
-            meal_name = box.get('title')
-            meal_id = box.get('id').replace('mealSelector', '')
-            found_meals.append(f"<b>ID: #{meal_id}</b> | Name: {meal_name}")
-
-        return "<h3>BetterDay Menu Harvest</h3>" + "<br>".join(found_meals)
-    except Exception as e:
-        return f"Harvest Failed: {str(e)}"
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5001))
-    app.run(host='0.0.0.0', port=port)
+                           already_booked_error=already_booked_error
