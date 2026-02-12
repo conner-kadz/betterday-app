@@ -9,6 +9,10 @@ app = Flask(__name__)
 def format_datetime(value):
     return datetime.strptime(value, '%Y-%m-%d')
 
+@app.template_filter('format_datetime_month')
+def format_datetime_month(value):
+    return value.strftime('%B %Y')
+
 # --- CONFIGURATION ---
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
 
