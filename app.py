@@ -92,7 +92,6 @@ def book(date_raw):
         resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
         return resp
 
-# --- NEW HARVEST ROUTE (SCREENSHOT OPTIMIZED) ---
 @app.route('/harvest')
 def harvest_menu():
     target_date = request.args.get('date', '2026-02-15')
@@ -139,7 +138,7 @@ def harvest_menu():
 
     except Exception as e:
         return f"API Harvest Error: {str(e)}"
-
+        
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
     app.run(host='0.0.0.0', port=port)
