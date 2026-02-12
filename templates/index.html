@@ -13,10 +13,19 @@
         }
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { margin: 0; background: var(--accent); color: var(--dark); padding-bottom: 50px; }
-        .app-header { background: var(--primary); color: white; padding: 16px 24px; font-weight: 800; font-size: 1.2rem; }
+        
+        /* Centered Header with Logo */
+        .app-header { 
+            background: var(--primary); 
+            padding: 12px 24px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            box-shadow: var(--shadow); 
+        }
+        
         .app-main { padding: 30px 20px; max-width: 500px; margin: 0 auto; }
         
-        /* ALERT: RESTORED DOUBLE-BOOKING NOTIFICATION */
         .alert-error {
             background: var(--error-red); color: white; padding: 15px; border-radius: var(--radius-lg);
             margin-bottom: 25px; text-align: center; font-weight: 700; box-shadow: var(--shadow);
@@ -41,7 +50,6 @@
         .month-label h2 { margin: 0; font-size: 1.3rem; font-weight: 900; text-transform: uppercase; }
         .month-label span { font-size: 0.75rem; font-weight: 800; color: var(--status-open); }
 
-        /* THE SWOOSH: Triggers on load to simulate a page transition */
         .booking-list { 
             background: white; border-radius: var(--radius-lg); padding: 10px 25px; box-shadow: var(--shadow); 
             animation: swooshIn 0.5s cubic-bezier(0.23, 1, 0.32, 1);
@@ -61,7 +69,12 @@
     </style>
 </head>
 <body>
-    <header class="app-header">BetterDay</header>
+    <header class="app-header">
+        <a href="/">
+            <img src="{{ url_for('static', filename='Logo.svg') }}" alt="BetterDay Logo" style="height: 50px; width: auto; display: block;">
+        </a>
+    </header>
+
     <main class="app-main">
         {% if already_booked_error %}
         <div class="alert-error">
