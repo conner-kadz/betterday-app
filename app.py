@@ -44,7 +44,7 @@ def index():
 
 @app.route('/book/<date_raw>', methods=['GET', 'POST'])
 def book(date_raw):
-    # If they already have a cookie, don't let them see the form
+    # If they already have a cookie, send them home
     if request.cookies.get('user_booked_date'):
         return redirect('/')
 
@@ -58,25 +58,20 @@ def book(date_raw):
             "delivery_notes": request.form.get("delivery_notes")
         }
         
-        # 1. Send to Google Sheets
+        # 1. Send to Google Sheets (The important part!)
         try:
-            requests.post(GOOGLE_SCRIPT_URL, json=data)
+            requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=5)
         except:
-            pass 
+            # If Google is slow, we still want the user to see the success page
+            print("Google Sync timed out, but proceeding.")
 
-        # 2. Mark as taken locally
-        conn = sqlite3.connect('bookings.db')
-        conn.execute('INSERT OR REPLACE INTO taken_dates (date) VALUES (?)', (date_raw,))
-        conn.commit()
-        conn.close()
-        
-        # 3. Show success and "Plant" the cookie for 30 days
+        # 2. Show success and "Plant" the cookie
         resp = make_response(render_template('success.html'))
         resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
         return resp
 
     return render_template('form.html', date_display=date_raw, raw_date=date_raw)
-
+    
 if __name__ == '__main__':
     # Initialize DB if it doesn't exist
     conn = sqlite3.connect('bookings.db')
