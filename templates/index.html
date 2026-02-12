@@ -5,30 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root {
-            --primary: #4ea2fd;    /* Action Blue */
-            --accent: #faebda;     /* Cream Background */
-            --dark: #00465e;       /* Navy Text */
-            --bus-yellow: #ffd54f; /* School Bus Yellow */
-            --status-open: #27ae60;
-            --radius-lg: 18px;
+            --primary: #4ea2fd;    --accent: #faebda;
+            --dark: #00465e;       --bus-yellow: #ffd54f;
+            --status-open: #27ae60; --radius-lg: 18px;
             --shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            --error-red: #e74c3c;
         }
-
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { margin: 0; background: var(--accent); color: var(--dark); padding-bottom: 50px; }
-
-        .app-header {
-            background: var(--primary); color: white;
-            padding: 16px 24px; box-shadow: var(--shadow);
-            font-weight: 800; font-size: 1.2rem;
-        }
-
+        .app-header { background: var(--primary); color: white; padding: 16px 24px; font-weight: 800; font-size: 1.2rem; }
         .app-main { padding: 30px 20px; max-width: 500px; margin: 0 auto; }
         
-        /* Intro Wording */
+        /* ALERT: RESTORED DOUBLE-BOOKING NOTIFICATION */
+        .alert-error {
+            background: var(--error-red); color: white; padding: 15px; border-radius: var(--radius-lg);
+            margin-bottom: 25px; text-align: center; font-weight: 700; box-shadow: var(--shadow);
+            animation: shake 0.4s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
         .intro-section { text-align: center; margin-bottom: 30px; }
         .intro-section h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
-        .intro-section p { font-size: 1rem; opacity: 0.8; font-weight: 600; }
+        .intro-section p { font-size: 1rem; opacity: 0.9; font-weight: 400; line-height: 1.4; }
 
         .scroller-nav {
             display: flex; align-items: center; justify-content: space-between;
@@ -37,65 +39,66 @@
         }
         .nav-arrow { color: var(--dark); text-decoration: none; font-size: 1.5rem; font-weight: 800; }
         .month-label h2 { margin: 0; font-size: 1.3rem; font-weight: 900; text-transform: uppercase; }
-        .month-label span { font-size: 0.75rem; font-weight: 800; color: var(--status-open); letter-spacing: 0.5px; }
+        .month-label span { font-size: 0.75rem; font-weight: 800; color: var(--status-open); }
 
-        .booking-list {
-            background: white; border-radius: var(--radius-lg);
-            padding: 10px 25px; box-shadow: var(--shadow);
-            animation: whooshIn 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        /* THE SWOOSH: Triggers on load to simulate a page transition */
+        .booking-list { 
+            background: white; border-radius: var(--radius-lg); padding: 10px 25px; box-shadow: var(--shadow); 
+            animation: swooshIn 0.5s cubic-bezier(0.23, 1, 0.32, 1);
         }
-        @keyframes whooshIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes swooshIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
 
-        .date-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 20px 0; border-bottom: 1px solid #f2f2f2;
-        }
+        .date-row { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #f2f2f2; }
         .date-row:last-child { border-bottom: none; }
         .date-text { font-weight: 800; font-size: 1.05rem; }
 
-        .btn-select {
-            background: var(--primary); color: white;
-            text-decoration: none; padding: 10px 22px;
-            border-radius: 99px; font-weight: 800; font-size: 0.75rem;
-            text-transform: uppercase; transition: 0.2s;
-        }
-        .status-taken {
-            background: var(--bus-yellow); color: #5d4037;
-            padding: 8px 14px; border-radius: 99px;
-            font-size: 0.65rem; font-weight: 900; text-transform: uppercase;
-        }
+        .btn-select { background: var(--primary); color: white; text-decoration: none; padding: 10px 22px; border-radius: 99px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; }
+        .status-taken { background: var(--bus-yellow); color: #5d4037; padding: 8px 14px; border-radius: 99px; font-size: 0.65rem; font-weight: 900; }
+        .confirmed-badge { color: var(--status-open); font-weight: 800; font-size: 0.8rem; }
     </style>
 </head>
 <body>
     <header class="app-header">BetterDay</header>
-
     <main class="app-main">
+        {% if already_booked_error %}
+        <div class="alert-error">
+            ⚠️ You already have an active booking!
+        </div>
+        {% endif %}
+
+        {% if user_booked_date %}
+        <div style="background: var(--status-open); color: white; padding: 15px; border-radius: var(--radius-lg); margin-bottom: 25px; text-align: center; box-shadow: var(--shadow);">
+            <div style="font-weight: 800; font-size: 1.1rem;">✨ Your Booking is Confirmed!</div>
+            <div style="font-size: 0.9rem; opacity: 0.9;">Scheduled for: {{ user_booked_date }}</div>
+        </div>
+        {% endif %}
+
         <div class="intro-section">
             <h1>School Lunch Drop-off 🍎</h1>
-            <p>Choose a date below to lock in your school's lunch delivery. <br>Monday, Tuesday, and Wednesdays available.</p>
+            <p>Choose a date below to lock in your school's lunch delivery.<br>Monday, Tuesday, and Wednesdays available.</p>
         </div>
 
         <div class="scroller-nav">
-            <a href="{{ prev_url }}" class="nav-arrow">←</a>
+            {% if prev_url %}<a href="{{ prev_url }}" class="nav-arrow">←</a>{% else %}<span style="opacity:0.2; font-size:1.5rem;">←</span>{% endif %}
             <div class="month-label" style="text-align: center;">
                 <h2>{{ month_name }}</h2>
                 <span>{{ slots }} SLOTS AVAILABLE</span>
             </div>
-            <a href="{{ next_url }}" class="nav-arrow">→</a>
+            {% if next_url %}<a href="{{ next_url }}" class="nav-arrow">→</a>{% else %}<span style="opacity:0.2; font-size:1.5rem;">→</span>{% endif %}
         </div>
 
         <div class="booking-list">
             {% for date in dates %}
-            <div class="date-row">
+            <div class="date-row" {% if date.is_user_date %}style="background:#f0fdf4; border: 1px solid var(--status-open); border-radius: 12px; padding: 10px;"{% endif %}>
                 <div class="date-text">{{ date.display }}</div>
                 <div class="action-zone">
-                    {% if date.past %}
-                        <span style="color:#adb5bd; font-size:0.7rem; font-weight:800;">EXPIRED</span>
-                    {% elif date.taken %}
-                        <span class="status-taken">All Scooped Up! 🍎</span>
-                    {% else %}
-                        <a href="/book/{{ date.raw_date }}" class="btn-select">Select</a>
-                    {% endif %}
+                    {% if date.is_user_date %}<span class="confirmed-badge">CONFIRMED ✓</span>
+                    {% elif date.past %}<span style="color:#adb5bd; font-size:0.7rem; font-weight:800;">EXPIRED</span>
+                    {% elif date.taken %}<span class="status-taken">All Scooped Up! 🍎</span>
+                    {% else %}<a href="/book/{{ date.raw_date }}" class="btn-select">Select</a>{% endif %}
                 </div>
             </div>
             {% endfor %}
