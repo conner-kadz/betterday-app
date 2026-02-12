@@ -7,104 +7,98 @@
         :root {
             --primary: #4ea2fd;    --accent: #faebda;
             --dark: #00465e;       --radius-lg: 18px;
-            --shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { margin: 0; background: var(--accent); color: var(--dark); padding-bottom: 50px; }
+        body { margin: 0; background: var(--accent); color: var(--dark); min-height: 100vh; }
         
-        /* Matching Header from Home */
+        /* The Header Logo is now a clear "Back" path */
         .app-header { 
             background: var(--primary); 
             padding: 12px 24px; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            box-shadow: var(--shadow); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
         }
 
-        .container { padding: 30px 20px; max-width: 500px; margin: 0 auto; }
+        .container { padding: 40px 20px; max-width: 550px; margin: 0 auto; }
 
-        /* The Booking Box */
         .form-card {
             background: white;
-            border-radius: 24px;
-            padding: 40px 30px;
+            border-radius: 30px;
+            padding: 40px;
             box-shadow: var(--shadow);
             text-align: center;
         }
 
-        /* Styled Header inside the box */
-        .form-header { margin-bottom: 30px; }
+        .form-header { margin-bottom: 35px; }
         .form-header span { 
             display: block; 
             text-transform: uppercase; 
             font-size: 0.75rem; 
             font-weight: 800; 
-            letter-spacing: 1px; 
-            opacity: 0.6; 
-            margin-bottom: 4px;
+            letter-spacing: 1.5px; 
+            opacity: 0.5; 
+            margin-bottom: 8px;
         }
-        .form-header h1 { 
-            margin: 0; 
-            font-size: 1.8rem; 
-            font-weight: 800; 
-            color: var(--dark); 
-        }
+        .form-header h1 { margin: 0; font-size: 2.2rem; font-weight: 900; color: var(--dark); }
 
-        /* Input Styling */
-        .form-group { text-align: left; margin-bottom: 20px; }
-        label { 
-            display: block; 
-            font-weight: 700; 
-            font-size: 0.9rem; 
-            margin-bottom: 8px; 
-            margin-left: 5px;
-        }
+        .form-group { text-align: left; margin-bottom: 22px; }
+        label { display: block; font-weight: 800; font-size: 0.85rem; margin-bottom: 8px; text-transform: uppercase; }
+        
         input, textarea {
             width: 100%;
-            padding: 14px 18px;
-            border-radius: 12px;
-            border: 1px solid #e1e8ed;
+            padding: 16px;
+            border-radius: 15px;
+            border: 2px solid #f0f4f8;
             background: #f8fafc;
             font-size: 1rem;
-            transition: 0.2s;
-        }
-        input:focus { 
-            outline: none; 
-            border-color: var(--primary); 
-            background: white; 
-            box-shadow: 0 0 0 4px rgba(78, 162, 253, 0.1); 
+            color: var(--dark);
         }
 
-        /* Matching Button */
         .btn-submit {
             background: var(--primary);
             color: white;
             border: none;
             width: 100%;
-            padding: 16px;
-            border-radius: 99px;
+            padding: 18px;
+            border-radius: 18px;
             font-weight: 800;
-            font-size: 1rem;
+            font-size: 1.1rem;
             text-transform: uppercase;
             cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 8px 20px rgba(78, 162, 253, 0.3);
             transition: 0.2s;
-            margin-top: 10px;
         }
-        .btn-submit:hover { transform: scale(1.02); background: #3b8cd9; }
+        .btn-submit:hover { transform: translateY(-2px); background: #3b8cd9; }
+
+        /* THE NEW BACK BUTTON STYLE */
+        .back-link {
+            display: inline-block;
+            margin-top: 25px;
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            transition: 0.2s;
+        }
+        .back-link:hover { opacity: 1; color: var(--primary); }
     </style>
 </head>
 <body>
     <header class="app-header">
-        <a href="/">
-            <img src="{{ url_for('static', filename='Logo.svg') }}" alt="BetterDay Logo" style="height: 50px; width: auto; display: block;">
+        <a href="/" title="Back to Calendar">
+            <img src="{{ url_for('static', filename='Logo.svg') }}" alt="BetterDay Logo" style="height: 45px; width: auto; display: block;">
         </a>
     </header>
 
     <div class="container">
         <div class="form-card">
             <div class="form-header">
-                <div style="font-size: 2rem; margin-bottom: 10px;">🍎</div>
+                <div style="font-size: 2.5rem; margin-bottom: 10px;">🍎</div>
                 <span>Booking for</span>
                 <h1>{{ date_display }}</h1>
             </div>
@@ -112,24 +106,40 @@
             <form method="POST">
                 <div class="form-group">
                     <label>Your Name</label>
-                    <input type="text" name="contact_name" placeholder="ie. Jane Doe" required>
+                    <input type="text" name="contact_name" required>
                 </div>
 
                 <div class="form-group">
                     <label>School Name</label>
-                    <input type="text" name="school_name" placeholder="ie. Lincoln High" required>
+                    <input type="text" name="school_name" required>
                 </div>
 
                 <div class="form-group">
                     <label>School Address</label>
-                    <input type="text" name="address" placeholder="123 Street Ave, City" required>
+                    <input type="text" name="address" required>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-bottom: 22px;">
+                    <div style="flex: 1; text-align: left;">
+                        <label>Staff Count</label>
+                        <input type="number" name="staff_count" required>
+                    </div>
+                    <div style="flex: 2; text-align: left;">
+                        <label>Lunch Hours</label>
+                        <input type="text" name="lunch_time" required>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Staff Count</label>
-                    <input type="number" name="staff_count" placeholder="ie. 25" required>
+                    <label>Delivery Notes</label>
+                    <textarea name="delivery_notes" rows="3"></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label>Lunch Hours</label>
-                    <input type="text" name="lunch_time" placeholder="ie. 11:3
+                <button type="submit" class="btn-submit">Confirm Booking</button>
+            </form>
+
+            <a href="/" class="back-link">← Choose a different date</a>
+        </div>
+    </div>
+</body>
+</html>
