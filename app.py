@@ -123,44 +123,41 @@ def harvest_menu():
     target_date = request.args.get('date', '2026-02-15')
     url = f"https://eatbetterday.ca/currentmenu/?dd={target_date}"
     
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    
-    # Path setup for Render
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    # We use a header to "pretend" we are a normal browser
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
     
     try:
-        driver.get(url)
-        # Wait up to 10 seconds for at least one meal to load
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "mb-3"))
-        )
+        # We go back to 'requests' because it's much more stable on Render
+        response = requests.get(url, headers=headers, timeout=10)
         
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        if response.status_code != 200:
+            return f"Error: Could not reach the menu page. Status code: {response.status_code}"
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # We look for the meal containers
         selectors = soup.find_all('div', id=re.compile('^mealSelector'))
         
         if not selectors:
-            return f"Harvest Failed: Page loaded but no meals found for {target_date}."
+            return f"<h3>No meals found for {target_date}</h3><p>The page might be empty or Sprwt changed their layout.</p>"
 
         found_meals = []
         for box in selectors:
-            meal_name = box.get('title')
-            meal_id = box.get('id').replace('mealSelector', '')
+            meal_name = box.get('title', 'Unknown Dish')
+            meal_id = box.get('id', '').replace('mealSelector', '')
             
-            # Find the image if possible
+            # Find the image link inside the box
             img = box.find('img')
             img_url = img.get('src') if img else "No Image"
             
-            found_meals.append(f"<b>ID: #{meal_id}</b> | Name: {meal_name} | <small>{img_url}</small>")
+            found_meals.append(f"<b>ID: #{meal_id}</b> | Name: {meal_name} <br> <img src='{img_url}' width='100'>")
             
-        return "<h3>BetterDay Menu Harvest (Dynamic)</h3>" + "<br>".join(found_meals)
+        return f"<h3>BetterDay Harvest: {target_date}</h3>" + "<br><hr>".join(found_meals)
+
     except Exception as e:
         return f"Harvest Failed: {str(e)}"
-    finally:
-        driver.quit()
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
