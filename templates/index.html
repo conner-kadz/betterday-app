@@ -3,125 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BetterDay School Lunch</title>
+    <title>BetterDay Booking Portal</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        /* 1. Brand Core & Uniform Font */
+        /* 1. BRAND COLOR VARIABLES */
         :root {
-            --primary-blue: #5da9ff;
-            --soft-bg: #fef5e7;
-            --available-green: #2e7d32;
-            --scooped-orange: #ef6c00;
-            --expired-grey: #adb5bd;
+            --navy: #00465e;       /* Primary Branding */
+            --lilac: #c8a4f5;      /* Accent / Hover */
+            --action-blue: #0066bf; /* Buttons */
+            --bg-canvas: #fbfbfd;
+            --text-muted: #636e72;
         }
 
-        * { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important; }
+        * { font-family: 'Segoe UI', Roboto, -apple-system, sans-serif !important; }
 
         body { 
-            background-color: var(--soft-bg); 
-            color: #333; 
+            background-color: var(--bg-canvas); 
+            color: var(--navy); 
             margin: 0; 
-            padding-bottom: 50px;
+            overflow-x: hidden;
         }
         
-        /* 2. Brand Header */
+        /* 2. PREMIUM HEADER */
         .brand-header {
-            background-color: var(--primary-blue); 
+            background-color: var(--navy); 
             color: white;
-            padding: 15px 40px; 
-            font-weight: 800; 
-            font-size: 1.6rem;
-            letter-spacing: -0.5px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 18px 40px; 
+            font-weight: 700; 
+            font-size: 1.4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 70, 94, 0.15);
         }
 
-        /* 3. Month Section Styling */
-        .month-container {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .month-title {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #2d3436;
-            margin-bottom: 25px;
+        /* 3. MONTH SCROLLER */
+        .month-nav-container {
             display: flex;
             align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin: 50px 0 30px 0;
         }
 
-        .month-title::before {
-            content: "";
-            width: 8px;
-            height: 40px;
-            background: var(--primary-blue);
-            margin-right: 15px;
-            border-radius: 4px;
+        .month-display {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: var(--navy);
+            min-width: 350px;
+            text-align: center;
+            letter-spacing: -1px;
         }
 
-        /* 4. The 5-Day Grid */
+        .nav-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            border: 2px solid var(--navy);
+            background: transparent;
+            color: var(--navy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--lilac);
+            border-color: var(--lilac);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        /* 4. THE "WHOOSH" GRID ANIMATION */
+        .calendar-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px 60px 20px;
+            animation: whooshIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes whooshIn {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* Mon, Tue, Wed, Thu, Fri */
+            grid-template-columns: repeat(5, 1fr); /* 5-Day Week */
             gap: 20px;
-            background: white;
-            padding: 30px;
-            border-radius: 30px;
-            box-shadow: 0 15px 45px rgba(0,0,0,0.03);
         }
 
         .weekday-label {
             text-align: center;
-            font-weight: 800;
-            font-size: 0.85rem;
+            font-weight: 700;
+            font-size: 0.8rem;
             text-transform: uppercase;
-            color: #b2bec3;
-            letter-spacing: 1px;
-            padding-bottom: 15px;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            padding-bottom: 10px;
         }
 
-        /* 5. The "Popping" Day Box */
-        .day-box {
-            min-height: 160px;
+        /* 5. TACTILE DAY CARDS */
+        .day-card {
+            min-height: 180px;
+            background: white;
             border-radius: 24px;
-            border: 2px solid #f1f3f5;
+            border: 1px solid rgba(0, 70, 94, 0.05);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-decoration: none !important;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            background: white;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: 0 10px 30px rgba(0, 70, 94, 0.03);
             position: relative;
-            overflow: hidden;
         }
 
-        /* Status: Available (The Pop!) */
-        .day-box.available {
-            border-color: #e9ecef;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        /* Hover Interaction */
+        .day-card.available:hover {
+            transform: translateY(-12px);
+            border-color: var(--lilac);
+            box-shadow: 0 25px 50px rgba(200, 164, 245, 0.25);
         }
 
-        .day-box.available:hover {
-            transform: translateY(-10px) scale(1.02);
-            border-color: var(--primary-blue);
-            box-shadow: 0 20px 40px rgba(93, 169, 255, 0.2);
+        /* Statuses */
+        .day-card.scooped { background: #fff8f8; cursor: not-allowed; opacity: 0.9; }
+        .day-card.expired { background: #f1f3f5; opacity: 0.6; cursor: not-allowed; }
+        .day-card.closed { background: #fafbfc; opacity: 0.5; cursor: not-allowed; }
+
+        /* Content Styles */
+        .day-num {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--navy);
+            margin-bottom: 5px;
         }
 
-        /* Status: Taken / Scooped */
-        .day-box.taken {
-            background: #fffafa;
-            border-color: #ffeadb;
-            cursor: not-allowed;
+        .status-pill {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 50px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
         }
 
-        /* Status: Past or Closed (Thu/Fri) */
-        .day-box.expired, .day-box.closed {
-            background: #f8f9fa;
-            border-color: #f8f9fa;
-            opacity: 0.6;
-            cursor: not-allowed;
+        .status-pill.available { background: #f3ebff; color: #7b4fb3; } /* Lilac tint */
+        .status-pill.scooped { background: #ffe3e3; color: #e03131; }
+        .status-pill.expired { background: #e9ecef; color: #868e96; }
+
+        /* The Button */
+        .btn-booking {
+            width: 80%;
+            background-color: var(--action-blue);
+            color: white;
+            border: none;
+            padding: 10px 0;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            transition: background 0.2s;
         }
 
-        /* 6. Text & UI Elements inside Boxes
+        .btn-booking:hover { background-color: #0056a3; }
+        .btn-booking.disabled { background-color: #dee2e6; color: #adb5bd; }
+
+    </style>
+</head>
+<body>
+
+<header class="brand-header">
+    <div>BetterDay</div>
+    <div style="font-size: 0.9rem; font-weight: 400; opacity: 0.8;">Lunch Management Portal</div>
+</header>
+
+<div class="container">
+    <div class="month-nav-container">
+        <a href="{{ prev_url }}" class="nav-btn">←</a>
+        <div class="month-display">{{ month_name }} {{ year }}</div>
+        <a href="{{ next_url }}" class="nav-btn">→</a>
+    </div>
+
+    <div class="calendar-wrapper">
+        <div class="calendar-grid">
+            <div class="weekday-label">Mon</div>
+            <div class="weekday-label">Tue</div>
+            <div class="weekday-label">Wed</div>
+            <div class="weekday-label">Thu</div>
+            <div class="weekday-label">Fri</div>
+
+            {% for date in dates %}
+                {% if date.weekday < 5 %}
+                    {% set is_past = date.raw_date | is_past %}
+                    
+                    <div class="day-slot">
+                        {% if is_past %}
+                            <div class="day-card expired">
+                                <span class="day-num">{{ date.day_num }}</span>
+                                <span class="status-pill expired">Expired</span>
+                                <button class="btn-booking disabled">Unavailable</button>
+                            </div>
+                        {% elif date.taken %}
+                            <div class="day-card scooped">
+                                <span class="day-num">{{ date.day_num }}</span>
+                                <span class="status-pill scooped">All Scooped Up! 🍎</span>
+                                <button class="btn-booking disabled">Unavailable</button>
+                            </div>
+                        {% elif date.weekday < 3 %}
+                            <a href="/book/{{ date.raw_date }}" class="day-card available">
+                                <span class="day-num">{{ date.day_num }}</span>
+                                <span class="status-pill available">Available</span>
+                                <button class="btn-booking">Book Now</button>
+                            </a>
+                        {% else %}
+                            <div class="day-card closed">
+                                <span class="day-num">{{ date.day_num }}</span>
+                                <span class="status-pill expired">Closed</span>
+                                <button class="btn-booking disabled">Unavailable</button>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
