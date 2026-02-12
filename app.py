@@ -86,4 +86,82 @@ def index():
                            prev_url=prev_url,
                            next_url=next_url,
                            user_booked_date=user_booking,
-                           already_booked_error=already_booked_error
+                           already_booked_error=already_booked_error)
+
+@app.route('/book/<date_raw>', methods=['GET', 'POST'])
+def book(date_raw):
+    if request.cookies.get('user_booked_date'):
+        return redirect(url_for('index', error='already_booked'))
+
+    date_obj = datetime.strptime(date_raw, '%Y-%m-%d')
+    date_formatted = date_obj.strftime('%A, %b %d')
+
+    if request.method == 'GET':
+        return render_template('form.html', date_display=date_formatted, raw_date=date_raw)
+
+    if request.method == 'POST':
+        data = {
+            "date": date_raw,
+            "contact_name": request.form.get("contact_name"),
+            "school_name": request.form.get("school_name"),
+            "address": request.form.get("address"),
+            "staff_count": request.form.get("staff_count"),
+            "lunch_time": request.form.get("lunch_time"),
+            "delivery_notes": request.form.get("delivery_notes")
+        }
+        try:
+            requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=5)
+        except:
+            pass
+
+        resp = make_response(render_template('success.html'))
+        resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
+        return resp
+
+@app.route('/harvest')
+def harvest_menu():
+    target_date = request.args.get('date', '2026-02-15')
+    url = f"https://eatbetterday.ca/currentmenu/?dd={target_date}"
+    
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    
+    # Path setup for Render
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    
+    try:
+        driver.get(url)
+        # Wait up to 10 seconds for at least one meal to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "mb-3"))
+        )
+        
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        selectors = soup.find_all('div', id=re.compile('^mealSelector'))
+        
+        if not selectors:
+            return f"Harvest Failed: Page loaded but no meals found for {target_date}."
+
+        found_meals = []
+        for box in selectors:
+            meal_name = box.get('title')
+            meal_id = box.get('id').replace('mealSelector', '')
+            
+            # Find the image if possible
+            img = box.find('img')
+            img_url = img.get('src') if img else "No Image"
+            
+            found_meals.append(f"<b>ID: #{meal_id}</b> | Name: {meal_name} | <small>{img_url}</small>")
+            
+        return "<h3>BetterDay Menu Harvest (Dynamic)</h3>" + "<br>".join(found_meals)
+    except Exception as e:
+        return f"Harvest Failed: {str(e)}"
+    finally:
+        driver.quit()
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host='0.0.0.0', port=port)
