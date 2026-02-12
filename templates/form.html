@@ -1,47 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Booking Details - BetterDay</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Your Lunch</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; }
-        body { margin: 0; padding: 20px; background: var(--accent); font-family: system-ui, sans-serif; }
-        .form-container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 18px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
-        h1 { margin-top: 0; color: var(--dark); font-size: 1.5rem; text-align: center; }
-        .input-group { margin-bottom: 20px; }
-        label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.9rem; color: var(--dark); }
-        input, textarea { width: 100%; padding: 12px; border: 2px solid #e0e4ea; border-radius: 10px; font-size: 1rem; box-sizing: border-box; }
-        .btn { display: block; width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 999px; font-weight: 600; font-size: 1rem; cursor: pointer; }
-        .back-link { display: block; text-align: center; margin-top: 20px; color: #718096; text-decoration: none; }
+        /* This ensures the font is identical across the whole page */
+        body, input, textarea, button, select { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; 
+            background-color: #f8f9fa;
+        }
+        .form-card {
+            background: white; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            padding: 30px; margin-top: 50px;
+        }
+        .btn-primary { background-color: #ff4d4d; border: none; }
+        .btn-primary:hover { background-color: #e64545; }
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h1>Booking for {{ date_display }}</h1>
-        <form action="/book/{{ raw_date }}" method="POST">
-            <div class="input-group">
-                <label>Primary Contact Name</label>
-                <input type="text" name="contact_name" placeholder="Full name" required>
+<div class="container d-flex justify-content-center">
+    <div class="form-card col-md-6">
+        <h2 class="fw-bold mb-4">Lunch for {{ date_display }} 🍎</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">Your Name</label>
+                <input type="text" name="contact_name" class="form-control" required>
             </div>
-            <div class="input-group">
-                <label>School Name</label>
-                <input type="text" name="school_name" placeholder="Enter school name" required>
+            <div class="mb-3">
+                <label class="form-label">School Name</label>
+                <input type="text" name="school_name" class="form-control" required>
             </div>
-            <div class="input-group">
-                <label>Number of Staff (approx.)</label>
-                <input type="number" name="staff_count" placeholder="Total staff members" required>
+            <div class="mb-3">
+                <label class="form-label">School Address</label>
+                <input type="text" name="address" class="form-control" placeholder="123 Street Ave, City" required>
             </div>
-            <div class="input-group">
-                <label>Preferred Lunch Time</label>
-                <input type="text" name="lunch_time" placeholder="Example: 12:15 - 12:45 PM" required>
+            <div class="mb-3">
+                <label class="form-label">Staff Count</label>
+                <input type="number" name="staff_count" class="form-control" required>
             </div>
-            <div class="input-group">
-                <label>Delivery Notes</label>
-                <textarea name="delivery_notes" rows="3" placeholder="e.g. Park in staff lot, sign in at office..."></textarea>
+            <div class="mb-3">
+                <label class="form-label">Preferred Delivery Time</label>
+                <input type="text" name="lunch_time" class="form-control" placeholder="e.g. 11:30 AM" required>
             </div>
-            <button type="submit" class="btn">Confirm Booking</button>
+            <div class="mb-3">
+                <label class="form-label">Delivery Notes (Optional)</label>
+                <textarea name="delivery_notes" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Confirm Booking</button>
         </form>
-        <a href="/" class="back-link">← Change Date</a>
     </div>
+</div>
 </body>
 </html>
