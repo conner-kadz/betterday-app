@@ -56,51 +56,56 @@ def index():
 def harvest_menu():
     target_date = request.args.get('date', '2026-02-15')
     url = f"https://eatbetterday.ca/currentmenu/?dd={target_date}"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    
+    # We use a real browser header to ensure Sprwt doesn't block the request
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
     
     try:
-        # 1. Fetch the giant mountain of code
         response = requests.get(url, headers=headers, timeout=10)
-        code = response.text
         
-        # 2. Use a "Magnet" (Regex) to find every mealSelector ID and Title
-        # Pattern: id="mealSelector537" ... title="Backroads Honey Hot Glazed Chicken"
-        pattern = r'id="mealSelector(\d+)".*?title="(.*?)"'
-        matches = re.findall(pattern, code, re.DOTALL)
+        # Regex Magnet: Find every number inside the 'data/meals/' folder as seen in your screenshot
+        # Pattern looks for 'data/meals/' then captures digits (\d+) before '.jpg'
+        found_ids = re.findall(r'data/meals/(\d+)\.jpg', response.text)
         
-        if not matches:
-            return f"<h3>No Meal IDs found for {target_date}</h3><p>Sprwt is hiding the data well. Let's check the Pattern Hunter results.</p>"
+        # Also look for meal names paired with IDs in the HTML
+        name_matches = re.findall(r'id="mealSelector(\d+)".*?title="(.*?)"', response.text, re.DOTALL)
+        name_map = {m_id: m_name for m_id, m_name in name_matches}
+
+        unique_ids = sorted(list(set(found_ids)))
+        
+        if not unique_ids:
+            return f"<h3>No Meal IDs found for {target_date}</h3><p>Sprwt might be hiding the links in a separate script. Try finding a link ending in .json in your Network tab.</p>"
 
         found_meals = []
-        unique_check = set() # To avoid duplicates
-
-        for m_id, m_name in matches:
-            if m_id not in unique_check:
-                unique_check.add(m_id)
-                img_url = f"https://eatbetterday.ca/data/meals/{m_id}.jpg"
-                found_meals.append({
-                    "id": m_id,
-                    "name": m_name,
-                    "image": img_url
-                })
-        
-        # 3. Build the beautiful "MVP" preview
-        html_out = f"<h3>BetterDay Harvest: {target_date}</h3><p>Found {len(found_meals)} unique meals.</p><hr>"
+        for m_id in unique_ids:
+            # Pair ID with Name if found, otherwise use placeholder
+            m_name = name_map.get(m_id, "Dish Found")
+            img_url = f"https://eatbetterday.ca/data/meals/{m_id}.jpg"
+            
+            found_meals.append({
+                "id": m_id,
+                "name": m_name,
+                "image": img_url
+            })
+            
+        # Build a visual gallery for the Chef/Admin
+        html_out = f"<h3>BetterDay Harvest: {target_date}</h3><p>Detected {len(found_meals)} unique meal IDs.</p><hr>"
         for meal in found_meals:
             html_out += f"""
-            <div style="display:flex; align-items:center; margin-bottom:20px; border-bottom:1px solid #ddd; padding-bottom:10px;">
-                <img src="{meal['image']}" width="120" style="border-radius:10px; margin-right:20px;">
+            <div style="display:flex; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                <img src="{meal['image']}" width="100" style="border-radius:8px; margin-right:15px; border:1px solid #ddd;">
                 <div>
-                    <b style="font-size:1.2em;">{meal['name']}</b><br>
-                    <span style="color:#666;">Meal ID: #{meal['id']}</span>
+                    <b style="font-size:1.1em;">{meal['name']}</b><br>
+                    <code style="background:#f4f4f4; padding:2px 5px;">ID: #{meal['id']}</code>
                 </div>
             </div>
             """
-            
         return html_out
 
     except Exception as e:
-        return f"Harvest Error: {str(e)}"
+        return f"Harvest Error Details: {str(e)}"
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
