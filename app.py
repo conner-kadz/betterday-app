@@ -81,12 +81,17 @@ def index():
 
 @app.route('/book/<date_raw>', methods=['GET', 'POST'])
 def book(date_raw):
-    # RESTORED: Check if user already has a booking before showing form
+    # Prevent double booking
     if request.cookies.get('user_booked_date'):
         return redirect(url_for('index', error='already_booked'))
 
+    # Convert raw date (2026-02-24) to friendly date (Tuesday, Feb 24)
+    date_obj = datetime.strptime(date_raw, '%Y-%m-%d')
+    date_formatted = date_obj.strftime('%A, %b %d')
+
     if request.method == 'GET':
-        return render_template('form.html', date_display=date_raw, raw_date=date_raw)
+        # Pass the friendly date to form.html
+        return render_template('form.html', date_display=date_formatted, raw_date=date_raw)
 
     if request.method == 'POST':
         data = {
