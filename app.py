@@ -1,3 +1,34 @@
+from flask import Flask, render_template, request, make_response, redirect
+import requests
+from datetime import datetime, timedelta
+import os
+import calendar
+
+# Initialize the Flask app (This fixes the NameError)
+app = Flask(__name__)
+
+# --- FILTERS ---
+@app.template_filter('is_past')
+def is_past_filter(date_str):
+    date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+    return date_obj < datetime.now().date()
+
+# --- CONFIGURATION ---
+# Replace with your actual Google Script URL
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
+
+def get_taken_dates():
+    try:
+        response = requests.get(GOOGLE_SCRIPT_URL, timeout=5)
+        if response.status_code == 200:
+            return response.json()
+        return []
+    except Exception as e:
+        print(f"Error fetching from Google: {e}")
+        return []
+
+# --- ROUTES ---
+
 @app.route('/')
 def index():
     user_booking = request.cookies.get('user_booked_date')
@@ -42,3 +73,36 @@ def index():
                            slots=slots_available,
                            prev_url=f"/?m={prev_m}&y={prev_y}",
                            next_url=f"/?m={next_m}&y={next_y}")
+
+@app.route('/book/<date_raw>', methods=['GET', 'POST'])
+def book(date_raw):
+    if request.cookies.get('user_booked_date'):
+        return redirect('/')
+
+    if request.method == 'POST':
+        data = {
+            "date": date_raw,
+            "contact_name": request.form.get("contact_name"),
+            "school_name": request.form.get("school_name"),
+            "address": request.form.get("address"),
+            "staff_count": request.form.get("staff_count"),
+            "lunch_time": request.form.get("lunch_time"),
+            "delivery_notes": request.form.get("delivery_notes")
+        }
+        
+        try:
+            requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=5)
+        except:
+            print("Google Sync timed out.")
+
+        # You will need a success.html template
+        resp = make_response(render_template('success.html'))
+        resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
+        return resp
+
+    return render_template('form.html', date_display=date_raw, raw_date=date_raw)
+
+if __name__ == '__main__':
+    # Render uses the PORT environment variable
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host='0.0.0.0', port=port)
