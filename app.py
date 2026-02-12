@@ -3,8 +3,8 @@ import requests
 from datetime import datetime, timedelta
 import os
 import calendar
-import re  # Added for the scraper
-from bs4 import BeautifulSoup  # Added for the scraper
+import re
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
@@ -111,12 +111,11 @@ def book(date_raw):
         resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
         return resp
 
-# --- NEW HARVESTER ROUTE ---
 @app.route('/harvest')
 def harvest_menu():
     target_date = request.args.get('date')
     if not target_date:
-        return "⚠️ Error: Please add a date to the URL, e.g., /harvest?date=2026-02-15"
+        return "⚠️ Please add a date to the URL, e.g., /harvest?date=2026-02-15"
 
     url = f"https://eatbetterday.ca/currentmenu/?dd={target_date}"
     headers = {'User-Agent': 'Mozilla/5.0'}
@@ -124,12 +123,10 @@ def harvest_menu():
     try:
         response = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # This looks for the mealSelector IDs from your Inspect tool
         selectors = soup.find_all('div', id=re.compile('^mealSelector'))
         
         if not selectors:
-            return f"No meals found for {target_date}. The page might be empty or the structure changed."
+            return f"No meals found for {target_date}. The page might be hidden or structure changed."
 
         found_meals = []
         for box in selectors:
