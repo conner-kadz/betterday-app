@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Details - BetterDay</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; }
+        body { margin: 0; padding: 20px; background: var(--accent); font-family: system-ui, sans-serif; }
+        .form-container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 18px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+        h1 { margin-top: 0; color: var(--dark); font-size: 1.5rem; text-align: center; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.9rem; color: var(--dark); }
+        input, textarea { width: 100%; padding: 12px; border: 2px solid #e0e4ea; border-radius: 10px; font-size: 1rem; box-sizing: border-box; }
+        .btn { display: block; width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 999px; font-weight: 600; font-size: 1rem; cursor: pointer; }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: #718096; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Booking for {{ date_display }}</h1>
+        <form action="/book/{{ raw_date }}" method="POST">
+            <div class="input-group">
+                <label>Primary Contact Name</label>
+                <input type="text" name="contact_name" placeholder="Full name" required>
+            </div>
+            <div class="input-group">
+                <label>School Name</label>
+                <input type="text" name="school_name" placeholder="Enter school name" required>
+            </div>
+            <div class="input-group">
+                <label>Number of Staff (approx.)</label>
+                <input type="number" name="staff_count" placeholder="Total staff members" required>
+            </div>
+            <div class="input-group">
+                <label>Preferred Lunch Time</label>
+                <input type="text" name="lunch_time" placeholder="Example: 12:15 - 12:45 PM" required>
+            </div>
+            <div class="input-group">
+                <label>Delivery Notes</label>
+                <textarea name="delivery_notes" rows="3" placeholder="e.g. Park in staff lot, sign in at office..."></textarea>
+            </div>
+            <button type="submit" class="btn">Confirm Booking</button>
+        </form>
+        <a href="/" class="back-link">← Change Date</a>
+    </div>
+</body>
+</html>

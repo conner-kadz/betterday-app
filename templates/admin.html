@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BetterDay Admin</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; color: #333; }
+        h1 { margin-bottom: 20px; color: #00465e; }
+        
+        /* Table Styles */
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #00465e; color: white; font-weight: bold; }
+        tr:hover { background-color: #f1f1f1; }
+        
+        .btn-download {
+            display: inline-block; padding: 10px 20px; background-color: #27ae60; color: white;
+            text-decoration: none; border-radius: 5px; font-weight: bold; margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h1>BetterDay Bookings Dashboard</h1>
+        <a href="/admin/download" class="btn-download">Download CSV</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>School</th>
+                <th>Contact</th>
+                <th>Phone</th>
+                <th>Count</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in bookings %}
+            <tr>
+                <td>{{ row[1] }}</td>
+                <td><strong>{{ row[2] }}</strong></td>
+                <td>{{ row[3] }}</td>
+                <td>{{ row[4] }}</td>
+                <td>{{ row[7] }}</td>
+                <td>{{ row[9] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

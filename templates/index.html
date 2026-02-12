@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BetterDay School Lunch Bookings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; }
+        body { margin: 0; padding: 20px; background: var(--accent); font-family: system-ui, sans-serif; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; }
+        
+        .card { 
+            background: white; padding: 25px; border-radius: 20px; text-align: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s;
+            border: 3px solid transparent; 
+        }
+        
+        /* Highlight for the date the user picked */
+        .user-selection { border: 3px solid #4caf50 !important; transform: scale(1.02); }
+
+        .btn { 
+            display: block; width: 100%; padding: 12px; border-radius: 999px; 
+            background: var(--primary); color: white; text-decoration: none; 
+            font-weight: 600; border: none; cursor: pointer; box-sizing: border-box;
+        }
+        .btn:disabled { background: #eee; color: #999; cursor: not-allowed; }
+
+        /* Modal / Popup Styles */
+        .modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; 
+        }
+        .modal-content { 
+            background: white; padding: 40px; border-radius: 25px; text-align: center; 
+            max-width: 320px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>School Lunch Drop-off 🍎</h1>
+        <p>Monday, Tuesday, and Wednesdays available.</p>
+        
+        {% if user_booking %}
+        <div style="background: #e7f3ff; border: 2px solid var(--primary); padding: 15px; border-radius: 15px; display: inline-block; margin-top: 10px; color: var(--dark);">
+            <strong>✨ You have a booking for {{ user_booking }}</strong>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="grid">
+        {% for date in dates %}
+        <div class="card {% if date.is_user_date %}user-selection{% endif %}">
+            <h3>{{ date.display }}</h3>
+            
+            {% if date.is_user_date %}
+                <div style="color: #4caf50; font-weight: 700; margin-bottom: 15px;">Your Selection ✓</div>
+                <button class="btn" disabled>Confirmed</button>
+            {% elif date.taken %}
+                <div style="color: #d97706; margin-bottom: 15px;">All Scooped Up! 🍎</div>
+                <button class="btn" disabled>Unavailable</button>
+            {% else %}
+                <div style="color: #0288d1; margin-bottom: 15px;">Available</div>
+                {% if user_booking %}
+                    <button class="btn" onclick="showDenied()">Book Now</button>
+                {% else %}
+                    <a href="/book/{{ date.raw_date }}" class="btn">Book Now</a>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="deniedModal" class="modal">
+        <div class="modal-content">
+            <div style="font-size: 3rem;">🍎</div>
+            <h2>Limit Reached</h2>
+            <p>You already have an active booking. Contact the BetterDay team to make changes!</p>
+            <button onclick="hideDenied()" class="btn" style="background: var(--dark);">Got it!</button>
+        </div>
+    </div>
+
+    <script>
+        function showDenied() { document.getElementById('deniedModal').style.display = 'flex'; }
+        function hideDenied() { document.getElementById('deniedModal').style.display = 'none'; }
+    </script>
+</body>
+</html>
