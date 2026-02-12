@@ -93,57 +93,52 @@ def book(date_raw):
         return resp
 
 # --- NEW HARVEST ROUTE (SCREENSHOT OPTIMIZED) ---
-
 @app.route('/harvest')
 def harvest_menu():
     target_date = request.args.get('date', '2026-02-15')
-    url = f"https://eatbetterday.ca/currentmenu/?dd={target_date}"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    
+    # This is the "Secret Data Link" we found in your Network Tab screenshot
+    # It returns a clean list of data instead of a messy website
+    api_url = "https://eatbetterday.ca/cart/checkout?read=1"
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': f'https://eatbetterday.ca/currentmenu/?dd={target_date}'
+    }
     
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        code = response.text
+        # We ask the server for the raw data feed
+        response = requests.get(api_url, headers=headers, timeout=10)
         
-        # MAGNET 1: Find ID and Name pairs as seen in your code snippets
-        matches = re.findall(r'id="mealSelector(\d+)".*?title="(.*?)"', code, re.DOTALL)
+        # We search this feed for "mealid":XXX or "id":XXX
+        # Since this is a data feed, the IDs are much easier to find
+        data_ids = re.findall(r'"mealid":(\d+)', response.text) or re.findall(r'"id":(\d+)', response.text)
         
-        # MAGNET 2: Backup image search from your first screenshot
-        image_ids = re.findall(r'data/meals/(\d+)\.jpg', code)
+        unique_ids = sorted(list(set(data_ids)))
         
+        if not unique_ids:
+            return f"<h3>Backdoor Active - No Meals Found</h3><p>The API responded, but returned no meals for {target_date}. Sprwt might require a login session cookie.</p>"
+
         found_meals = []
-        unique_check = set()
-
-        for m_id, m_name in matches:
-            if m_id not in unique_check:
-                unique_check.add(m_id)
-                img_url = f"https://eatbetterday.ca/data/meals/{m_id}.jpg"
-                found_meals.append({"id": m_id, "name": m_name, "image": img_url})
-
-        for m_id in image_ids:
-            if m_id not in unique_check:
-                unique_check.add(m_id)
-                img_url = f"https://eatbetterday.ca/data/meals/{m_id}.jpg"
-                found_meals.append({"id": m_id, "name": "Dish Found (ID Only)", "image": img_url})
-
-        if not found_meals:
-            return f"<h3>Harvest Status</h3><p>No matches found in code mountain for {target_date}.</p>"
-
-        # Final visual display for the Culinary App
-        html_out = f"<h3>BetterDay Menu Harvest: {target_date}</h3><p>Found {len(found_meals)} dishes.</p><hr>"
+        for m_id in unique_ids:
+            img_url = f"https://eatbetterday.ca/data/meals/{m_id}.jpg"
+            found_meals.append({
+                "id": m_id,
+                "image": img_url
+            })
+            
+        html_out = f"<h3>BetterDay API Harvest: {target_date}</h3><p>Bypassed the website shell. Found {len(found_meals)} meal entries in the database.</p><hr>"
         for meal in found_meals:
             html_out += f"""
-            <div style="display:flex; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
-                <img src="{meal['image']}" width="100" style="border-radius:8px; margin-right:15px; border:1px solid #ddd;">
-                <div>
-                    <b style="font-size:1.1em;">{meal['name']}</b><br>
-                    <code style="background:#f4f4f4; padding:2px 5px;">ID: #{meal['id']}</code>
-                </div>
+            <div style="display:inline-block; margin:15px; text-align:center;">
+                <img src="{meal['image']}" width="150" style="border-radius:12px; border:1px solid #ddd;"><br>
+                <b style="font-family:sans-serif;">ID: #{meal['id']}</b>
             </div>
             """
         return html_out
 
     except Exception as e:
-        return f"Harvest Error: {str(e)}"
+        return f"API Harvest Error: {str(e)}"
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
