@@ -50,7 +50,6 @@ def index():
 
 @app.route('/book/<date_raw>', methods=['GET', 'POST'])
 def book(date_raw):
-    # If they already have a cookie, send them home
     if request.cookies.get('user_booked_date'):
         return redirect('/')
 
@@ -59,19 +58,17 @@ def book(date_raw):
             "date": date_raw,
             "contact_name": request.form.get("contact_name"),
             "school_name": request.form.get("school_name"),
+            "address": request.form.get("address"), # NEW LINE
             "staff_count": request.form.get("staff_count"),
             "lunch_time": request.form.get("lunch_time"),
             "delivery_notes": request.form.get("delivery_notes")
         }
         
-        # 1. Send to Google Sheets (The important part!)
         try:
             requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=5)
         except:
-            # If Google is slow, we still want the user to see the success page
-            print("Google Sync timed out, but proceeding.")
+            print("Google Sync timed out.")
 
-        # 2. Show success and "Plant" the cookie
         resp = make_response(render_template('success.html'))
         resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
         return resp
