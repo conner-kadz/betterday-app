@@ -1,48 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BetterDay Admin</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --yellow: #ffd54f; }
-        body { background: var(--accent); font-family: system-ui, sans-serif; margin: 0; padding-bottom: 50px; }
-        .header { background: var(--primary); padding: 25px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
-        .card { 
-            background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06); border-left: 10px solid var(--primary);
-            transition: transform 0.2s; cursor: pointer;
+        body { background: var(--accent); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding-bottom: 50px; }
+        .header { background: var(--primary); padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .logo { height: 45px; }
+        .container { max-width: 650px; margin: 30px auto; padding: 0 20px; }
+        
+        .admin-title { color: var(--dark); font-weight: 900; text-align: center; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .booking-card { 
+            background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-left: 12px solid var(--primary);
+            display: flex; flex-direction: column; gap: 15px; position: relative;
         }
-        .card:hover { transform: translateY(-3px); }
-        .school-name { margin: 0; color: var(--dark); font-size: 1.3rem; font-weight: 900; }
-        .status-badge { background: #f0f0f0; padding: 6px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
-        .deadline-box { border-top: 1px solid #eee; margin-top: 15px; padding-top: 15px; font-size: 0.85rem; }
-        .deadline-box b { color: var(--primary); }
+
+        .school-name { margin: 0; color: var(--dark); font-size: 1.4rem; font-weight: 800; }
+        .delivery-date { color: var(--primary); font-weight: 700; font-size: 0.95rem; }
+        
+        .deadline-area { background: #fff5f5; border: 1px solid #ffe3e3; padding: 10px; border-radius: 10px; color: #e74c3c; font-weight: 800; font-size: 0.8rem; }
+
+        .crm-controls { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: #fdfcfb; border: 1px solid #f0efed; padding: 15px; border-radius: 12px;
+        }
+        .status-label { font-size: 0.7rem; font-weight: 900; color: #aaa; text-transform: uppercase; }
+        
+        select {
+            padding: 10px; border-radius: 8px; border: 2px solid #eee; 
+            font-weight: 700; color: var(--dark); cursor: pointer; background: white;
+        }
+
+        .order-link { text-align: right; font-size: 0.75rem; font-weight: 800; color: var(--primary); text-decoration: none; margin-top: 5px; }
+        .order-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <img src="https://www.eatbetterday.ca/cdn/shop/files/Logo_White_300x.png" alt="BetterDay Logo" style="height: 40px;">
+        <img src="https://www.eatbetterday.ca/cdn/shop/files/Logo_White_300x.png" class="logo" alt="BetterDay Logo">
     </div>
+
     <div class="container">
-        <h2 style="color: var(--dark); font-weight: 900; text-align: center;">Delivery Command Center</h2>
+        <h2 class="admin-title">School Delivery Dashboard</h2>
+
         {% for b in bookings %}
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: start;">
+        {% if b.school %}
+        <div class="booking-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <h3 class="school-name">{{ b.school }}</h3>
-                    <span style="font-weight: 700; opacity: 0.6;">Delivering: {{ b.delivery_date }}</span>
+                    <div class="delivery-date">🚚 Delivery: {{ b.delivery_date }}</div>
                 </div>
-                <span class="status-badge">{{ b.status }}</span>
+                <div style="background: var(--yellow); padding: 5px 10px; border-radius: 6px; font-size: 0.6rem; font-weight: 900;">
+                    ANCHOR: {{ b.anchor_sunday }}
+                </div>
             </div>
-            <div class="deadline-box">
-                <b>ORDER DEADLINE:</b> {{ b.deadline }}
+
+            <div class="deadline-area">
+                ⏰ ORDER DEADLINE: {{ b.deadline }}
             </div>
-            <div style="margin-top: 10px; font-size: 0.7rem; opacity: 0.5; font-weight: 800;">
-                SUNDAY ANCHOR: {{ b.anchor_sunday }}
+
+            <div class="crm-controls">
+                <span class="status-label">Onboarding Progress</span>
+                <select onchange="console.log('Update:', this.value)">
+                    <option value="New Booking" {% if b.status == 'New Booking' %}selected{% endif %}>🆕 New Booking</option>
+                    <option value="Link Sent" {% if b.status == 'Link Sent' %}selected{% endif %}>🔗 Link Sent</option>
+                    <option value="In Progress" {% if b.status == 'In Progress' %}selected{% endif %}>⏳ In Progress</option>
+                    <option value="Orders Locked" {% if b.status == 'Orders Locked' %}selected{% endif %}>⛔ Orders Locked</option>
+                    <option value="Culinary Exported" {% if b.status == 'Culinary Exported' %}selected{% endif %}>📦 Culinary Exported</option>
+                    <option value="Out for Delivery" {% if b.status == 'Out for Delivery' %}selected{% endif %}>🚚 Out for Delivery</option>
+                </select>
             </div>
+
+            <a href="/order/{{ b.delivery_date }}?school={{ b.school | replace(' ', '+') }}" target="_blank" class="order-link">
+                Open Teacher Order Form 🔗
+            </a>
         </div>
+        {% endif %}
         {% endfor %}
+
+        {% if not bookings %}
+        <div style="text-align: center; padding: 40px; opacity: 0.5;">
+            <h3>No bookings found.</h3>
+            <p>New bookings will appear here automatically.</p>
+        </div>
+        {% endif %}
     </div>
+
 </body>
 </html>
