@@ -1,67 +1,135 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>BetterDay Order</title>
+    <title>BetterDay | Teacher Order</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --radius: 20px; }
-        body { background: var(--accent); font-family: -apple-system, sans-serif; padding-bottom: 120px; margin: 0; }
-        .header { background: var(--primary); padding: 20px; text-align: center; }
-        .logo { height: 45px; width: auto; }
-        .container { padding: 30px; max-width: 500px; margin: 0 auto; }
-        .school-header { font-size: 2.2rem; font-weight: 900; text-align: center; margin: 0; color: var(--dark); }
-        .deadline-notice { color: #e74c3c; font-weight: 800; text-align: center; margin-top: 10px; font-size: 1rem; }
+        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --radius: 22px; }
+        body { background: var(--accent); font-family: 'Helvetica Neue', Arial, sans-serif; padding-bottom: 140px; margin: 0; color: var(--dark); }
         
-        .meal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
-        .meal-card { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; border: 6px solid transparent; transition: 0.2s; }
-        .meal-card.selected { border-color: var(--primary); transform: translateY(-5px); }
-        .meal-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #eee; }
-        .meal-name { padding: 15px; font-weight: 800; font-size: 0.95rem; text-align: center; color: var(--dark); }
+        /* Branded Header */
+        .header { background: var(--primary); padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .logo { height: 45px; width: auto; }
 
-        .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 25px; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 100; }
-        .submit-btn { width: 100%; max-width: 450px; background: var(--dark); color: white; border: none; padding: 20px; border-radius: 50px; font-weight: 900; font-size: 1.2rem; cursor: pointer; }
+        .container { padding: 25px; max-width: 500px; margin: 0 auto; }
+        .school-info { text-align: center; margin-bottom: 30px; }
+        .school-info h1 { font-size: 2.2rem; font-weight: 900; margin: 0; letter-spacing: -1px; }
+        .deadline-tag { background: #fff1f0; color: #e74c3c; padding: 10px 15px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; margin-top: 15px; display: inline-block; border: 1px solid #ffd1d1; }
+        
+        .name-section { background: white; padding: 25px; border-radius: var(--radius); margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .name-section label { display: block; font-weight: 900; font-size: 0.75rem; color: var(--primary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .name-input { width: 100%; padding: 18px; border: 2px solid #f0f0f0; border-radius: 15px; font-size: 1.1rem; box-sizing: border-box; outline: none; transition: border-color 0.3s; }
+        .name-input:focus { border-color: var(--primary); }
+
+        /* Meal Grid & Selection Logic */
+        .meal-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        
+        .meal-card { 
+            background: white; border-radius: var(--radius); overflow: hidden; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; 
+            border: 4px solid transparent; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; position: relative; padding: 10px;
+        }
+
+        .photo-wrap { width: 80px; height: 80px; border-radius: 15px; overflow: hidden; flex-shrink: 0; transition: transform 0.4s; }
+        .meal-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .meal-name { padding-left: 20px; font-weight: 800; font-size: 1.1rem; flex-grow: 1; transition: transform 0.4s; }
+
+        /* The Selection State (Slide & Highlight) */
+        .meal-card.selected { border-color: var(--primary); background: #f0f7ff; }
+        .meal-card.selected .photo-wrap { transform: translateX(10px); }
+        .meal-card.selected .meal-name { transform: translateX(15px); color: var(--primary); }
+
+        /* The Checkmark */
+        .check-mark { position: absolute; right: 20px; opacity: 0; transform: scale(0); transition: all 0.4s; font-size: 1.5rem; color: var(--primary); }
+        .meal-card.selected .check-mark { opacity: 1; transform: scale(1); }
+
+        /* Submit Bar & Transforming Button */
+        .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 25px; box-shadow: 0 -10px 30px rgba(0,0,0,0.08); display: flex; justify-content: center; z-index: 100; }
+        
+        .submit-btn { 
+            width: 100%; max-width: 400px; border: none; padding: 20px; border-radius: 50px; 
+            font-weight: 900; font-size: 1.2rem; cursor: pointer; transition: all 0.3s;
+            background: #cbd5e0; color: #718096; pointer-events: none; /* Disabled by default */
+        }
+
+        /* Active Button Styling */
+        .submit-btn.active { 
+            background: var(--dark); color: white; pointer-events: auto; 
+            box-shadow: 0 8px 20px rgba(0,70,94,0.3); transform: translateY(-2px);
+        }
+        .submit-btn.active:active { transform: translateY(0); }
     </style>
 </head>
 <body>
-    <div class="header">
+
+    <header class="header">
         <img src="{{ url_for('static', filename='Logo.svg') }}" class="logo">
-    </div>
+    </header>
 
     <div class="container">
-        <h1 class="school-header">{{ school_name }}</h1>
-        <div class="deadline-notice">⏰ Order By: Wednesday, {{ deadline }}</div>
+        <div class="school-info">
+            <h1>{{ school_name }}</h1>
+            <div class="deadline-tag">⚠️ Order by: {{ deadline }}</div>
+        </div>
 
         <form action="/submit-order" method="POST" id="orderForm">
-            <input type="hidden" name="meal_id" id="meal_id">
             <input type="hidden" name="delivery_date" value="{{ delivery_date }}">
             <input type="hidden" name="school_name" value="{{ school_name }}">
+            <input type="hidden" name="meal_id" id="meal_id">
 
-            <div style="background: white; padding: 20px; border-radius: 20px; margin-top: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.03);">
-                <label style="font-weight: 900; font-size: 0.75rem; color: var(--primary); display: block; margin-bottom: 8px;">YOUR NAME</label>
-                <input type="text" name="teacher_name" required placeholder="Type name..." style="width:100%; padding:15px; border:2px solid #f2f2f2; border-radius:12px; font-size: 1rem; box-sizing: border-box;">
+            <div class="name-section">
+                <label>Teacher Name</label>
+                <input type="text" name="teacher_name" id="teacherName" required placeholder="Enter your full name..." class="name-input">
             </div>
 
+            <h2 style="font-size: 0.8rem; font-weight: 900; color: #aaa; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;">Select Your Meal</h2>
+            
             <div class="meal-grid">
                 {% for item in menu %}
                 <div class="meal-card" onclick="selectMeal(this, '{{ item.id }}')">
-                    <img src="https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.png" class="meal-img" onerror="this.onerror=null; this.src='https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.jpg';">
+                    <div class="photo-wrap">
+                        <img src="https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.png" 
+                             class="meal-img" 
+                             onerror="this.onerror=null; this.src='https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.jpg';">
+                    </div>
                     <div class="meal-name">{{ item.name }}</div>
+                    <div class="check-mark">✔</div>
                 </div>
                 {% endfor %}
             </div>
 
             <div class="footer-bar">
-                <button type="submit" class="submit-btn">PLACE MY ORDER 🍎</button>
+                <button type="submit" id="submitBtn" class="submit-btn">SELECT A DISH</button>
             </div>
         </form>
     </div>
 
     <script>
         function selectMeal(card, id) {
+            // Remove selection from others
             document.querySelectorAll('.meal-card').forEach(c => c.classList.remove('selected'));
+            
+            // Add selection to clicked card
             card.classList.add('selected');
             document.getElementById('meal_id').value = id;
+
+            // Activate the button
+            const btn = document.getElementById('submitBtn');
+            btn.classList.add('active');
+            btn.innerText = "PLACE MY ORDER 🍎";
         }
+
+        // Prevent submission if name is missing but dish is selected
+        document.getElementById('orderForm').onsubmit = function(e) {
+            const name = document.getElementById('teacherName').value.trim();
+            if (!name) {
+                alert("Please enter your name first!");
+                return false;
+            }
+            return true;
+        };
     </script>
 </body>
 </html>
