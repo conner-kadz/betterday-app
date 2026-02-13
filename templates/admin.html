@@ -1,52 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>BetterDay Admin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amy's Command Center | BetterDay</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; color: #333; }
-        h1 { margin-bottom: 20px; color: #00465e; }
-        
-        /* Table Styles */
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #00465e; color: white; font-weight: bold; }
-        tr:hover { background-color: #f1f1f1; }
-        
-        .btn-download {
-            display: inline-block; padding: 10px 20px; background-color: #27ae60; color: white;
-            text-decoration: none; border-radius: 5px; font-weight: bold; margin-bottom: 20px;
+        :root {
+            --primary: #ff6b35; /* BetterDay Orange */
+            --secondary: #2f4858;
+            --bg: #f8f9fa;
+            --card: #ffffff;
         }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--secondary); margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 30px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        
+        /* Dashboard Cards */
+        .school-card { background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px; border-left: 5px solid var(--primary); }
+        .school-name { font-size: 1.4rem; font-weight: bold; margin: 0 0 10px 0; }
+        .date-badge { display: inline-block; background: #eee; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 15px; }
+        
+        .status-pill { background: #e8f5e9; color: #2e7d32; padding: 5px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; display: inline-block; }
+        
+        .action-group { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        button { padding: 10px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-link { background: var(--primary); color: white; }
+        .btn-link:hover { background: #e55a2b; }
+        .btn-cal { background: #2196f3; color: white; }
+        
+        .anchor-info { font-size: 0.8rem; color: #666; margin-top: 15px; font-style: italic; }
     </style>
 </head>
 <body>
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h1>BetterDay Bookings Dashboard</h1>
-        <a href="/admin/download" class="btn-download">Download CSV</a>
+
+<div class="container">
+    <div class="header">
+        <h1>Amy's Command Center</h1>
+        <div>Today: February 12, 2026</div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>School</th>
-                <th>Contact</th>
-                <th>Phone</th>
-                <th>Count</th>
-                <th>Notes</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in bookings %}
-            <tr>
-                <td>{{ row[1] }}</td>
-                <td><strong>{{ row[2] }}</strong></td>
-                <td>{{ row[3] }}</td>
-                <td>{{ row[4] }}</td>
-                <td>{{ row[7] }}</td>
-                <td>{{ row[9] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="grid">
+        {% for booking in bookings %}
+        <div class="school-card">
+            <div class="school-name">{{ booking.school }}</div>
+            <div class="date-badge">📅 Delivery: {{ booking.delivery_date }}</div>
+            
+            <div>
+                <span class="status-pill">Ready for Orders</span>
+            </div>
+
+            <div class="action-group">
+                <button class="btn-link" onclick="copyOrderLink('{{ booking.delivery_date }}')">
+                    🔗 Copy Teacher Order Link
+                </button>
+                <button class="btn-cal">📅 Sync to Google Calendar</button>
+            </div>
+
+            <div class="anchor-info">
+                Menu anchored to Sunday: <strong>{{ booking.anchor_sunday }}</strong><br>
+                (Pulling items from Columns I-T in 8.0 Schedule)
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function copyOrderLink(date) {
+        const link = window.location.origin + '/order/' + date;
+        navigator.clipboard.writeText(link).then(() => {
+            alert('Order Link Copied: ' + link);
+        });
+    }
+</script>
+
 </body>
 </html>
