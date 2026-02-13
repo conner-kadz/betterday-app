@@ -1,68 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>BetterDay Teacher Order</title>
+    <title>BetterDay | Teacher Order</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --radius: 18px; }
-        body { background: var(--accent); font-family: system-ui, sans-serif; padding-bottom: 120px; margin: 0; }
-        .app-header { background: var(--primary); padding: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .app-main { padding: 20px; max-width: 500px; margin: 0 auto; }
-        .intro { text-align: center; margin-bottom: 25px; }
-        .deadline-alert { background: #fff5f5; color: #e74c3c; padding: 10px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; border: 1px solid #ffcccc; margin-top: 10px; }
+        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --radius: 24px; }
+        body { background: var(--accent); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding-bottom: 140px; margin: 0; color: var(--dark); }
         
-        .name-card { background: white; padding: 20px; border-radius: var(--radius); margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .name-card label { display: block; font-weight: 900; font-size: 0.75rem; color: var(--primary); margin-bottom: 8px; }
-        .name-input { width: 100%; padding: 15px; border: 2px solid #f2f2f2; border-radius: 12px; font-size: 1rem; box-sizing: border-box; }
+        /* Branded Header */
+        .header { background: var(--primary); padding: 25px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .logo { height: 50px; width: auto; }
 
-        .meal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .container { padding: 30px; max-width: 550px; margin: 0 auto; }
+        .school-header { text-align: center; margin-bottom: 35px; }
+        .school-header h1 { font-size: 2.6rem; font-weight: 900; margin: 0; letter-spacing: -1.5px; line-height: 1; }
+        .deadline-badge { background: #fff1f0; color: #e74c3c; padding: 12px 20px; border-radius: 15px; font-weight: 800; font-size: 1rem; margin-top: 15px; display: inline-block; border: 2px solid #ffd1d1; }
+        
+        /* Name Input */
+        .input-group { background: white; padding: 30px; border-radius: var(--radius); margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .input-group label { display: block; font-weight: 900; font-size: 0.85rem; color: var(--primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .name-input { width: 100%; padding: 20px; border: 3px solid #f8f9fa; border-radius: 18px; font-size: 1.3rem; box-sizing: border-box; outline: none; transition: border-color 0.2s; }
+        .name-input:focus { border-color: var(--primary); }
+
+        /* Meal Grid */
+        .meal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .meal-card { 
             background: white; border-radius: var(--radius); overflow: hidden; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; 
-            border: 3px solid transparent; transition: 0.2s; position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.07); cursor: pointer; 
+            border: 6px solid transparent; transition: all 0.2s ease;
         }
-        .meal-card.selected { border-color: var(--primary); transform: translateY(-5px); }
-        .meal-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #eee; display: block; }
-        .meal-name { padding: 12px; font-weight: 800; font-size: 0.85rem; line-height: 1.2; color: var(--dark); height: 3.2em; overflow: hidden; }
+        .meal-card.selected { border-color: var(--primary); transform: translateY(-8px); box-shadow: 0 15px 35px rgba(78, 162, 253, 0.2); }
+        
+        .photo-container { width: 100%; aspect-ratio: 1/1; background: #eee; position: relative; }
+        .meal-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .meal-name { padding: 20px; font-weight: 800; font-size: 1rem; text-align: center; line-height: 1.2; display: flex; align-items: center; justify-content: center; min-height: 3.5em; }
 
-        .submit-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; box-shadow: 0 -10px 20px rgba(0,0,0,0.05); display: flex; justify-content: center; }
-        .order-btn { width: 100%; max-width: 400px; background: var(--dark); color: white; border: none; padding: 18px; border-radius: 50px; font-weight: 900; font-size: 1.1rem; cursor: pointer; }
+        /* Submit Bar */
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 30px; box-shadow: 0 -15px 40px rgba(0,0,0,0.1); display: flex; justify-content: center; z-index: 1000; }
+        .order-button { width: 100%; max-width: 450px; background: var(--dark); color: white; border: none; padding: 22px; border-radius: 60px; font-weight: 900; font-size: 1.3rem; cursor: pointer; transition: transform 0.1s; }
+        .order-button:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
-    <header class="app-header">
-        <img src="https://www.eatbetterday.ca/cdn/shop/files/Logo_White_300x.png" style="height: 40px;">
+
+    <header class="header">
+        <img src="https://www.eatbetterday.ca/cdn/shop/files/Logo_White_300x.png" class="logo">
     </header>
-    <main class="app-main">
-        <div class="intro">
-            <h1 style="margin:0; font-weight: 900; color: var(--dark);">{{ school_name }}</h1>
-            <div class="deadline-alert">Ordering closes: {{ deadline }}</div>
+
+    <div class="container">
+        <div class="school-header">
+            <h1>{{ school_name }}</h1>
+            <div class="deadline-badge">⚠️ ORDER BY: {{ deadline }}</div>
         </div>
 
         <form action="/submit-order" method="POST" id="orderForm">
             <input type="hidden" name="delivery_date" value="{{ delivery_date }}">
             <input type="hidden" name="school_name" value="{{ school_name }}">
-            <input type="hidden" name="meal_id" id="meal_id" required>
+            <input type="hidden" name="meal_id" id="meal_id">
 
-            <div class="name-card">
-                <label>YOUR FULL NAME</label>
-                <input type="text" name="teacher_name" required placeholder="e.g. Mrs. Robinson" class="name-input">
+            <div class="input-group">
+                <label>First & Last Name</label>
+                <input type="text" name="teacher_name" required placeholder="Type your name..." class="name-input">
             </div>
 
             <div class="meal-grid">
                 {% for item in menu %}
                 <div class="meal-card" onclick="selectMeal(this, '{{ item.id }}')">
-                    <img src="https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.jpg" class="meal-img" onerror="this.src='https://via.placeholder.com/300?text=BetterDay'">
+                    <div class="photo-container">
+                        <img src="https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.png" 
+                             class="meal-img" 
+                             onerror="this.onerror=null; this.src='https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.jpg';">
+                    </div>
                     <div class="meal-name">{{ item.name }}</div>
                 </div>
                 {% endfor %}
             </div>
 
-            <div class="submit-bar">
-                <button type="submit" class="order-btn">PLACE ORDER 🍎</button>
+            <div class="footer">
+                <button type="submit" class="order-button">PLACE MY ORDER 🍎</button>
             </div>
         </form>
-    </main>
+    </div>
 
     <script>
         function selectMeal(card, id) {
@@ -70,10 +89,10 @@
             card.classList.add('selected');
             document.getElementById('meal_id').value = id;
         }
-        
+
         document.getElementById('orderForm').onsubmit = function() {
             if (!document.getElementById('meal_id').value) {
-                alert("Please select a meal before ordering!");
+                alert("Please select a meal first!");
                 return false;
             }
             return true;
