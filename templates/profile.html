@@ -1,61 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ school }} Profile</title>
+    <title>{{ school }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; }
         body { background: var(--accent); font-family: sans-serif; padding: 20px; color: var(--dark); }
+        .header { background: var(--primary); padding: 15px; text-align: center; margin: -20px -20px 20px -20px; }
+        .logo { height: 40px; }
         
-        .header { background: var(--primary); padding: 15px; text-align: center; margin: -20px -20px 30px -20px; }
-        .logo { height: 45px; width: auto; }
-
-        .profile-container { max-width: 550px; margin: 0 auto; background: var(--white); border-radius: 30px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-        .back-link { text-decoration: none; color: var(--primary); font-weight: 800; display: block; margin-bottom: 25px; }
+        .profile-card { max-width: 500px; margin: 0 auto; background: var(--white); border-radius: 20px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
         
-        h1 { font-size: 2.2rem; font-weight: 900; margin: 0; line-height: 1; }
-        .subtitle { font-size: 1.2rem; font-weight: 700; color: var(--primary); margin: 10px 0 30px 0; }
+        .nav-btn { display: inline-block; background: #eee; padding: 8px 15px; border-radius: 8px; color: #666; text-decoration: none; font-size: 0.8rem; margin-bottom: 20px; }
+        
+        h1 { font-size: 1.8rem; font-weight: 700; margin: 0; }
+        .date-sub { font-size: 1rem; color: #888; margin-bottom: 25px; }
 
-        /* Big Progress Tracker */
-        .tracker-label { font-size: 0.75rem; font-weight: 900; color: #aaa; text-transform: uppercase; margin-bottom: 8px; }
-        .big-bar { background: #f0f0f0; height: 12px; border-radius: 20px; overflow: hidden; margin-bottom: 40px; }
-        .big-fill { background: var(--primary); height: 100%; border-radius: 20px; }
+        .stat-box { background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; color: #aaa; letter-spacing: 1px; margin-bottom: 5px; }
+        .stat-val { font-size: 1.1rem; }
 
-        .section { border-top: 1px solid #f0f0f0; padding-top: 25px; margin-top: 25px; }
-        .label { font-size: 0.8rem; font-weight: 900; color: #bbb; text-transform: uppercase; }
-        .val { font-size: 1.2rem; font-weight: 700; margin-top: 5px; }
+        .progress-bar { height: 10px; background: #eee; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        .progress-fill { height: 100%; background: var(--primary); }
 
-        .btn-action { display: block; background: var(--dark); color: white; text-align: center; padding: 20px; border-radius: 18px; text-decoration: none; font-weight: 900; margin-top: 40px; }
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .btn { display: block; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .btn-main { background: var(--dark); color: white; grid-column: span 2; }
+        .btn-sec { background: #f0f0f0; color: var(--dark); }
+
+        .link-area { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+        .url-box { background: #f0f7ff; color: var(--primary); padding: 10px; border-radius: 8px; font-size: 0.8rem; word-break: break-all; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <img src="{{ url_for('static', filename='Logo.svg') }}" class="logo">
-    </div>
+    <div class="header"><img src="{{ url_for('static', filename='Logo.svg') }}" class="logo"></div>
+    <div class="profile-card">
+        <a href="/amy-admin" class="nav-btn">← Return</a>
+        
+        <h1>{{ school | decode_school }}</h1>
+        <div class="date-sub">{{ display_date }}</div>
 
-    <div class="profile-container">
-        <a href="/amy-admin" class="back-link">← HUB</a>
-        <h1>{{ school }}</h1>
-        <div class="subtitle">Lunch Drop: {{ date }}</div>
-
-        <div class="tracker-label">Drop Progress</div>
-        <div class="big-bar">
-            <div class="big-fill" style="width: 50%;"></div> 
+        <div class="stat-box">
+            <div class="stat-label">Orders Placed</div>
+            <div class="stat-val">{{ orders }} / {{ staff }} Staff</div>
+            <div class="progress-bar"><div class="progress-fill" style="width: {{ (orders / (staff if staff > 0 else 1) * 100) }}%"></div></div>
         </div>
 
-        <div class="section">
-            <div class="label">Production Deadline</div>
-            <div class="val" style="color: #e74c3c;">Wednesday, {{ deadline }} @ 4:00 PM</div>
+        <div class="stat-box">
+            <div class="stat-label">Deadline for orders</div>
+            <div class="stat-val" style="color: #e74c3c;">Wednesday, {{ deadline }}</div>
         </div>
 
-        <div class="section">
-            <div class="label">Teacher Ordering Link</div>
-            <div style="background: #f0f7ff; border: 2px dashed var(--primary); padding: 15px; border-radius: 15px; margin-top: 10px; font-size: 0.85rem; color: var(--primary); word-break: break-all;">
-                https://betterday-app.onrender.com/order/{{ date }}?school={{ school | replace(' ', '+') }}
-            </div>
+        <div class="action-grid">
+            <a href="/picklist/{{ school }}/{{ date }}" target="_blank" class="btn btn-sec">📄 PDF Picklist</a>
+            <a href="/download-csv/{{ school }}/{{ date }}" class="btn btn-sec">📊 Download CSV</a>
         </div>
 
-        <a href="mailto:?subject=BetterDay Link for {{ school }}&body=Hi! Order here: https://betterday-app.onrender.com/order/{{ date }}?school={{ school | replace(' ', '+') }}" class="btn-action">EMAIL LINK TO PRINCIPAL</a>
+        <div class="link-area">
+            <div class="stat-label">Teacher Order Link</div>
+            <div class="url-box">https://betterday-app.onrender.com/order/{{ date }}?school={{ school }}</div>
+            <a href="mailto:?body=Order Here: https://betterday-app.onrender.com/order/{{ date }}?school={{ school }}" class="btn btn-main">Email Link to Primary Contact</a>
+        </div>
     </div>
 </body>
 </html>
