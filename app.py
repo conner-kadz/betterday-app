@@ -39,9 +39,9 @@ def get_deadline_obj(delivery_date_str):
     try:
         clean_date = str(delivery_date_str).split('T')[0]
         delivery_date = datetime.strptime(clean_date, '%Y-%m-%d')
+        # Deadline is Wednesday of the week *before* delivery
         days_to_subtract = (delivery_date.weekday() - 2) % 7
         if days_to_subtract <= 2: days_to_subtract += 7
-        # Deadline is Wednesday at 4:00 PM
         deadline_date = delivery_date - timedelta(days=days_to_subtract)
         return deadline_date.replace(hour=16, minute=0, second=0)
     except: return None
@@ -194,22 +194,20 @@ def update_booking():
     school = request.form.get('school')
     date = request.form.get('date')
     try:
-        payload = {
+        requests.post(GOOGLE_SCRIPT_URL, json={
             "action": "update_booking",
             "school": school,
             "date": date,
             "status": request.form.get('status'),
             "email": request.form.get('email')
-        }
-        requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=8)
+        }, timeout=8)
     except: pass
     return redirect(url_for('school_profile', school_name=school.replace(' ', '+'), date=date))
 
 @app.route('/download-csv/<school_name>/<date>')
 def download_csv(school_name, date):
     clean_school_name = school_name.replace('+', ' ')
-
-try:
+    try:
         # Get Orders
         payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
         r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
