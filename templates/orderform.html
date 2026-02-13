@@ -7,37 +7,30 @@
         :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --radius: 24px; }
         body { background: var(--accent); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding-bottom: 140px; margin: 0; color: var(--dark); }
         
-        /* Fixed Header */
+        /* Local Logo SVG from Static Folder */
         .header { background: var(--primary); padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .logo { height: 45px; width: auto; }
 
         .container { padding: 25px; max-width: 500px; margin: 0 auto; }
         .school-info { text-align: center; margin-bottom: 30px; }
-        .school-info h1 { font-size: 2.4rem; font-weight: 900; margin: 0; letter-spacing: -1.5px; }
-        .deadline-tag { background: #fff1f0; color: #e74c3c; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; margin-top: 15px; display: inline-block; border: 2px solid #ffd1d1; }
+        .school-info h1 { font-size: 2.2rem; font-weight: 900; margin: 0; letter-spacing: -1.5px; }
+        .deadline-tag { background: #fff1f0; color: #e74c3c; padding: 10px 15px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; margin-top: 15px; display: inline-block; border: 1px solid #ffd1d1; }
         
-        /* Name Input Card */
-        .input-card { background: white; padding: 30px; border-radius: var(--radius); margin-bottom: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-        .input-card label { display: block; font-weight: 900; font-size: 0.8rem; color: var(--primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .name-input { width: 100%; padding: 20px; border: 3px solid #f8f9fa; border-radius: 18px; font-size: 1.2rem; box-sizing: border-box; outline: none; transition: border-color 0.3s; }
-        .name-input:focus { border-color: var(--primary); }
-
-        /* Animated Meal List */
+        /* Single Column Meal List */
         .meal-list { display: grid; grid-template-columns: 1fr; gap: 15px; }
         
         .meal-card { 
             background: white; border-radius: var(--radius); overflow: hidden; 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.06); cursor: pointer; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; 
             border: 5px solid transparent; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex; align-items: center; position: relative; padding: 12px;
         }
 
         .photo-wrap { width: 90px; height: 90px; border-radius: 18px; overflow: hidden; flex-shrink: 0; transition: transform 0.4s; background: #eee; }
         .meal-img { width: 100%; height: 100%; object-fit: cover; }
-        
         .meal-name { padding-left: 20px; font-weight: 800; font-size: 1.15rem; flex-grow: 1; transition: transform 0.4s; line-height: 1.2; }
 
-        /* Sliding State */
+        /* The Slide-and-Highlight State */
         .meal-card.selected { border-color: var(--primary); background: #f0f7ff; }
         .meal-card.selected .photo-wrap { transform: translateX(12px); }
         .meal-card.selected .meal-name { transform: translateX(18px); color: var(--primary); }
@@ -45,12 +38,11 @@
         .check-mark { position: absolute; right: 25px; opacity: 0; transform: scale(0); transition: all 0.4s; font-size: 1.8rem; color: var(--primary); }
         .meal-card.selected .check-mark { opacity: 1; transform: scale(1); }
 
-        /* Sticky Footer & Transforming Button */
+        /* Transforming Submit Bar */
         .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 30px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); display: flex; justify-content: center; z-index: 1000; }
-        
         .submit-btn { 
             width: 100%; max-width: 450px; border: none; padding: 22px; border-radius: 60px; 
-            font-weight: 900; font-size: 1.2rem; cursor: pointer; transition: all 0.3s ease;
+            font-weight: 900; font-size: 1.2rem; cursor: pointer; transition: 0.3s;
             background: #cbd5e0; color: #718096; pointer-events: none;
         }
 
@@ -73,22 +65,22 @@
         </div>
 
         <form action="/submit-order" method="POST" id="orderForm">
+            <input type="hidden" name="meal_id" id="meal_id">
             <input type="hidden" name="delivery_date" value="{{ delivery_date }}">
             <input type="hidden" name="school_name" value="{{ school_name }}">
-            <input type="hidden" name="meal_id" id="meal_id">
 
-            <div class="input-card">
-                <label>First & Last Name</label>
-                <input type="text" name="teacher_name" id="teacherName" required placeholder="Type your name..." class="name-input">
+            <div style="background: white; padding: 25px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.03);">
+                <label style="font-weight: 900; color: var(--primary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Your Full Name</label>
+                <input type="text" name="teacher_name" id="tName" required placeholder="Type name here..." style="width:100%; padding:18px; border:2px solid #f2f2f2; border-radius:15px; margin-top:5px; font-size: 1.1rem; outline: none;">
             </div>
 
             <div class="meal-list">
                 {% for item in menu %}
                 <div class="meal-card" onclick="selectMeal(this, '{{ item.id }}')">
                     <div class="photo-wrap">
-                        <img src="https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.png" 
+                        <img src="https://eatbetterday.ca/meal/{{ item.id }}" 
                              class="meal-img" 
-                             onerror="this.onerror=null; this.src='https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.jpg';">
+                             onerror="this.src='{{ url_for('static', filename='Logo.svg') }}'; this.style.padding='20px';">
                     </div>
                     <div class="meal-name">{{ item.name }}</div>
                     <div class="check-mark">✔</div>
@@ -97,7 +89,7 @@
             </div>
 
             <div class="footer">
-                <button type="submit" id="submitBtn" class="submit-btn">PICK A DISH</button>
+                <button type="submit" id="subBtn" class="submit-btn">PICK YOUR MEAL</button>
             </div>
         </form>
     </div>
@@ -107,16 +99,15 @@
             document.querySelectorAll('.meal-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
             document.getElementById('meal_id').value = id;
-
-            const btn = document.getElementById('submitBtn');
+            
+            const btn = document.getElementById('subBtn');
             btn.classList.add('active');
             btn.innerText = "PLACE MY ORDER 🍎";
         }
 
         document.getElementById('orderForm').onsubmit = function() {
-            const name = document.getElementById('teacherName').value.trim();
-            if (!name) {
-                alert("Please enter your name first!");
+            if (!document.getElementById('tName').value.trim()) {
+                alert("Please enter your name!");
                 return false;
             }
             return true;
