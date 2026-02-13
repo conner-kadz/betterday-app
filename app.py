@@ -16,10 +16,8 @@ def get_sunday_anchor(delivery_date_str):
     try:
         # Expected format: '2026-03-02'
         delivery_date = datetime.strptime(delivery_date_str, '%Y-%m-%d')
-        # weekday() returns Mon=0, Sun=6.
         # To get the previous Sunday:
         days_to_subtract = (delivery_date.weekday() + 1) % 7
-        # If the delivery is Sunday, we look back exactly one week
         if days_to_subtract == 0: 
             days_to_subtract = 7
             
@@ -113,8 +111,7 @@ def book(date_raw):
 # --- AMY'S COMMAND CENTER (CRM VIEW) ---
 @app.route('/amy-admin')
 def amy_admin():
-    # Placeholder for fetching all school bookings from Google Sheets
-    # For testing, we mock the Hillside booking for March 2nd
+    # In a full CRM, this would fetch from Google. For now, it's a dashboard starting point.
     mock_bookings = [
         {
             "id": "101",
@@ -129,12 +126,13 @@ def amy_admin():
 # --- TEACHER ORDERING LINK ---
 @app.route('/order/<delivery_date>')
 def teacher_order(delivery_date):
-    # 1. Calculate the Sunday Anchor (e.g., March 2nd -> Feb 15th)
     anchor_sunday = get_sunday_anchor(delivery_date)
+    
+    # NEW: Capture the school from the URL (e.g. ?school=Hillside)
+    school_name = request.args.get('school', 'BetterDay School')
     
     menu_items = []
     try:
-        # 2. Call your Google Script to get the real menu from the Buffer sheet
         response = requests.post(GOOGLE_SCRIPT_URL, json={
             "action": "get_menu",
             "sunday_anchor": anchor_sunday
@@ -144,36 +142,29 @@ def teacher_order(delivery_date):
             raw_data = response.json()
             raw_menu = raw_data.get('menu', [])
             
-            # 3. Clean the names (extract the #ID and the Name)
             for item in raw_menu:
                 if item and str(item).strip():
-                    # Look for # followed by numbers (like #509)
                     match = re.search(r'#(\d+)', str(item))
                     m_id = match.group(1) if match else "000"
-                    # Remove the ID from the name so it looks clean
                     m_name = str(item).split('#')[0].replace('\n', ' ').strip()
                     menu_items.append({"id": m_id, "name": m_name})
                     
     except Exception as e:
         print(f"Connection Error: {e}")
 
-    # 4. Send the real menu to the page
     return render_template('orderform.html', 
                            delivery_date=delivery_date, 
                            anchor=anchor_sunday, 
-                           menu=menu_items)
+                           menu=menu_items,
+                           school_name=school_name)
 
 @app.route('/submit-order', methods=['POST'])
 def submit_order():
-    # Data from the Teacher
     teacher_name = request.form.get('teacher_name')
     meal_id = request.form.get('meal_id')
-    
-    # Metadata to keep Amy's CRM organized
     delivery_date = request.form.get('delivery_date')
     school_name = request.form.get('school_name')
 
-    # The payload for Google Sheets
     order_data = {
         "action": "submit_teacher_order",
         "name": teacher_name,
@@ -184,10 +175,7 @@ def submit_order():
     }
 
     try:
-        # Pushing to your GOOGLE_SCRIPT_URL
-        response = requests.post(GOOGLE_SCRIPT_URL, json=order_data, timeout=5)
-        
-        # We need a success page to tell the teacher "You're all set!"
+        requests.post(GOOGLE_SCRIPT_URL, json=order_data, timeout=5)
         return render_template('order_success.html', name=teacher_name, date=delivery_date)
     except Exception as e:
         return f"CRM Error: Could not save order. Details: {str(e)}"
