@@ -22,12 +22,12 @@
             color: var(--dark);
         }
 
-        /* Fixed Header */
+        /* Fixed Brand Header */
         .header { 
             background: var(--primary); 
             padding: 20px; 
             text-align: center; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         .header img { 
             height: 50px; 
@@ -42,7 +42,7 @@
             padding: 0 20px; 
         }
 
-        .admin-title { 
+        .dashboard-title { 
             font-size: 2.2rem; 
             font-weight: 900; 
             text-align: center; 
@@ -51,7 +51,7 @@
             letter-spacing: -1px;
         }
 
-        /* The Clickable Card */
+        /* The Card Link */
         .card-link {
             text-decoration: none;
             color: inherit;
@@ -59,6 +59,7 @@
             margin-bottom: 25px;
         }
 
+        /* The Drop Card Layout */
         .drop-card { 
             background: var(--white); 
             border-radius: 25px; 
@@ -72,7 +73,7 @@
             transform: translateY(-5px);
         }
 
-        /* The Stylized Drop Bar (Left Accent) */
+        /* The Stylized Blue Accent Bar (The Drop Bar) */
         .drop-bar { 
             width: 16px; 
             background-color: var(--primary); 
@@ -84,7 +85,7 @@
             flex-grow: 1; 
             display: flex; 
             flex-direction: column; 
-            gap: 20px; 
+            gap: 15px; 
         }
 
         .card-header { 
@@ -103,20 +104,21 @@
         .delivery-date { 
             color: var(--primary); 
             font-weight: 700; 
-            font-size: 1.2rem; 
-            margin-top: 8px;
+            font-size: 1.15rem; 
+            margin-top: 5px;
         }
 
         .anchor-pill { 
             background: var(--yellow); 
             padding: 6px 12px; 
             border-radius: 8px; 
-            font-size: 0.7rem; 
+            font-size: 0.65rem; 
             font-weight: 900; 
             color: var(--dark);
+            text-transform: uppercase;
         }
 
-        /* Improved Deadline Area */
+        /* Urgent Deadline Area */
         .deadline-area { 
             background: #fff5f5; 
             border: 1px solid #ffe3e3; 
@@ -130,42 +132,44 @@
             gap: 10px;
         }
 
-        .crm-footer { 
+        .card-footer { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             border-top: 1px solid #f0f0f0; 
             padding-top: 20px;
+            margin-top: 5px;
         }
 
-        .status-pill {
+        .status-badge {
             background: #f0f4f8;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 50px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 700;
+            color: var(--dark);
         }
 
-        .view-profile { 
+        .view-profile-hint { 
             font-weight: 800; 
             color: var(--primary); 
-            font-size: 0.9rem;
+            font-size: 0.85rem; 
         }
 
         @media (max-width: 500px) {
             .school-name { font-size: 1.4rem; }
-            .delivery-date { font-size: 1rem; }
+            .dashboard-title { font-size: 1.6rem; }
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <img src="https://www.eatbetterday.ca/cdn/shop/files/Logo_White_300x.png" alt="BetterDay Logo">
+        <img src="{{ url_for('static', filename='Logo.svg') }}" alt="BetterDay Logo">
     </div>
 
     <div class="container">
-        <h1 class="admin-title">School Lunch Drop Dashboard</h1>
+        <h1 class="dashboard-title">School Lunch Drop Dashboard</h1>
 
         {% for b in bookings %}
         {% if b.school %}
@@ -179,16 +183,16 @@
                             <h3 class="school-name">{{ b.school }}</h3>
                             <div class="delivery-date">🚚 Drop: {{ b.delivery_date }}</div>
                         </div>
-                        <div class="anchor-pill">MENU ANCHOR: {{ b.anchor_sunday }}</div>
+                        <div class="anchor-pill">Menu Anchor: {{ b.anchor_sunday }}</div>
                     </div>
 
                     <div class="deadline-area">
-                        ⏰ ORDER DEADLINE: Wednesday, {{ b.deadline }}
+                        ⏰ ORDER DEADLINE: Wed, {{ b.deadline }} @ 4 PM
                     </div>
 
-                    <div class="crm-footer">
-                        <div class="status-pill">{{ b.status }}</div>
-                        <div class="view-profile">View Full Profile →</div>
+                    <div class="card-footer">
+                        <div class="status-badge">{{ b.status }}</div>
+                        <div class="view-profile-hint">VIEW FULL PROFILE →</div>
                     </div>
                     
                 </div>
@@ -199,8 +203,8 @@
 
         {% if not bookings %}
         <div style="text-align: center; padding: 60px; opacity: 0.5;">
-            <h2 style="font-weight: 900;">No active lunch drops.</h2>
-            <p>New bookings will appear here instantly.</p>
+            <h2 style="font-weight: 900;">No drops currently scheduled.</h2>
+            <p>New bookings will appear here automatically.</p>
         </div>
         {% endif %}
     </div>
