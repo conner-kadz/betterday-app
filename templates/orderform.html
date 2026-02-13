@@ -1,72 +1,122 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Your BetterDay Lunch</title>
+    <title>BetterDay Teacher Order</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        :root { --primary: #ff6b35; --secondary: #2f4858; --bg: #ffffff; }
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
-        .header { background: var(--secondary); color: white; padding: 20px; text-align: center; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        :root {
+            --primary: #4ea2fd;    --accent: #faebda;
+            --dark: #00465e;       --bus-yellow: #ffd54f;
+            --status-open: #27ae60; --radius-lg: 18px;
+            --shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            --error-red: #e74c3c;
+        }
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; background: var(--accent); color: var(--dark); padding-bottom: 50px; }
         
-        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .app-header { 
+            background: var(--primary); 
+            padding: 12px 24px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            box-shadow: var(--shadow); 
+        }
         
-        h2 { color: var(--secondary); margin-top: 0; }
-        label { display: block; font-weight: bold; margin-bottom: 10px; }
-        input[type="text"] { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        .app-main { padding: 30px 20px; max-width: 500px; margin: 0 auto; }
+
+        .intro-section { text-align: center; margin-bottom: 30px; }
+        .intro-section h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+        .intro-section p { font-size: 1rem; opacity: 0.9; font-weight: 400; line-height: 1.4; }
+
+        .name-card {
+            background: white; border-radius: var(--radius-lg); padding: 25px; 
+            box-shadow: var(--shadow); margin-bottom: 25px;
+        }
+        .name-card label { display: block; font-weight: 800; margin-bottom: 10px; font-size: 0.8rem; color: var(--primary); }
+        .name-input { 
+            width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #f2f2f2;
+            font-size: 1rem; font-weight: 600; outline: none; transition: border-color 0.3s;
+        }
+        .name-input:focus { border-color: var(--primary); }
+
+        .booking-list { 
+            background: white; border-radius: var(--radius-lg); padding: 10px 20px; box-shadow: var(--shadow); 
+        }
+
+        .meal-row { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #f2f2f2; gap: 15px; }
+        .meal-row:last-child { border-bottom: none; }
         
-        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; }
-        .menu-item { border: 2px solid #eee; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s; position: relative; }
-        .menu-item:hover { border-color: var(--primary); }
-        
-        /* The Secret Sauce: Hidden Radio Buttons */
-        input[type="radio"] { position: absolute; opacity: 0; }
-        input[type="radio"]:checked + .item-content { color: var(--primary); }
-        input[type="radio"]:checked + .item-content::before { content: '✓ '; font-weight: bold; }
-        
-        .item-content { display: flex; align-items: center; gap: 15px; }
-        .item-img { width: 80px; height: 80px; border-radius: 10px; object-fit: cover; background: #eee; }
-        
-        button.submit { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.1rem; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        .meal-img { 
+            width: 75px; height: 75px; border-radius: 12px; object-fit: cover; 
+            background: #eee; border: 1px solid #f0f0f0;
+        }
+
+        .meal-info { flex-grow: 1; }
+        .meal-name { font-weight: 800; font-size: 0.95rem; margin-bottom: 4px; line-height: 1.2; }
+        .meal-id { font-size: 0.7rem; font-weight: 900; color: var(--primary); }
+
+        .btn-order { 
+            background: var(--primary); color: white; border: none; padding: 10px 16px; 
+            border-radius: 99px; font-weight: 800; font-size: 0.7rem; 
+            text-transform: uppercase; cursor: pointer;
+        }
+
+        .footer-note { text-align: center; margin-top: 30px; font-size: 0.75rem; opacity: 0.5; font-weight: 700; }
     </style>
 </head>
 <body>
+    <header class="app-header">
+        <a href="/">
+            <img src="https://www.eatbetterday.ca/cdn/shop/files/Logo_White_300x.png" alt="BetterDay Logo" style="height: 45px;">
+        </a>
+    </header>
 
-<div class="header">
-    <h1>BetterDay Staff Lunch</h1>
-    <p>Delivery: {{ delivery_date }}</p>
-</div>
-
-<div class="container">
-    <form action="/submit-order" method="POST">
-        <div class="card">
-            <h2>1. Who are you?</h2>
-            <label for="teacher_name">Full Name (for your meal label)</label>
-            <input type="text" id="teacher_name" name="teacher_name" placeholder="e.g. Mrs. Robinson" required>
+    <main class="app-main">
+        <div class="intro-section">
+            <h1>Teacher Lunch 🍎</h1>
+            <p>Order for <b>{{ school_name }}</b><br>Delivery: {{ delivery_date }}</p>
         </div>
 
-        <div class="card">
-            <h2>2. Pick your meal</h2>
-            <div class="menu-grid">
+        <form action="/submit-order" method="POST" id="orderForm">
+            <input type="hidden" name="delivery_date" value="{{ delivery_date }}">
+            <input type="hidden" name="school_name" value="{{ school_name }}">
+
+            <div class="name-card">
+                <label for="teacher_name">YOUR NAME</label>
+                <input type="text" name="teacher_name" id="teacher_name" class="name-input" placeholder="e.g. Mrs. Robinson" required>
+            </div>
+
+            <div class="booking-list">
+                {% if not menu %}
+                    <p style="text-align:center; padding: 20px;">No meals found for this date.</p>
+                {% endif %}
+
                 {% for item in menu %}
-                <label class="menu-item">
-                    <input type="radio" name="meal_id" value="{{ item.id }}" required>
-                    <div class="item-content">
-                        <img src="https://eatbetterday.ca/data/meals/{{ item.id }}.jpg" class="item-img" onerror="this.src='https://via.placeholder.com/80?text=Meal'">
-                        <div>
-                            <strong>{{ item.name }}</strong><br>
-                            <small style="color: #666;">ID: #{{ item.id }}</small>
-                        </div>
+                <div class="meal-row">
+                    <img src="https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.jpg" class="meal-img" alt="{{ item.name }}" onerror="this.src='https://via.placeholder.com/150?text=BetterDay'">
+                    <div class="meal-info">
+                        <div class="meal-name">{{ item.name }}</div>
+                        <div class="meal-id">#{{ item.id }}</div>
                     </div>
-                </label>
+                    <button type="submit" name="meal_id" value="{{ item.id }}" class="btn-order">Order</button>
+                </div>
                 {% endfor %}
             </div>
-            
-            <button type="submit" class="submit">Place My Order</button>
-        </div>
-    </form>
-</div>
+        </form>
 
+        <p class="footer-note">BetterDay CRM • Healthy Schools, Happy Teachers</p>
+    </main>
+
+    <script>
+        document.getElementById('orderForm').onsubmit = function() {
+            var name = document.getElementById('teacher_name').value;
+            if (!name.trim()) {
+                alert("Please enter your name first!");
+                return false;
+            }
+            return true;
+        };
+    </script>
 </body>
 </html>
