@@ -1,73 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ school }} | Drop Profile</title>
+    <title>{{ school }} Profile</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; }
-        body { background: var(--accent); font-family: -apple-system, system-ui, sans-serif; margin: 0; padding: 20px; color: var(--dark); }
+        body { background: var(--accent); font-family: sans-serif; padding: 20px; color: var(--dark); }
         
-        .header { background: var(--primary); padding: 15px; text-align: center; margin: -20px -20px 30px -20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .header { background: var(--primary); padding: 15px; text-align: center; margin: -20px -20px 30px -20px; }
         .logo { height: 45px; width: auto; }
 
-        .profile-container { 
-            max-width: 550px; 
-            margin: 0 auto; 
-            background: var(--white); 
-            border-radius: 30px; 
-            padding: 40px; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.08); 
-        }
+        .profile-container { max-width: 550px; margin: 0 auto; background: var(--white); border-radius: 30px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .back-link { text-decoration: none; color: var(--primary); font-weight: 800; display: block; margin-bottom: 25px; }
+        
+        h1 { font-size: 2.2rem; font-weight: 900; margin: 0; line-height: 1; }
+        .subtitle { font-size: 1.2rem; font-weight: 700; color: var(--primary); margin: 10px 0 30px 0; }
 
-        .back-link { text-decoration: none; color: var(--primary); font-weight: 800; display: block; margin-bottom: 25px; font-size: 1rem; }
+        /* Big Progress Tracker */
+        .tracker-label { font-size: 0.75rem; font-weight: 900; color: #aaa; text-transform: uppercase; margin-bottom: 8px; }
+        .big-bar { background: #f0f0f0; height: 12px; border-radius: 20px; overflow: hidden; margin-bottom: 40px; }
+        .big-fill { background: var(--primary); height: 100%; border-radius: 20px; }
 
-        h1 { font-size: 2.6rem; margin: 0; font-weight: 900; letter-spacing: -1px; line-height: 1; }
-        .drop-date { font-size: 1.3rem; font-weight: 700; color: var(--primary); margin: 10px 0 30px 0; }
+        .section { border-top: 1px solid #f0f0f0; padding-top: 25px; margin-top: 25px; }
+        .label { font-size: 0.8rem; font-weight: 900; color: #bbb; text-transform: uppercase; }
+        .val { font-size: 1.2rem; font-weight: 700; margin-top: 5px; }
 
-        .detail-section { border-top: 1px solid #f0f0f0; padding-top: 25px; margin-top: 25px; }
-        .label { font-size: 0.8rem; font-weight: 900; color: #bbb; text-transform: uppercase; letter-spacing: 1px; }
-        .value { font-size: 1.3rem; font-weight: 700; margin-top: 5px; color: var(--dark); }
-
-        .link-box {
-            background: #f0f7ff; border: 2px dashed var(--primary); padding: 20px; border-radius: 20px; margin-top: 10px;
-            font-family: monospace; font-size: 0.9rem; color: var(--primary); word-break: break-all;
-        }
-
-        .btn-action { 
-            display: block; background: var(--dark); color: white; text-align: center; 
-            padding: 22px; border-radius: 18px; text-decoration: none; font-weight: 900; font-size: 1.1rem;
-            margin-top: 35px; box-shadow: 0 10px 20px rgba(0,70,94,0.2);
-        }
+        .btn-action { display: block; background: var(--dark); color: white; text-align: center; padding: 20px; border-radius: 18px; text-decoration: none; font-weight: 900; margin-top: 40px; }
     </style>
 </head>
 <body>
-
     <div class="header">
         <img src="{{ url_for('static', filename='Logo.svg') }}" class="logo">
     </div>
 
     <div class="profile-container">
-        <a href="/amy-admin" class="back-link">← BACK TO HUB</a>
-        
+        <a href="/amy-admin" class="back-link">← HUB</a>
         <h1>{{ school }}</h1>
-        <div class="drop-date">Drop Day: {{ date }}</div>
+        <div class="subtitle">Lunch Drop: {{ date }}</div>
 
-        <div class="detail-section">
-            <div class="label">Production Deadline</div>
-            <div class="value" style="color: #e74c3c;">Wednesday, {{ deadline }} @ 4:00 PM</div>
+        <div class="tracker-label">Drop Progress</div>
+        <div class="big-bar">
+            <div class="big-fill" style="width: 50%;"></div> 
         </div>
 
-        <div class="detail-section">
+        <div class="section">
+            <div class="label">Production Deadline</div>
+            <div class="val" style="color: #e74c3c;">Wednesday, {{ deadline }} @ 4:00 PM</div>
+        </div>
+
+        <div class="section">
             <div class="label">Teacher Ordering Link</div>
-            <div class="link-box">
+            <div style="background: #f0f7ff; border: 2px dashed var(--primary); padding: 15px; border-radius: 15px; margin-top: 10px; font-size: 0.85rem; color: var(--primary); word-break: break-all;">
                 https://betterday-app.onrender.com/order/{{ date }}?school={{ school | replace(' ', '+') }}
             </div>
         </div>
 
-        <a href="mailto:?subject=Teacher Lunch Link: {{ school }}&body=Hi! Here is the link for teachers to select their meals for the drop on {{ date }}: https://betterday-app.onrender.com/order/{{ date }}?school={{ school | replace(' ', '+') }}" class="btn-action">
-            SEND LINK TO PRINCIPAL
-        </a>
+        <a href="mailto:?subject=BetterDay Link for {{ school }}&body=Hi! Order here: https://betterday-app.onrender.com/order/{{ date }}?school={{ school | replace(' ', '+') }}" class="btn-action">EMAIL LINK TO PRINCIPAL</a>
     </div>
-
 </body>
 </html>
