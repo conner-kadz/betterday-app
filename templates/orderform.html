@@ -4,62 +4,60 @@
     <title>BetterDay | Teacher Order</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --radius: 22px; }
-        body { background: var(--accent); font-family: 'Helvetica Neue', Arial, sans-serif; padding-bottom: 140px; margin: 0; color: var(--dark); }
+        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --radius: 24px; }
+        body { background: var(--accent); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding-bottom: 140px; margin: 0; color: var(--dark); }
         
-        /* Branded Header */
+        /* Fixed Header */
         .header { background: var(--primary); padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .logo { height: 45px; width: auto; }
 
         .container { padding: 25px; max-width: 500px; margin: 0 auto; }
         .school-info { text-align: center; margin-bottom: 30px; }
-        .school-info h1 { font-size: 2.2rem; font-weight: 900; margin: 0; letter-spacing: -1px; }
-        .deadline-tag { background: #fff1f0; color: #e74c3c; padding: 10px 15px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; margin-top: 15px; display: inline-block; border: 1px solid #ffd1d1; }
+        .school-info h1 { font-size: 2.4rem; font-weight: 900; margin: 0; letter-spacing: -1.5px; }
+        .deadline-tag { background: #fff1f0; color: #e74c3c; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; margin-top: 15px; display: inline-block; border: 2px solid #ffd1d1; }
         
-        .name-section { background: white; padding: 25px; border-radius: var(--radius); margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .name-section label { display: block; font-weight: 900; font-size: 0.75rem; color: var(--primary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .name-input { width: 100%; padding: 18px; border: 2px solid #f0f0f0; border-radius: 15px; font-size: 1.1rem; box-sizing: border-box; outline: none; transition: border-color 0.3s; }
+        /* Name Input Card */
+        .input-card { background: white; padding: 30px; border-radius: var(--radius); margin-bottom: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .input-card label { display: block; font-weight: 900; font-size: 0.8rem; color: var(--primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .name-input { width: 100%; padding: 20px; border: 3px solid #f8f9fa; border-radius: 18px; font-size: 1.2rem; box-sizing: border-box; outline: none; transition: border-color 0.3s; }
         .name-input:focus { border-color: var(--primary); }
 
-        /* Meal Grid & Selection Logic */
-        .meal-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        /* Animated Meal List */
+        .meal-list { display: grid; grid-template-columns: 1fr; gap: 15px; }
         
         .meal-card { 
             background: white; border-radius: var(--radius); overflow: hidden; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; 
-            border: 4px solid transparent; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex; align-items: center; position: relative; padding: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06); cursor: pointer; 
+            border: 5px solid transparent; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; position: relative; padding: 12px;
         }
 
-        .photo-wrap { width: 80px; height: 80px; border-radius: 15px; overflow: hidden; flex-shrink: 0; transition: transform 0.4s; }
+        .photo-wrap { width: 90px; height: 90px; border-radius: 18px; overflow: hidden; flex-shrink: 0; transition: transform 0.4s; background: #eee; }
         .meal-img { width: 100%; height: 100%; object-fit: cover; }
         
-        .meal-name { padding-left: 20px; font-weight: 800; font-size: 1.1rem; flex-grow: 1; transition: transform 0.4s; }
+        .meal-name { padding-left: 20px; font-weight: 800; font-size: 1.15rem; flex-grow: 1; transition: transform 0.4s; line-height: 1.2; }
 
-        /* The Selection State (Slide & Highlight) */
+        /* Sliding State */
         .meal-card.selected { border-color: var(--primary); background: #f0f7ff; }
-        .meal-card.selected .photo-wrap { transform: translateX(10px); }
-        .meal-card.selected .meal-name { transform: translateX(15px); color: var(--primary); }
+        .meal-card.selected .photo-wrap { transform: translateX(12px); }
+        .meal-card.selected .meal-name { transform: translateX(18px); color: var(--primary); }
 
-        /* The Checkmark */
-        .check-mark { position: absolute; right: 20px; opacity: 0; transform: scale(0); transition: all 0.4s; font-size: 1.5rem; color: var(--primary); }
+        .check-mark { position: absolute; right: 25px; opacity: 0; transform: scale(0); transition: all 0.4s; font-size: 1.8rem; color: var(--primary); }
         .meal-card.selected .check-mark { opacity: 1; transform: scale(1); }
 
-        /* Submit Bar & Transforming Button */
-        .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 25px; box-shadow: 0 -10px 30px rgba(0,0,0,0.08); display: flex; justify-content: center; z-index: 100; }
+        /* Sticky Footer & Transforming Button */
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 30px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); display: flex; justify-content: center; z-index: 1000; }
         
         .submit-btn { 
-            width: 100%; max-width: 400px; border: none; padding: 20px; border-radius: 50px; 
-            font-weight: 900; font-size: 1.2rem; cursor: pointer; transition: all 0.3s;
-            background: #cbd5e0; color: #718096; pointer-events: none; /* Disabled by default */
+            width: 100%; max-width: 450px; border: none; padding: 22px; border-radius: 60px; 
+            font-weight: 900; font-size: 1.2rem; cursor: pointer; transition: all 0.3s ease;
+            background: #cbd5e0; color: #718096; pointer-events: none;
         }
 
-        /* Active Button Styling */
         .submit-btn.active { 
             background: var(--dark); color: white; pointer-events: auto; 
-            box-shadow: 0 8px 20px rgba(0,70,94,0.3); transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,70,94,0.3); transform: translateY(-3px);
         }
-        .submit-btn.active:active { transform: translateY(0); }
     </style>
 </head>
 <body>
@@ -71,7 +69,7 @@
     <div class="container">
         <div class="school-info">
             <h1>{{ school_name }}</h1>
-            <div class="deadline-tag">⚠️ Order by: {{ deadline }}</div>
+            <div class="deadline-tag">⏰ Order By: Wednesday, {{ deadline }}</div>
         </div>
 
         <form action="/submit-order" method="POST" id="orderForm">
@@ -79,14 +77,12 @@
             <input type="hidden" name="school_name" value="{{ school_name }}">
             <input type="hidden" name="meal_id" id="meal_id">
 
-            <div class="name-section">
-                <label>Teacher Name</label>
-                <input type="text" name="teacher_name" id="teacherName" required placeholder="Enter your full name..." class="name-input">
+            <div class="input-card">
+                <label>First & Last Name</label>
+                <input type="text" name="teacher_name" id="teacherName" required placeholder="Type your name..." class="name-input">
             </div>
 
-            <h2 style="font-size: 0.8rem; font-weight: 900; color: #aaa; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;">Select Your Meal</h2>
-            
-            <div class="meal-grid">
+            <div class="meal-list">
                 {% for item in menu %}
                 <div class="meal-card" onclick="selectMeal(this, '{{ item.id }}')">
                     <div class="photo-wrap">
@@ -100,29 +96,24 @@
                 {% endfor %}
             </div>
 
-            <div class="footer-bar">
-                <button type="submit" id="submitBtn" class="submit-btn">SELECT A DISH</button>
+            <div class="footer">
+                <button type="submit" id="submitBtn" class="submit-btn">PICK A DISH</button>
             </div>
         </form>
     </div>
 
     <script>
         function selectMeal(card, id) {
-            // Remove selection from others
             document.querySelectorAll('.meal-card').forEach(c => c.classList.remove('selected'));
-            
-            // Add selection to clicked card
             card.classList.add('selected');
             document.getElementById('meal_id').value = id;
 
-            // Activate the button
             const btn = document.getElementById('submitBtn');
             btn.classList.add('active');
             btn.innerText = "PLACE MY ORDER 🍎";
         }
 
-        // Prevent submission if name is missing but dish is selected
-        document.getElementById('orderForm').onsubmit = function(e) {
+        document.getElementById('orderForm').onsubmit = function() {
             const name = document.getElementById('teacherName').value.trim();
             if (!name) {
                 alert("Please enter your name first!");
