@@ -16,7 +16,6 @@ GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-
 
 def get_nice_date(date_str):
     try:
-        # Converts 2026-02-15 -> "Monday, Feb 15"
         dt = datetime.strptime(str(date_str).split('T')[0], '%Y-%m-%d')
         return dt.strftime('%A, %b %d')
     except: return date_str
@@ -52,18 +51,20 @@ def is_past_filter(date_str):
         return date_obj < datetime.now().date()
     except: return False
 
-
 # ==============================================================================
 # SECTION 1: THE FRONT DOOR (Principal Calendar)
-# Do NOT delete this section. It runs the Homepage.
 # ==============================================================================
 
 @app.route('/')
 def index():
     taken = []
     try:
-        r = requests.get(GOOGLE_SCRIPT_URL, timeout=10)
-        taken = r.json() if r.status_code == 200 else []
+        r = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=8)
+        # Using get_bookings here as well to check existing dates
+        # Or simple GET if you kept the dual logic in doGet
+        # Assuming doGet default is taken dates
+        r_cal = requests.get(GOOGLE_SCRIPT_URL, timeout=8) 
+        taken = r_cal.json() if r_cal.status_code == 200 else []
     except: pass
     
     now = datetime.now()
@@ -73,7 +74,6 @@ def index():
     
     for d in range(1, num_days + 1):
         date_obj = datetime(view_y, view_m, d)
-        # Only show Mon-Wed (0, 1, 2)
         if date_obj.weekday() < 3: 
             ds = date_obj.strftime('%Y-%m-%d')
             valid_dates.append({
@@ -89,8 +89,8 @@ def book(date_raw):
     if request.method == 'GET':
         return render_template('form.html', date_display=date_raw, raw_date=date_raw)
     
-    # Submit booking to Sheet
     data = {
+        "action": "book_principal", # NEW: Explicit Action
         "date": date_raw,
         "contact_name": request.form.get("contact_name"),
         "school_name": request.form.get("school_name"),
@@ -106,8 +106,7 @@ def book(date_raw):
 
 
 # ==============================================================================
-# SECTION 2: AMY'S DASHBOARD (The Admin System)
-# Handles the Hub, Profiles, CSVs, and PDFs.
+# SECTION 2: BD ADMIN (The Dashboard)
 # ==============================================================================
 
 @app.route('/BD-Admin')
@@ -120,16 +119,17 @@ def bd_admin():
     refined = []
     for b in bookings_raw:
         try:
-            # Skip header row and row indexes
             if "Date" in str(b[0]) or str(b[2]).isdigit(): continue
             d_date = str(b[0]).split('T')[0]
             status = str(b[7]) if len(b) > 7 else "New Booking"
-            
+            staff_count = str(b[4]) if len(b) > 4 else "0"
+
             refined.append({
                 "delivery_date_raw": d_date,
                 "delivery_date_display": get_nice_date(d_date),
                 "school": str(b[2]),
                 "status": status,
+                "staff_count": staff_count,
                 "deadline": get_wednesday_deadline(d_date)
             })
         except: continue
@@ -139,21 +139,18 @@ def bd_admin():
 def school_profile(school_name, date):
     clean_school_name = school_name.replace('+', ' ')
     
-    # 1. Get Booking Details (for Staff Count)
+    # NEW: Fetch everything in ONE fast call
     staff_count = 0
-    try:
-        r = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=10)
-        for row in r.json():
-            if str(row[2]) == clean_school_name and str(row[0]).split('T')[0] == date:
-                staff_count = int(row[4]) if str(row[4]).isdigit() else 0
-                break
-    except: pass
-
-    # 2. Get Actual Orders
     order_count = 0
+    orders = []
+    
     try:
-        r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_orders", "school": clean_school_name, "date": date}, timeout=10)
-        orders = r.json()
+        payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
+        r = requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=12)
+        data = r.json()
+        
+        staff_count = int(data.get('staff_count', 0))
+        orders = data.get('orders', [])
         order_count = len(orders)
     except: pass
 
@@ -170,14 +167,17 @@ def school_profile(school_name, date):
 def download_csv(school_name, date):
     clean_school_name = school_name.replace('+', ' ')
     try:
-        r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_orders", "school": clean_school_name, "date": date})
-        orders = r.json()
+        # We can re-use the profile data fetch or just get orders. 
+        # Re-using get_profile_data is fine.
+        payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
+        r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
+        data = r.json()
+        orders = data.get('orders', [])
     except: orders = []
 
-    # Create CSV in memory
     si = io.StringIO()
     cw = csv.writer(si)
-    cw.writerow(['Teacher Name', 'Dish ID']) # Header
+    cw.writerow(['Teacher Name', 'Dish ID']) 
     for o in orders:
         cw.writerow([o['teacher'], o['meal_id']])
         
@@ -190,11 +190,12 @@ def download_csv(school_name, date):
 def picklist_print(school_name, date):
     clean_school_name = school_name.replace('+', ' ')
     try:
-        r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_orders", "school": clean_school_name, "date": date})
-        orders = r.json()
+        payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
+        r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
+        data = r.json()
+        orders = data.get('orders', [])
     except: orders = []
     
-    # Group by dish for summary
     summary = {}
     for o in orders:
         mid = o['meal_id']
@@ -204,8 +205,7 @@ def picklist_print(school_name, date):
 
 
 # ==============================================================================
-# SECTION 3: TEACHER ORDERS (The User Interface)
-# Handles the Menu, Dish selection, and submission.
+# SECTION 3: TEACHER ORDERS
 # ==============================================================================
 
 @app.route('/order/<delivery_date>')
@@ -237,7 +237,7 @@ def submit_order():
         "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
     requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=10)
-    return "Order Submitted!"
+    return render_template('order_success.html') # New template
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5001)))
