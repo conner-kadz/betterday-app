@@ -10,13 +10,17 @@ import io
 app = Flask(__name__)
 
 # ==============================================================================
-# CONFIGURATION & UTILITIES
+# CONFIGURATION
 # ==============================================================================
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
+# Replace with your actual Google Sheet URL for the "Teacher Bookings" button
+TEACHER_SHEET_URL = "https://docs.google.com/spreadsheets" 
 
+# ==============================================================================
+# HELPERS
+# ==============================================================================
 def get_nice_date(date_str):
     try:
-        # Converts 2026-02-15 -> "Monday, Feb 15"
         dt = datetime.strptime(str(date_str).split('T')[0], '%Y-%m-%d')
         return dt.strftime('%A, %b %d')
     except: return date_str
@@ -26,38 +30,45 @@ def get_sunday_anchor(delivery_date_str):
         clean_date = str(delivery_date_str).split('T')[0]
         if "Date" in clean_date: return None
         delivery_date = datetime.strptime(clean_date, '%Y-%m-%d')
-        # Anchor is the Sunday of the week *before* delivery
         days_to_subtract = (delivery_date.weekday() + 1) % 7
         if days_to_subtract == 0: days_to_subtract = 7
         return (delivery_date - timedelta(days=days_to_subtract)).strftime('%Y-%m-%d')
     except: return None
 
-def get_wednesday_deadline(delivery_date_str):
+def get_deadline_obj(delivery_date_str):
     try:
         clean_date = str(delivery_date_str).split('T')[0]
         delivery_date = datetime.strptime(clean_date, '%Y-%m-%d')
-        # Deadline is Wednesday of the week *before* delivery
         days_to_subtract = (delivery_date.weekday() - 2) % 7
         if days_to_subtract <= 2: days_to_subtract += 7
-        deadline = delivery_date - timedelta(days=days_to_subtract)
-        # UPDATE: Added time format
-        return deadline.strftime('%b %d @ 4:00 PM') 
-    except: return "TBD"
+        # Deadline is Wednesday at 4:00 PM
+        deadline_date = delivery_date - timedelta(days=days_to_subtract)
+        return deadline_date.replace(hour=16, minute=0, second=0)
+    except: return None
+
+def get_menu_map(delivery_date):
+    # Helper to get ID -> Name mapping
+    anchor = get_sunday_anchor(delivery_date)
+    mapping = {}
+    try:
+        r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_menu", "sunday_anchor": anchor}, timeout=10)
+        if r.status_code == 200:
+            for item in r.json().get('menu', []):
+                if "#" in str(item):
+                    m = re.search(r'#(.*)', str(item)) # Capture everything after #
+                    if m:
+                        m_id = m.group(1).strip()
+                        m_name = str(item).split('#')[0].strip()
+                        mapping[m_id] = m_name
+    except: pass
+    return mapping
 
 @app.template_filter('decode_school')
 def decode_school_filter(s):
     return str(s).replace('+', ' ')
 
-@app.template_filter('is_past')
-def is_past_filter(date_str):
-    try:
-        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-        return date_obj < datetime.now().date()
-    except: return False
-
-
 # ==============================================================================
-# SECTION 1: THE FRONT DOOR (Principal Calendar)
+# ROUTES
 # ==============================================================================
 
 @app.route('/')
@@ -71,62 +82,45 @@ def index():
                 taken.append(str(row[0]).split('T')[0])
     except: pass
     
-    # 1. Determine "Now" and "View"
     now = datetime.now()
-    current_m = now.month
-    current_y = now.year
-    
-    # Get view from URL, default to current
-    view_m = int(request.args.get('m', current_m))
-    view_y = int(request.args.get('y', current_y))
+    view_m = int(request.args.get('m', now.month))
+    view_y = int(request.args.get('y', now.year))
 
-    # 2. Logic for "Next Month" button
-    # We only want to allow 1 month ahead
-    if view_m == current_m:
-        # If looking at current month, Next -> Next Month
+    # Next/Prev Logic
+    if view_m == now.month:
         next_m = view_m + 1 if view_m < 12 else 1
         next_y = view_y if view_m < 12 else view_y + 1
         next_url = url_for('index', m=next_m, y=next_y)
-        prev_url = None # Can't go back past today
-    elif (view_m == current_m + 1) or (current_m == 12 and view_m == 1):
-        # If looking at next month, Prev -> Current Month
-        # Next -> None (Limit reached)
-        prev_url = url_for('index', m=current_m, y=current_y)
+        prev_url = None 
+    elif (view_m == now.month + 1) or (now.month == 12 and view_m == 1):
+        prev_url = url_for('index', m=now.month, y=now.year)
         next_url = None
     else:
-        # Fallback if someone manually types a far-out date: redirect to home
         return redirect(url_for('index'))
 
-    # 3. Build the Calendar Grid
     num_days = calendar.monthrange(view_y, view_m)[1]
     valid_dates = []
     
     for d in range(1, num_days + 1):
         date_obj = datetime(view_y, view_m, d)
-        if date_obj.weekday() < 3: # Mon-Wed only
+        if date_obj.weekday() < 3: 
             ds = date_obj.strftime('%Y-%m-%d')
             valid_dates.append({
                 'raw_date': ds, 
-                'display': date_obj.strftime('%A, %b %d'), # "Monday, Feb 16"
+                'display': date_obj.strftime('%A, %b %d'), 
                 'taken': ds in taken, 
                 'past': date_obj.date() < now.date()
             })
 
-    return render_template('index.html', 
-                         dates=valid_dates, 
-                         month_name=calendar.month_name[view_m], 
-                         year=view_y,
-                         prev_url=prev_url,
-                         next_url=next_url)
+    return render_template('index.html', dates=valid_dates, month_name=calendar.month_name[view_m], year=view_y, prev_url=prev_url, next_url=next_url)
 
 @app.route('/book/<date_raw>', methods=['GET', 'POST'])
 def book(date_raw):
     if request.method == 'GET':
         return render_template('form.html', date_display=date_raw, raw_date=date_raw)
     
-    # Submit booking to Sheet
     data = {
-        "action": "book_principal", # Explicit Action
+        "action": "book_principal",
         "date": date_raw,
         "contact_name": request.form.get("contact_name"),
         "school_name": request.form.get("school_name"),
@@ -140,11 +134,6 @@ def book(date_raw):
     resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
     return resp
 
-
-# ==============================================================================
-# SECTION 2: BD ADMIN (The Dashboard)
-# ==============================================================================
-
 @app.route('/BD-Admin')
 def bd_admin():
     try:
@@ -155,19 +144,17 @@ def bd_admin():
     refined = []
     for b in bookings_raw:
         try:
-            # Skip header row and row indexes
             if "Date" in str(b[0]) or str(b[2]).isdigit(): continue
             d_date = str(b[0]).split('T')[0]
-            status = str(b[7]) if len(b) > 7 else "New Booking"
-            staff_count = str(b[4]) if len(b) > 4 else "0"
-
+            deadline_obj = get_deadline_obj(d_date)
+            
             refined.append({
                 "delivery_date_raw": d_date,
                 "delivery_date_display": get_nice_date(d_date),
                 "school": str(b[2]),
-                "status": status,
-                "staff_count": staff_count,
-                "deadline": get_wednesday_deadline(d_date)
+                "status": str(b[7]) if len(b) > 7 else "New Booking",
+                "staff_count": str(b[4]) if len(b) > 4 else "0",
+                "deadline": deadline_obj.strftime('%b %d') if deadline_obj else "TBD"
             })
         except: continue
     return render_template('admin.html', bookings=refined)
@@ -175,151 +162,49 @@ def bd_admin():
 @app.route('/school-profile/<school_name>/<date>')
 def school_profile(school_name, date):
     clean_school_name = school_name.replace('+', ' ')
-    
     data = {}
     try:
-        # One fast call to get everything
         payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
         r = requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=12)
         data = r.json()
     except: pass
 
-    # Unpack safely
-    staff_count = int(data.get('staff_count', 0))
-    orders = data.get('orders', [])
-    order_count = len(orders)
+    # Countdown Logic
+    deadline_obj = get_deadline_obj(date)
+    days_left = (deadline_obj - datetime.now()).days if deadline_obj else -1
+    deadline_str = deadline_obj.strftime('%b %d @ 4:00 PM') if deadline_obj else "TBD"
     
+    if days_left < 0: countdown_text = "⚠️ Orders Closed"
+    elif days_left == 0: countdown_text = "🚨 Ends Today!"
+    else: countdown_text = f"⏰ {days_left} Days Left"
+
     return render_template('profile.html', 
                          school=clean_school_name, 
                          date=date, 
-                         deadline=get_wednesday_deadline(date), 
-                         staff=staff_count, 
-                         orders=order_count,
                          display_date=get_nice_date(date),
-                         info=data) 
+                         deadline=deadline_str,
+                         countdown=countdown_text,
+                         staff=int(data.get('staff_count', 0)), 
+                         orders=len(data.get('orders', [])),
+                         info=data,
+                         sheet_url=TEACHER_SHEET_URL) 
 
 @app.route('/update-booking', methods=['POST'])
 def update_booking():
     school = request.form.get('school')
     date = request.form.get('date')
-    status = request.form.get('status')
-    email = request.form.get('email')
-    
     try:
         payload = {
             "action": "update_booking",
             "school": school,
             "date": date,
-            "status": status,
-            "email": email
+            "status": request.form.get('status'),
+            "email": request.form.get('email')
         }
         requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=8)
     except: pass
-    
     return redirect(url_for('school_profile', school_name=school.replace(' ', '+'), date=date))
-
 
 @app.route('/download-csv/<school_name>/<date>')
 def download_csv(school_name, date):
     clean_school_name = school_name.replace('+', ' ')
-    try:
-        payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
-        r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
-        data = r.json()
-        orders = data.get('orders', [])
-    except: orders = []
-
-    # Create CSV
-    si = io.StringIO()
-    cw = csv.writer(si)
-    cw.writerow(['Teacher Name', 'Dish ID']) # Header
-    for o in orders:
-        cw.writerow([o['teacher'], o['meal_id']])
-        
-    output = make_response(si.getvalue())
-    output.headers["Content-Disposition"] = f"attachment; filename={clean_school_name}_orders.csv"
-    output.headers["Content-type"] = "text/csv"
-    return output
-
-@app.route('/picklist/<school_name>/<date>')
-def picklist_print(school_name, date):
-    clean_school_name = school_name.replace('+', ' ')
-    try:
-        payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
-        r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
-        data = r.json()
-        orders = data.get('orders', [])
-    except: orders = []
-    
-    # Group by dish for summary
-    summary = {}
-    for o in orders:
-        mid = o['meal_id']
-        summary[mid] = summary.get(mid, 0) + 1
-        
-    return render_template('picklist.html', school=clean_school_name, date=date, orders=orders, summary=summary)
-
-
-# ==============================================================================
-# SECTION 3: TEACHER ORDERS (User Interface)
-# ==============================================================================
-
-@app.route('/order/<delivery_date>')
-def teacher_order(delivery_date):
-    # --- NEW: COOKIE GUARD ---
-    # 1. Check if they already have the cookie for this date
-    if request.cookies.get(f'ordered_{delivery_date}'):
-        # If yes, send them straight to success page with "existing=True"
-        school = request.args.get('school', 'BetterDay School')
-        share_link = url_for('teacher_order', delivery_date=delivery_date, school=school, _external=True)
-        return render_template('order_success.html', share_link=share_link, existing=True)
-
-    # 2. If no cookie, proceed normally
-    anchor = get_sunday_anchor(delivery_date)
-    school = request.args.get('school', 'BetterDay School')
-    deadline = get_wednesday_deadline(delivery_date)
-    menu = []
-    try:
-        r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_menu", "sunday_anchor": anchor}, timeout=15)
-        if r.status_code == 200:
-            for item in r.json().get('menu', []):
-                if "#" in str(item):
-                    m = re.search(r'#(\d+)', str(item))
-                    m_id = m.group(1) if m else "000"
-                    m_name = str(item).split('#')[0].strip()
-                    menu.append({"id": m_id, "name": m_name})
-    except: pass
-    return render_template('orderform.html', delivery_date=delivery_date, deadline=deadline, menu=menu, school_name=school)
-
-@app.route('/submit-order', methods=['POST'])
-def submit_order():
-    school_name = request.form.get('school_name')
-    delivery_date = request.form.get('delivery_date')
-
-    data = {
-        "action": "submit_teacher_order",
-        "name": request.form.get('teacher_name'),
-        "meal_id": request.form.get('meal_id'),
-        "delivery_date": delivery_date,
-        "school": school_name,
-        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    }
-    
-    try:
-        requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=5)
-    except: pass
-    
-    # Generate Share Link
-    share_link = url_for('teacher_order', delivery_date=delivery_date, school=school_name, _external=True)
-    
-    # --- NEW: SET COOKIE ---
-    # Create the response object
-    resp = make_response(render_template('order_success.html', share_link=share_link, existing=False))
-    
-    # Stamp the browser with a 30-day cookie
-    resp.set_cookie(f'ordered_{delivery_date}', 'true', max_age=60*60*24*30)
-    
-    return resp
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5001)))
