@@ -15,6 +15,7 @@ def get_sunday_anchor(delivery_date_str):
     """Finds the Sunday before the delivery date for Buffer Sheet matching"""
     try:
         delivery_date = datetime.strptime(delivery_date_str, '%Y-%m-%d')
+        # weekday(): Mon=0 ... Sun=6. Sunday anchor is previous Sunday.
         days_to_subtract = (delivery_date.weekday() + 1) % 7
         if days_to_subtract == 0: days_to_subtract = 7
         return (delivery_date - timedelta(days=days_to_subtract)).strftime('%Y-%m-%d')
@@ -24,9 +25,9 @@ def get_wednesday_deadline(delivery_date_str):
     """Calculates the Wednesday 4:00 PM deadline of the week BEFORE delivery"""
     try:
         delivery_date = datetime.strptime(delivery_date_str, '%Y-%m-%d')
-        # We want the Wednesday of the week prior to the delivery week
-        # If delivery is Mon/Tue/Wed, we go back to the previous Wednesday
+        # We need the Wednesday of the week prior to the delivery week.
         days_to_subtract = (delivery_date.weekday() - 2) % 7
+        # Adjust to ensure we are looking at the previous week's Wednesday
         if days_to_subtract <= 2:
             days_to_subtract += 7
         deadline = delivery_date - timedelta(days=days_to_subtract)
@@ -103,7 +104,6 @@ def book(date_raw):
 @app.route('/amy-admin')
 def amy_admin():
     try:
-        # Fetch actual bookings from the Teacher Lunch Bookings sheet
         response = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=15)
         bookings_raw = response.json() if response.status_code == 200 else []
     except:
@@ -111,7 +111,7 @@ def amy_admin():
 
     refined = []
     for b in bookings_raw:
-        # Expected row: [Date, Contact, Email, School, Address, Count, Time, Notes, Status]
+        # Columns: [Date, Contact, Email, School, Address, Count, Time, Notes, Status]
         d_date = b[0]
         refined.append({
             "school": b[3],
