@@ -5,154 +5,163 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --gray: #8898aa; }
-        body { background: var(--accent); font-family: -apple-system, system-ui, sans-serif; padding: 20px; color: var(--dark); }
+        body { background: var(--accent); font-family: -apple-system, system-ui, sans-serif; padding: 20px; color: var(--dark); padding-bottom: 80px; }
         .header { background: var(--primary); padding: 15px; text-align: center; margin: -20px -20px 20px -20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .logo { height: 40px; }
-        
         .profile-container { max-width: 600px; margin: 0 auto; }
-        
-        /* Nav */
-        .nav-btn { display: inline-flex; align-items: center; background: var(--white); padding: 8px 12px; border-radius: 8px; color: var(--dark); text-decoration: none; font-size: 0.8rem; margin-bottom: 20px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* Typography */
-        h1 { font-size: 1.5rem; font-weight: 800; margin: 0; line-height: 1.2; }
-        .date-sub { font-size: 0.95rem; color: #666; margin-bottom: 20px; font-weight: 500; }
-        
-        /* Card & Grid System */
+        /* Navigation */
+        .top-nav { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .nav-btn { display: inline-flex; align-items: center; background: var(--white); padding: 8px 12px; border-radius: 8px; color: var(--dark); text-decoration: none; font-size: 0.8rem; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .sheet-btn { background: #27ae60; color: white; }
+
+        h1 { font-size: 1.6rem; font-weight: 900; margin: 0 0 20px 5px; }
+
+        /* Card Styles */
         .card { background: var(--white); border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 15px; }
         
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .grid-full { margin-top: 15px; }
 
-        /* Field Styling (The "Tight" Look) */
-        .field-group { display: flex; flex-direction: column; }
-        .label { font-size: 0.65rem; text-transform: uppercase; color: var(--gray); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
-        .value { font-size: 0.95rem; font-weight: 600; color: var(--dark); min-height: 20px; }
+        .label { font-size: 0.65rem; text-transform: uppercase; color: var(--gray); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .value { font-size: 1rem; font-weight: 700; color: var(--dark); }
+        .value-big { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+
+        .edit-input, .edit-select { width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.9rem; background: #f8f9fa; box-sizing: border-box; }
         
-        /* Inputs & Selects - Compact */
-        .edit-input { 
-            width: 100%; padding: 8px 10px; border: 1px solid #e0e0e0; border-radius: 6px; 
-            font-size: 0.95rem; color: var(--dark); background: #f8f9fa; box-sizing: border-box; 
-        }
-        .edit-select { 
-            width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px; 
-            background: #f8f9fa; font-size: 0.9rem; color: var(--dark); font-weight: 600; cursor: pointer;
-        }
+        /* Badges */
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-top: 5px; }
+        .badge-count { background: #ffe3e3; color: #e74c3c; }
 
-        /* Progress Bar */
-        .progress-label { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 5px; font-weight: 600; color: #666; }
-        .progress-track { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.5s ease; }
+        /* Progress */
+        .progress-track { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .progress-fill { height: 100%; background: var(--primary); }
 
-        /* Links & Buttons */
-        .link-box { background: #f0f7ff; padding: 12px; border-radius: 8px; margin-top: 15px; border: 1px dashed #cce5ff; }
-        .url-text { font-family: monospace; color: var(--primary); font-size: 0.75rem; word-break: break-all; margin-bottom: 8px; display: block; }
-        
-        .btn-link { font-size: 0.75rem; color: var(--primary); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; }
-        .btn-link:hover { text-decoration: underline; }
+        /* Link Box */
+        .link-box { background: #f0f7ff; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px dashed #cce5ff; }
+        .url-text { font-family: monospace; color: var(--primary); font-size: 0.75rem; word-break: break-all; margin-bottom: 10px; display: block; background: white; padding: 5px; border-radius: 4px; }
 
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .btn { text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; }
+        /* Buttons */
+        .btn { display: block; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 700; border: none; cursor: pointer; width: 100%; box-sizing: border-box; }
+        .btn-link { background: none; color: var(--primary); text-align: left; padding: 0; display: inline; }
+        .btn-reminder { background: var(--white); border: 2px solid var(--primary); color: var(--primary); margin-top: 10px; }
         .btn-sec { background: #f1f3f5; color: #495057; }
-        .btn-save { background: var(--dark); color: white; width: 100%; margin-top: 20px; font-size: 0.9rem; padding: 12px; box-shadow: 0 4px 12px rgba(0,70,94,0.2); }
-        .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0,70,94,0.3); }
+        .btn-save { background: var(--dark); color: white; margin-top: 30px; font-size: 1rem; box-shadow: 0 5px 20px rgba(0,70,94,0.3); }
 
-        .section-title { font-size: 0.8rem; font-weight: 800; color: #ccc; margin: 25px 0 10px 0; padding-left: 5px; text-transform: uppercase; }
+        .section-header { font-size: 0.8rem; font-weight: 800; color: #ccc; margin: 30px 0 10px 5px; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <div class="header"><img src="{{ url_for('static', filename='Logo.svg') }}" class="logo"></div>
     
     <div class="profile-container">
-        <a href="/BD-Admin" class="nav-btn">← Back</a>
-
-        <div style="margin: 10px 0 20px 5px;">
-            <h1>{{ school | decode_school }}</h1>
-            <div class="date-sub">{{ display_date }}</div>
+        <div class="top-nav">
+            <a href="/BD-Admin" class="nav-btn">← Back</a>
+            <a href="{{ sheet_url }}" target="_blank" class="nav-btn sheet-btn">Open Google Sheet ↗</a>
         </div>
+
+        <h1>{{ school | decode_school }}</h1>
 
         <form action="/update-booking" method="POST">
             <input type="hidden" name="school" value="{{ school }}">
             <input type="hidden" name="date" value="{{ date }}">
 
             <div class="card">
-                <div class="grid-2" style="align-items: end;">
-                    <div class="field-group">
-                        <label class="label">Current Status</label>
-                        <select name="status" class="edit-select">
-                            <option value="{{ info.status }}" selected>{{ info.status }}</option>
-                            <option disabled>──────────</option>
-                            <option value="🆕 New Booking">🆕 New Booking</option>
-                            <option value="🔗 Link Sent">🔗 Link Sent</option>
-                            <option value="⏳ In Progress">⏳ In Progress</option>
-                            <option value="🔒 Orders Locked">🔒 Orders Locked</option>
-                            <option value="🚚 Out for Delivery">🚚 Out for Delivery</option>
-                            <option value="✅ Completed">✅ Completed</option>
-                        </select>
+                <div class="grid-2">
+                    <div>
+                        <label class="label">Delivery Date</label>
+                        <div class="value-big">{{ display_date }}</div>
                     </div>
+                    <div style="text-align: right;">
+                        <label class="label">Order Deadline</label>
+                        <div class="value" style="color: #e74c3c;">{{ deadline }}</div>
+                        <div class="badge badge-count">{{ countdown }}</div>
+                    </div>
+                </div>
 
-                    <div class="field-group">
-                        <div class="progress-label">
-                            <span>Participation</span>
-                            <span>{{ orders }} / {{ staff }}</span>
+                <div class="grid-full" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #f0f0f0;">
+                    <div class="grid-2" style="align-items: end;">
+                        <div>
+                            <label class="label">Current Status</label>
+                            <select name="status" class="edit-select">
+                                <option value="{{ info.status }}" selected>{{ info.status }}</option>
+                                <option disabled>──────────</option>
+                                <option value="🆕 New Booking">🆕 New Booking</option>
+                                <option value="🔗 Link Sent">🔗 Link Sent</option>
+                                <option value="⏳ In Progress">⏳ In Progress</option>
+                                <option value="🔒 Orders Locked">🔒 Orders Locked</option>
+                                <option value="🚚 Out for Delivery">🚚 Out for Delivery</option>
+                                <option value="✅ Completed">✅ Completed</option>
+                            </select>
                         </div>
-                        <div class="progress-track">
-                            <div class="progress-fill" style="width: {{ (orders / (staff if staff > 0 else 1) * 100) }}%"></div>
+                        <div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <label class="label">Participation</label>
+                                <label class="label" style="color:var(--dark);">{{ orders }} / {{ staff }}</label>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" style="width: {{ (orders / (staff if staff > 0 else 1) * 100) }}%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="section-title">Contact Details</div>
+            <div class="section-header">Contact & Orders</div>
             
             <div class="card">
                 <div class="grid-2">
-                    <div class="field-group">
+                    <div>
                         <label class="label">Primary Contact</label>
                         <div class="value">{{ info.contact }}</div>
                     </div>
-                    
-                    <div class="field-group">
+                    <div>
                         <label class="label">Email Address</label>
                         <input type="email" name="email" class="edit-input" value="{{ info.email }}" placeholder="Add email...">
                     </div>
                 </div>
 
+                {% if info.email %}
+                <a href="mailto:{{ info.email }}?subject=Reminder: Lunch Order Deadline&body=Hi {{ info.contact }},%0D%0A%0D%0AJust a friendly reminder that the deadline for the upcoming lunch drop ({{ display_date }}) is {{ deadline }}.%0D%0A%0D%0ACurrently, {{ orders }} out of {{ staff }} staff have placed their orders.%0D%0A%0D%0APlease remind your team to order here:%0D%0Ahttps://betterday-app.onrender.com/order/{{ date }}?school={{ school }}" class="btn btn-reminder">
+                    🔔 Prepare Reminder Email
+                </a>
+                {% endif %}
+
                 <div class="link-box">
                     <label class="label" style="color: #4ea2fd;">Teacher Order Link</label>
                     <span class="url-text">betterday-app.onrender.com/order/{{ date }}?school={{ school }}</span>
-                    
                     {% if info.email %}
-                    <a href="mailto:{{ info.email }}?subject=Lunch Order Link&body=Hi {{ info.contact }},%0D%0A%0D%0AHere is the link for your teachers to order lunch:%0D%0Ahttps://betterday-app.onrender.com/order/{{ date }}?school={{ school }}%0D%0A%0D%0APlease share this with your team!" class="btn-link">
-                        📧 Send Link to {{ info.contact }} →
-                    </a>
-                    {% else %}
-                    <span style="font-size: 0.7rem; color: #999;">(Save email to enable 1-click send)</span>
+                    <a href="mailto:{{ info.email }}?subject=Lunch Order Link&body=Hi {{ info.contact }},%0D%0A%0D%0AHere is the link for your teachers to order lunch:%0D%0Ahttps://betterday-app.onrender.com/order/{{ date }}?school={{ school }}" class="btn-link">📧 Send Link to {{ info.contact }}</a>
                     {% endif %}
                 </div>
             </div>
 
-            <div class="section-title">Logistics</div>
+            <div class="section-header">Logistics</div>
 
             <div class="card">
                 <div class="grid-2">
-                    <div class="field-group">
+                    <div>
                         <label class="label">Address</label>
-                        <div class="value" style="font-size: 0.85rem;">{{ info.address }}</div>
+                        <div class="value" style="font-size:0.9rem;">{{ info.address }}</div>
                     </div>
-                    <div class="field-group">
+                    <div>
                         <label class="label">Lunch Time</label>
                         <div class="value">{{ info.lunch_hours }}</div>
                     </div>
                 </div>
-                
                 <div class="grid-full">
-                    <div class="field-group">
-                        <label class="label">Delivery Notes</label>
-                        <div class="value" style="font-size: 0.9rem; color: #555;">{{ info.notes }}</div>
-                    </div>
+                    <label class="label">Delivery Notes</label>
+                    <div class="value" style="font-size:0.9rem; color:#555;">{{ info.notes }}</div>
                 </div>
             </div>
 
-            <div class="btn-grid">
-                <a href="/picklist/{{ school }}/{{ date }}" target="_
+            <div class="grid-2" style="gap:10px;">
+                <a href="/picklist/{{ school }}/{{ date }}" target="_blank" class="btn btn-sec">📄 PDF Picklist</a>
+                <a href="/download-csv/{{ school }}/{{ date }}" class="btn btn-sec">📊 Export CSV</a>
+            </div>
+
+            <button type="submit" class="btn btn-save">💾 SAVE CHANGES</button>
+        </form>
+    </div>
+</body>
+</html>
