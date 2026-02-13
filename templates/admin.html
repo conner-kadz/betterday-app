@@ -9,55 +9,113 @@
         body { background: var(--accent); font-family: -apple-system, sans-serif; margin: 0; padding-bottom: 50px; color: var(--dark); }
         .header { background: var(--primary); padding: 20px; text-align: center; }
         .logo { height: 45px; }
-        .container { max-width: 500px; margin: 30px auto; padding: 0 20px; }
         
-        .card-link { text-decoration: none; color: inherit; display: block; margin-bottom: 20px; }
-        .drop-card { background: var(--white); border-radius: 20px; display: flex; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s; position: relative; }
-        .card-link:hover .drop-card { transform: translateY(-3px); }
+        .container { max-width: 600px; margin: 30px auto; padding: 0 20px; }
+        
+        /* Card Styling */
+        .drop-card { 
+            background: var(--white); 
+            border-radius: 20px; 
+            display: flex; 
+            overflow: hidden; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03); 
+            margin-bottom: 20px;
+            position: relative; 
+        }
         
         .drop-bar { width: 12px; background: var(--primary); flex-shrink: 0; }
         .card-body { padding: 20px; flex-grow: 1; }
 
+        /* Top Section */
         .school-name { font-size: 1.4rem; font-weight: 800; margin: 0; line-height: 1.2; }
         .drop-date { font-size: 1rem; color: #666; margin-top: 5px; font-weight: 400; }
 
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; border-top: 1px solid #f5f5f5; padding-top: 15px; }
+        /* Bottom Row Grid: 3 Columns */
+        .bottom-row { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; /* Equal width columns */
+            align-items: end; /* Align to bottom */
+            margin-top: 25px; 
+            padding-top: 15px; 
+            border-top: 1px solid #f5f5f5; 
+        }
         
+        /* Column Alignments */
+        .col-left { text-align: left; }
+        .col-mid { text-align: center; }
+        .col-right { text-align: right; }
+
+        /* Typography */
         .label { font-size: 0.65rem; text-transform: uppercase; color: #999; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .big-num { font-size: 1.5rem; font-weight: 800; color: var(--dark); line-height: 1; }
         
-        .big-num { font-size: 1.8rem; font-weight: 800; color: var(--dark); }
-        .status-pill { background: var(--accent); padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; color: var(--dark); display: inline-block; }
-        
-        .arrow { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); opacity: 0.2; font-size: 1.5rem; }
+        /* Status Pill */
+        .status-pill { 
+            background: var(--accent); 
+            padding: 6px 10px; 
+            border-radius: 8px; 
+            font-size: 0.7rem; 
+            font-weight: 700; 
+            color: var(--dark); 
+            display: inline-block; 
+            white-space: nowrap;
+        }
+
+        /* Profile Button */
+        .btn-profile { 
+            background: var(--dark); 
+            color: white; 
+            padding: 10px 18px; 
+            border-radius: 12px; 
+            text-decoration: none; 
+            font-size: 0.8rem; 
+            font-weight: 700; 
+            display: inline-block; 
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0,70,94,0.2);
+        }
+        .btn-profile:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,70,94,0.3); }
+
     </style>
 </head>
 <body>
     <div class="header"><img src="{{ url_for('static', filename='Logo.svg') }}" class="logo"></div>
     <div class="container">
         <h1 style="text-align: center; font-weight: 900; text-transform: uppercase; font-size: 1.5rem;">Admin</h1>
+        
         {% for b in bookings %}
-        <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date_raw }}" class="card-link">
-            <div class="drop-card">
-                <div class="drop-bar"></div>
-                <div class="card-body">
-                    <div class="school-name">{{ b.school }}</div>
-                    <div class="drop-date">{{ b.delivery_date_display }}</div>
+        <div class="drop-card">
+            <div class="drop-bar"></div>
+            <div class="card-body">
+                <div class="school-name">{{ b.school }}</div>
+                <div class="drop-date">{{ b.delivery_date_display }}</div>
 
-                    <div class="data-grid">
-                        <div>
-                            <span class="label">Staff Count</span>
-                            <div class="big-num">{{ b.staff_count }}</div>
-                        </div>
-                        <div>
-                            <span class="label">Booking Status</span>
-                            <span class="status-pill">{{ b.status }}</span>
-                        </div>
+                <div class="bottom-row">
+                    <div class="col-left">
+                        <span class="label">Staff</span>
+                        <div class="big-num">{{ b.staff_count }}</div>
+                    </div>
+
+                    <div class="col-mid">
+                        <span class="label">Status</span>
+                        <span class="status-pill">{{ b.status }}</span>
+                    </div>
+
+                    <div class="col-right">
+                        <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date_raw }}" class="btn-profile">
+                            Profile &rarr;
+                        </a>
                     </div>
                 </div>
-                <div class="arrow">→</div>
             </div>
-        </a>
+        </div>
         {% endfor %}
+        
+        {% if not bookings %}
+        <div style="text-align: center; opacity: 0.5; margin-top: 50px;">
+            <h3>No Bookings Found</h3>
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>
