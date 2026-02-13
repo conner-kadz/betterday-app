@@ -9,18 +9,14 @@ import io
 
 app = Flask(__name__)
 
-# --- CONFIGURATION ---
+# ==============================================================================
+# CONFIGURATION & UTILITIES
+# ==============================================================================
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
 
-# --- FILTERS ---
-@app.template_filter('decode_school')
-def decode_school_filter(s):
-    return str(s).replace('+', ' ')
-
-# --- UTILITIES ---
 def get_nice_date(date_str):
     try:
-        # Returns "Monday, Jan 5"
+        # Converts 2026-02-15 -> "Monday, Feb 15"
         dt = datetime.strptime(str(date_str).split('T')[0], '%Y-%m-%d')
         return dt.strftime('%A, %b %d')
     except: return date_str
@@ -45,6 +41,10 @@ def get_wednesday_deadline(delivery_date_str):
         return deadline.strftime('%b %d') 
     except: return "TBD"
 
+@app.template_filter('decode_school')
+def decode_school_filter(s):
+    return str(s).replace('+', ' ')
+
 @app.template_filter('is_past')
 def is_past_filter(date_str):
     try:
@@ -52,7 +52,12 @@ def is_past_filter(date_str):
         return date_obj < datetime.now().date()
     except: return False
 
-# --- 1. PRINCIPAL BOOKING CALENDAR (HOMEPAGE) ---
+
+# ==============================================================================
+# SECTION 1: THE FRONT DOOR (Principal Calendar)
+# Do NOT delete this section. It runs the Homepage.
+# ==============================================================================
+
 @app.route('/')
 def index():
     taken = []
@@ -68,7 +73,8 @@ def index():
     
     for d in range(1, num_days + 1):
         date_obj = datetime(view_y, view_m, d)
-        if date_obj.weekday() < 3: # Mon-Wed only
+        # Only show Mon-Wed (0, 1, 2)
+        if date_obj.weekday() < 3: 
             ds = date_obj.strftime('%Y-%m-%d')
             valid_dates.append({
                 'raw_date': ds, 
@@ -83,6 +89,7 @@ def book(date_raw):
     if request.method == 'GET':
         return render_template('form.html', date_display=date_raw, raw_date=date_raw)
     
+    # Submit booking to Sheet
     data = {
         "date": date_raw,
         "contact_name": request.form.get("contact_name"),
@@ -97,9 +104,14 @@ def book(date_raw):
     resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
     return resp
 
-# --- 2. AMY'S DASHBOARD & PROFILE ---
-@app.route('/amy-admin')
-def amy_admin():
+
+# ==============================================================================
+# SECTION 2: AMY'S DASHBOARD (The Admin System)
+# Handles the Hub, Profiles, CSVs, and PDFs.
+# ==============================================================================
+
+@app.route('/BD-Admin')
+def bd_admin():
     try:
         response = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=15)
         bookings_raw = response.json() if response.status_code == 200 else []
@@ -108,6 +120,7 @@ def amy_admin():
     refined = []
     for b in bookings_raw:
         try:
+            # Skip header row and row indexes
             if "Date" in str(b[0]) or str(b[2]).isdigit(): continue
             d_date = str(b[0]).split('T')[0]
             status = str(b[7]) if len(b) > 7 else "New Booking"
@@ -126,7 +139,7 @@ def amy_admin():
 def school_profile(school_name, date):
     clean_school_name = school_name.replace('+', ' ')
     
-    # 1. Get Staff Count
+    # 1. Get Booking Details (for Staff Count)
     staff_count = 0
     try:
         r = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=10)
@@ -161,9 +174,10 @@ def download_csv(school_name, date):
         orders = r.json()
     except: orders = []
 
+    # Create CSV in memory
     si = io.StringIO()
     cw = csv.writer(si)
-    cw.writerow(['Teacher Name', 'Dish ID'])
+    cw.writerow(['Teacher Name', 'Dish ID']) # Header
     for o in orders:
         cw.writerow([o['teacher'], o['meal_id']])
         
@@ -180,6 +194,7 @@ def picklist_print(school_name, date):
         orders = r.json()
     except: orders = []
     
+    # Group by dish for summary
     summary = {}
     for o in orders:
         mid = o['meal_id']
@@ -187,7 +202,12 @@ def picklist_print(school_name, date):
         
     return render_template('picklist.html', school=clean_school_name, date=date, orders=orders, summary=summary)
 
-# --- 3. TEACHER ORDERING ---
+
+# ==============================================================================
+# SECTION 3: TEACHER ORDERS (The User Interface)
+# Handles the Menu, Dish selection, and submission.
+# ==============================================================================
+
 @app.route('/order/<delivery_date>')
 def teacher_order(delivery_date):
     anchor = get_sunday_anchor(delivery_date)
