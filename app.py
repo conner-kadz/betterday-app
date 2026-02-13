@@ -139,7 +139,7 @@ def teacher_order(delivery_date):
         {"id": "490", "name": "Winner Winner, Chicken Dinner"}
     ]
     
-    return render_template('order.html', 
+    return render_template('orderform.html', 
                            delivery_date=delivery_date, 
                            anchor=anchor_sunday, 
                            menu=menu_items)
