@@ -11,22 +11,24 @@
         
         .profile-card { max-width: 500px; margin: 0 auto; background: var(--white); border-radius: 20px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
         
-        .nav-btn { display: inline-block; background: #eee; padding: 8px 15px; border-radius: 8px; color: #666; text-decoration: none; font-size: 0.8rem; margin-bottom: 20px; }
+        /* FIX: Return button style */
+        .nav-btn { display: inline-block; background: #eee; padding: 8px 15px; border-radius: 8px; color: #666; text-decoration: none; font-size: 0.8rem; margin-bottom: 20px; font-weight: 500; }
         
         h1 { font-size: 1.8rem; font-weight: 700; margin: 0; }
         .date-sub { font-size: 1rem; color: #888; margin-bottom: 25px; }
 
         .stat-box { background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-        .stat-label { font-size: 0.75rem; text-transform: uppercase; color: #aaa; letter-spacing: 1px; margin-bottom: 5px; }
-        .stat-val { font-size: 1.1rem; }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; color: #aaa; letter-spacing: 1px; margin-bottom: 5px; font-weight: 600; }
+        .stat-val { font-size: 1.1rem; font-weight: 500; }
 
+        /* FIX: Progress Bar logic */
         .progress-bar { height: 10px; background: #eee; border-radius: 10px; overflow: hidden; margin-top: 10px; }
         .progress-fill { height: 100%; background: var(--primary); }
 
         .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
         .btn { display: block; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; font-weight: 500; }
         .btn-main { background: var(--dark); color: white; grid-column: span 2; }
-        .btn-sec { background: #f0f0f0; color: var(--dark); }
+        .btn-sec { background: #f0f0f0; color: var(--dark); border: 1px solid #ddd; }
 
         .link-area { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
         .url-box { background: #f0f7ff; color: var(--primary); padding: 10px; border-radius: 8px; font-size: 0.8rem; word-break: break-all; margin-bottom: 10px; }
@@ -41,9 +43,11 @@
         <div class="date-sub">{{ display_date }}</div>
 
         <div class="stat-box">
-            <div class="stat-label">Orders Placed</div>
-            <div class="stat-val">{{ orders }} / {{ staff }} Staff</div>
-            <div class="progress-bar"><div class="progress-fill" style="width: {{ (orders / (staff if staff > 0 else 1) * 100) }}%"></div></div>
+            <div class="stat-label">Participation</div>
+            <div class="stat-val">{{ orders }} / {{ staff }} Staff Ordered</div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ (orders / (staff if staff > 0 else 1) * 100) }}%"></div>
+            </div>
         </div>
 
         <div class="stat-box">
@@ -52,7 +56,7 @@
         </div>
 
         <div class="action-grid">
-            <a href="/picklist/{{ school }}/{{ date }}" target="_blank" class="btn btn-sec">📄 PDF Picklist</a>
+            <a href="/picklist/{{ school }}/{{ date }}" target="_blank" class="btn btn-sec">📄 Picklist PDF</a>
             <a href="/download-csv/{{ school }}/{{ date }}" class="btn btn-sec">📊 Download CSV</a>
         </div>
 
