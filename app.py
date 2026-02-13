@@ -228,16 +228,30 @@ def teacher_order(delivery_date):
 
 @app.route('/submit-order', methods=['POST'])
 def submit_order():
+    # 1. Capture the data
+    school_name = request.form.get('school_name')
+    delivery_date = request.form.get('delivery_date')
+    
     data = {
         "action": "submit_teacher_order",
         "name": request.form.get('teacher_name'),
         "meal_id": request.form.get('meal_id'),
-        "delivery_date": request.form.get('delivery_date'),
-        "school": request.form.get('school_name'),
+        "delivery_date": delivery_date,
+        "school": school_name,
         "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
-    requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=10)
-    return render_template('order_success.html') # New template
+    
+    # 2. Send to Google Sheets (Fire and Forget)
+    try:
+        requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=5)
+    except: pass
+    
+    # 3. Generate the Share Link
+    # _external=True creates the full "https://..." link
+    share_link = url_for('teacher_order', delivery_date=delivery_date, school=school_name, _external=True)
+    
+    # 4. Render Success Page with the link
+    return render_template('order_success.html', share_link=share_link)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5001)))
