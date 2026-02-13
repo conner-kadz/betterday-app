@@ -51,25 +51,50 @@ def amy_admin():
     try:
         response = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=15)
         bookings_raw = response.json() if response.status_code == 200 else []
-    except: bookings_raw = []
+        # DEBUG: Print to Render logs so we can see the raw data
+        print(f"RAW DATA FROM SHEET: {bookings_raw[:3]}") 
+    except Exception as e:
+        print(f"Error fetching: {e}")
+        bookings_raw = []
 
     refined = []
-    # Skip header row [0]
-    for b in bookings_raw[1:]:
+    # We skip the header row. 
+    # Based on your CSV: 0=Date, 1=Contact, 2=School, 7=Status
+    for row in bookings_raw:
         try:
-            if len(b) >= 3 and b[2]:
-                d_date = str(b[0]).split('T')[0]
-                status = str(b[7]) if len(b) > 7 else "New Booking"
-                refined.append({
-                    "delivery_date": d_date,
-                    "school": str(b[2]),
-                    "status": status,
-                    "progress": get_progress(status),
-                    "deadline": get_wednesday_deadline(d_date),
-                    "anchor_sunday": get_sunday_anchor(d_date)
-                })
-        except: continue
+            # CHECK: If the first item is "Lunch Date", it's the header. Skip it.
+            if "Date" in str(row[0]):
+                continue
+            
+            # CHECK: If the school name is just a number (like '2'), 
+            # we check if we need to shift our index.
+            school_val = str(row[2])
+            date_val = str(row[0]).split('T')[0]
+            
+            # If school_val is a number, the columns are shifted in the API response
+            if school_val.isdigit() and len(row) > 3:
+                # Emergency fallback: try index 3 if index 2 is a digit
+                school_val = str(row[3]) 
+
+            status_val = str(row[7]) if len(row) > 7 else "New Booking"
+
+            refined.append({
+                "delivery_date": date_val,
+                "school": school_name_cleaner(school_val),
+                "status": status_val,
+                "progress": get_progress(status_val),
+                "deadline": get_wednesday_deadline(date_val),
+                "anchor_sunday": get_sunday_anchor(date_val)
+            })
+        except:
+            continue
     return render_template('admin.html', bookings=refined)
+
+def school_name_cleaner(val):
+    # Safety check to ensure we aren't displaying a raw index
+    if val == "1" or val == "2" or val == "0":
+        return "Unknown School (Check Columns)"
+    return val
 
 @app.route('/order/<delivery_date>')
 def teacher_order(delivery_date):
