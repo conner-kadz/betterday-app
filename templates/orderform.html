@@ -5,79 +5,162 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --radius: 20px; }
-        body { background: var(--accent); font-family: sans-serif; margin: 0; padding-bottom: 120px; color: var(--dark); }
+        body { background: var(--accent); font-family: -apple-system, sans-serif; margin: 0; padding-bottom: 140px; color: var(--dark); }
         .header { background: var(--primary); padding: 15px; text-align: center; }
         .logo { height: 40px; }
         .container { max-width: 1000px; margin: 0 auto; padding: 20px; } 
 
-        .school-title { text-align: center; font-size: 1.8rem; font-weight: 700; margin: 20px 0 5px 0; }
-        .deadline { text-align: center; color: #e74c3c; font-size: 0.9rem; margin-bottom: 30px; }
+        .school-title { text-align: center; font-size: 1.6rem; font-weight: 800; margin: 20px 0 5px 0; line-height: 1.2; }
+        .deadline { text-align: center; color: #e74c3c; font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; background: rgba(231, 76, 60, 0.1); display: inline-block; padding: 5px 15px; border-radius: 50px; }
+        .center-wrap { text-align: center; }
 
-        /* FIX: box-sizing prevents overshoot */
-        .input-box { width: 100%; max-width: 400px; margin: 0 auto 40px auto; display: block; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 1rem; box-sizing: border-box; }
+        /* Instructions Box */
+        .instruct-box { background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .instruct-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 5px; }
+        .instruct-text { color: #666; font-size: 0.9rem; margin-bottom: 15px; }
+        .view-more { color: var(--primary); font-weight: 700; text-decoration: none; font-size: 0.9rem; }
 
-        /* FIX: Responsive Grid (2 cols mobile, 4 cols desktop) */
-        .meal-grid { display: grid; gap: 20px; grid-template-columns: repeat(2, 1fr); }
+        /* Input */
+        .input-box { width: 100%; max-width: 400px; margin: 10px auto 0 auto; display: block; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 1rem; box-sizing: border-box; }
+        .input-label { display: block; font-size: 0.8rem; font-weight: 700; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Grid */
+        .meal-grid { display: grid; gap: 20px; grid-template-columns: repeat(2, 1fr); margin-top: 30px; }
         @media (min-width: 768px) { .meal-grid { grid-template-columns: repeat(4, 1fr); } }
 
-        .card { background: white; border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: 0.2s; border: 4px solid transparent; position: relative; }
-        .card:hover { transform: translateY(-5px); }
+        /* Cards */
+        .card { background: white; border-radius: var(--radius); overflow: hidden; transition: 0.2s; border: 3px solid transparent; position: relative; display: flex; flex-direction: column; }
         .card.selected { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(78,162,253,0.2); }
         
         .img-wrap { width: 100%; aspect-ratio: 1/1; background: #eee; position: relative; }
         .img-wrap img { width: 100%; height: 100%; object-fit: cover; }
         
-        .card-body { padding: 15px; text-align: center; }
-        .name { font-weight: 700; font-size: 0.95rem; line-height: 1.3; margin-bottom: 5px; }
-        .info { font-size: 0.75rem; color: #999; text-decoration: none; border-bottom: 1px dashed #ccc; }
+        .card-body { padding: 15px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; }
+        .name { font-weight: 700; font-size: 0.95rem; line-height: 1.3; margin-bottom: 5px; flex-grow: 1; }
+        .info { font-size: 0.75rem; color: #999; text-decoration: none; border-bottom: 1px dashed #ccc; align-self: center; margin-bottom: 15px; }
 
-        .check { position: absolute; top: 10px; right: 10px; background: var(--primary); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0); transition: 0.2s; }
-        .card.selected .check { opacity: 1; transform: scale(1); }
+        /* Select Button on Card */
+        .card-btn { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #eee; background: white; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s; }
+        .card.selected .card-btn { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; display: flex; justify-content: center; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); }
-        .btn { background: #ccc; color: white; padding: 15px 40px; border-radius: 50px; font-weight: 700; border: none; font-size: 1.1rem; pointer-events: none; transition: 0.3s; }
-        .btn.active { background: var(--dark); pointer-events: auto; }
+        /* Sticky Footer */
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; display: flex; justify-content: center; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 100; }
+        .btn-submit { background: #ccc; color: white; padding: 15px 40px; border-radius: 50px; font-weight: 800; border: none; font-size: 1.1rem; pointer-events: none; transition: 0.3s; width: 100%; max-width: 400px; }
+        .btn-submit.active { background: var(--dark); pointer-events: auto; cursor: pointer; }
+
+        /* Modal Popup */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
+        .modal { background: white; padding: 30px; border-radius: 25px; max-width: 400px; text-align: center; animation: popUp 0.3s ease-out; }
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal h2 { margin-top: 0; color: var(--dark); font-weight: 900; }
+        .modal p { color: #666; line-height: 1.5; margin-bottom: 25px; }
+        .modal-btn { background: var(--primary); color: white; padding: 15px 30px; border-radius: 50px; border: none; font-weight: 800; font-size: 1rem; width: 100%; cursor: pointer; }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
+    <div class="modal-overlay" id="introModal">
+        <div class="modal">
+            <div style="font-size: 3rem; margin-bottom: 10px;">👋</div>
+            <h2>Welcome to BetterDay</h2>
+            <p>Your Admin has organized a team lunch for <strong>{{ delivery_date }}</strong>!</p>
+            <p style="font-size: 0.9rem; background: #f0f7ff; padding: 10px; border-radius: 10px;">
+                <strong>How it works:</strong><br>
+                1. Enter your name<br>
+                2. Pick 1 delicious dish<br>
+                3. We deliver it fresh to the school
+            </p>
+            <button class="modal-btn" onclick="closeModal()">Let's Eat! 😋</button>
+            <div style="margin-top: 15px;">
+                <a href="https://eatbetterday.ca" target="_blank" style="color: #999; font-size: 0.8rem; text-decoration: none;">Visit Main Website</a>
+            </div>
+        </div>
+    </div>
+
     <div class="header"><img src="{{ url_for('static', filename='Logo.svg') }}" class="logo"></div>
+    
     <div class="container">
         <h1 class="school-title">{{ school_name | decode_school }}</h1>
-        <div class="deadline">Order By: Wednesday, {{ deadline }}</div>
+        <div class="center-wrap">
+            <div class="deadline">⏰ Orders close Wednesday @ 4:00 PM</div>
+        </div>
 
         <form action="/submit-order" method="POST" id="form">
             <input type="hidden" name="meal_id" id="mid">
             <input type="hidden" name="school_name" value="{{ school_name }}">
             <input type="hidden" name="delivery_date" value="{{ delivery_date }}">
             
-            <input type="text" name="teacher_name" id="name" class="input-box" placeholder="Your Full Name" required>
+            <div class="instruct-box">
+                <div class="instruct-title">Who is this meal for?</div>
+                <div class="instruct-text">Please enter your full name so we can label your meal.</div>
+                <input type="text" name="teacher_name" id="name" class="input-box" placeholder="e.g. Ms. Robinson" required onkeyup="checkForm()">
+            </div>
+
+            <h3 style="text-align: center; margin-top: 30px; text-transform: uppercase; color: #999; font-size: 0.9rem;">Select One Dish</h3>
 
             <div class="meal-grid">
                 {% for item in menu %}
-                <div class="card" onclick="pick(this, '{{ item.id }}')">
+                <div class="card" id="card-{{ item.id }}" onclick="pick('{{ item.id }}')">
                     <div class="img-wrap">
                         <img src="https://eatbetterday.ca/data/meals/{{ item.id }}.jpg" onerror="this.src='{{ url_for('static', filename='Logo.svg') }}'">
-                        <div class="check">✔</div>
                     </div>
                     <div class="card-body">
                         <div class="name">{{ item.name }}</div>
                         <a href="https://eatbetterday.ca/meal/{{ item.id }}" target="_blank" class="info" onclick="event.stopPropagation()">View Ingredients</a>
+                        <button type="button" class="card-btn" id="btn-{{ item.id }}">Select Dish</button>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
-            <div class="footer"><button id="btn" class="btn">Pick Meal</button></div>
+            <div class="footer">
+                <button id="submitBtn" class="btn-submit">Complete Order</button>
+            </div>
         </form>
     </div>
+
     <script>
-        function pick(el, id) {
+        // Modal Logic
+        function closeModal() {
+            document.getElementById('introModal').classList.add('hidden');
+        }
+
+        // Selection Logic
+        function pick(id) {
+            // Reset all cards
             document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
+            document.querySelectorAll('.card-btn').forEach(b => {
+                b.innerText = "Select Dish";
+                b.style.background = "white";
+                b.style.color = "#888";
+            });
+
+            // Highlight selected
+            const card = document.getElementById('card-' + id);
+            const btn = document.getElementById('btn-' + id);
+            
+            card.classList.add('selected');
+            btn.innerText = "Selected ✔";
+            
+            // Set Hidden Value
             document.getElementById('mid').value = id;
-            var btn = document.getElementById('btn');
-            btn.classList.add('active');
-            btn.innerText = "Place Order";
+            
+            checkForm();
+        }
+
+        function checkForm() {
+            const name = document.getElementById('name').value;
+            const mid = document.getElementById('mid').value;
+            const btn = document.getElementById('submitBtn');
+
+            if (name.length > 1 && mid) {
+                btn.classList.add('active');
+                btn.innerText = "Place Order";
+            } else {
+                btn.classList.remove('active');
+                btn.innerText = "Complete Order";
+            }
         }
     </script>
 </body>
