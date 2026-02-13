@@ -3,91 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BetterDay Admin</title>
+    <title>The Drop Dashboard | BetterDay Admin</title>
     <style>
-        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --yellow: #ffd54f; }
-        body { background: var(--accent); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding-bottom: 50px; }
-        .header { background: var(--primary); padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .logo { height: 45px; }
-        .container { max-width: 650px; margin: 30px auto; padding: 0 20px; }
+        :root { 
+            --primary: #4ea2fd; 
+            --accent: #faebda; 
+            --dark: #00465e; 
+            --white: #ffffff;
+            --red: #e74c3c;
+            --yellow: #ffd54f;
+        }
         
-        .admin-title { color: var(--dark); font-weight: 900; text-align: center; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px; }
-
-        .booking-card { 
-            background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-left: 12px solid var(--primary);
-            display: flex; flex-direction: column; gap: 15px; position: relative;
+        body { 
+            background-color: var(--accent); 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            padding-bottom: 50px;
+            color: var(--dark);
         }
 
-        .school-name { margin: 0; color: var(--dark); font-size: 1.4rem; font-weight: 800; }
-        .delivery-date { color: var(--primary); font-weight: 700; font-size: 0.95rem; }
-        
-        .deadline-area { background: #fff5f5; border: 1px solid #ffe3e3; padding: 10px; border-radius: 10px; color: #e74c3c; font-weight: 800; font-size: 0.8rem; }
-
-        .crm-controls { 
-            display: flex; justify-content: space-between; align-items: center; 
-            background: #fdfcfb; border: 1px solid #f0efed; padding: 15px; border-radius: 12px;
+        /* Fixed Header */
+        .header { 
+            background: var(--primary); 
+            padding: 20px; 
+            text-align: center; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .status-label { font-size: 0.7rem; font-weight: 900; color: #aaa; text-transform: uppercase; }
-        
-        select {
-            padding: 10px; border-radius: 8px; border: 2px solid #eee; 
-            font-weight: 700; color: var(--dark); cursor: pointer; background: white;
+        .header img { 
+            height: 50px; 
+            width: auto; 
+            display: block; 
+            margin: 0 auto; 
         }
 
-        .order-link { text-align: right; font-size: 0.75rem; font-weight: 800; color: var(--primary); text-decoration: none; margin-top: 5px; }
-        .order-link:hover { text-decoration: underline; }
+        .container { 
+            max-width: 700px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
+        }
+
+        .admin-title { 
+            font-size: 2.2rem; 
+            font-weight: 900; 
+            text-align: center; 
+            margin-bottom: 40px; 
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        /* The Clickable Card */
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            margin-bottom: 25px;
+        }
+
+        .drop-card { 
+            background: var(--white); 
+            border-radius: 25px; 
+            display: flex; 
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .card-link:hover .drop-card {
+            transform: translateY(-5px);
+        }
+
+        /* The Stylized Drop Bar (Left Accent) */
+        .drop-bar { 
+            width: 16px; 
+            background-color: var(--primary); 
+            flex-shrink: 0; 
+        }
+
+        .card-body { 
+            padding: 30px; 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+        }
+
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+        }
+
+        .school-name { 
+            margin: 0; 
+            font-size: 1.8rem; 
+            font-weight: 800; 
+            line-height: 1.1;
+        }
+
+        .delivery-date { 
+            color: var(--primary); 
+            font-weight: 700; 
+            font-size: 1.2rem; 
+            margin-top: 8px;
+        }
+
+        .anchor-pill { 
+            background: var(--yellow); 
+            padding: 6px 12px; 
+            border-radius: 8px; 
+            font-size: 0.7rem; 
+            font-weight: 900; 
+            color: var(--dark);
+        }
+
+        /* Improved Deadline Area */
+        .deadline-area { 
+            background: #fff5f5; 
+            border: 1px solid #ffe3e3; 
+            padding: 15px; 
+            border-radius: 15px; 
+            color: var(--red); 
+            font-weight: 800; 
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .crm-footer { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-top: 1px solid #f0f0f0; 
+            padding-top: 20px;
+        }
+
+        .status-pill {
+            background: #f0f4f8;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .view-profile { 
+            font-weight: 800; 
+            color: var(--primary); 
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 500px) {
+            .school-name { font-size: 1.4rem; }
+            .delivery-date { font-size: 1rem; }
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <img src="https://www.eatbetterday.ca/cdn/shop/files/Logo_White_300x.png" class="logo" alt="BetterDay Logo">
+        <img src="https://www.eatbetterday.ca/cdn/shop/files/Logo_White_300x.png" alt="BetterDay Logo">
     </div>
 
     <div class="container">
-        <h2 class="admin-title">School Delivery Dashboard</h2>
+        <h1 class="admin-title">School Lunch Drop Dashboard</h1>
 
         {% for b in bookings %}
         {% if b.school %}
-        <div class="booking-card">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <h3 class="school-name">{{ b.school }}</h3>
-                    <div class="delivery-date">🚚 Delivery: {{ b.delivery_date }}</div>
+        <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date }}" class="card-link">
+            <div class="drop-card">
+                <div class="drop-bar"></div>
+                <div class="card-body">
+                    
+                    <div class="card-header">
+                        <div>
+                            <h3 class="school-name">{{ b.school }}</h3>
+                            <div class="delivery-date">🚚 Drop: {{ b.delivery_date }}</div>
+                        </div>
+                        <div class="anchor-pill">MENU ANCHOR: {{ b.anchor_sunday }}</div>
+                    </div>
+
+                    <div class="deadline-area">
+                        ⏰ ORDER DEADLINE: Wednesday, {{ b.deadline }}
+                    </div>
+
+                    <div class="crm-footer">
+                        <div class="status-pill">{{ b.status }}</div>
+                        <div class="view-profile">View Full Profile →</div>
+                    </div>
+                    
                 </div>
-                <div style="background: var(--yellow); padding: 5px 10px; border-radius: 6px; font-size: 0.6rem; font-weight: 900;">
-                    ANCHOR: {{ b.anchor_sunday }}
-                </div>
             </div>
-
-            <div class="deadline-area">
-                ⏰ ORDER DEADLINE: {{ b.deadline }}
-            </div>
-
-            <div class="crm-controls">
-                <span class="status-label">Onboarding Progress</span>
-                <select onchange="console.log('Update:', this.value)">
-                    <option value="New Booking" {% if b.status == 'New Booking' %}selected{% endif %}>🆕 New Booking</option>
-                    <option value="Link Sent" {% if b.status == 'Link Sent' %}selected{% endif %}>🔗 Link Sent</option>
-                    <option value="In Progress" {% if b.status == 'In Progress' %}selected{% endif %}>⏳ In Progress</option>
-                    <option value="Orders Locked" {% if b.status == 'Orders Locked' %}selected{% endif %}>⛔ Orders Locked</option>
-                    <option value="Culinary Exported" {% if b.status == 'Culinary Exported' %}selected{% endif %}>📦 Culinary Exported</option>
-                    <option value="Out for Delivery" {% if b.status == 'Out for Delivery' %}selected{% endif %}>🚚 Out for Delivery</option>
-                </select>
-            </div>
-
-            <a href="/order/{{ b.delivery_date }}?school={{ b.school | replace(' ', '+') }}" target="_blank" class="order-link">
-                Open Teacher Order Form 🔗
-            </a>
-        </div>
+        </a>
         {% endif %}
         {% endfor %}
 
         {% if not bookings %}
-        <div style="text-align: center; padding: 40px; opacity: 0.5;">
-            <h3>No bookings found.</h3>
-            <p>New bookings will appear here automatically.</p>
+        <div style="text-align: center; padding: 60px; opacity: 0.5;">
+            <h2 style="font-weight: 900;">No active lunch drops.</h2>
+            <p>New bookings will appear here instantly.</p>
         </div>
         {% endif %}
     </div>
