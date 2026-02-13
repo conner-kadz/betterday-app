@@ -15,7 +15,6 @@ def get_sunday_anchor(delivery_date_str):
     """Finds the Sunday before the delivery date for Buffer Sheet matching"""
     try:
         delivery_date = datetime.strptime(delivery_date_str, '%Y-%m-%d')
-        # weekday(): Mon=0 ... Sun=6. Sunday anchor is previous Sunday.
         days_to_subtract = (delivery_date.weekday() + 1) % 7
         if days_to_subtract == 0: days_to_subtract = 7
         return (delivery_date - timedelta(days=days_to_subtract)).strftime('%Y-%m-%d')
@@ -26,8 +25,9 @@ def get_wednesday_deadline(delivery_date_str):
     try:
         delivery_date = datetime.strptime(delivery_date_str, '%Y-%m-%d')
         # We need the Wednesday of the week prior to the delivery week.
+        # Weekday: Mon=0, Tue=1, Wed=2...
         days_to_subtract = (delivery_date.weekday() - 2) % 7
-        # Adjust to ensure we are looking at the previous week's Wednesday
+        # Adjust to ensure we go back at least 5 days (to the previous Wed)
         if days_to_subtract <= 2:
             days_to_subtract += 7
         deadline = delivery_date - timedelta(days=days_to_subtract)
@@ -100,7 +100,7 @@ def book(date_raw):
         resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
         return resp
 
-# --- AMY'S COMMAND CENTER (CRM) ---
+# --- THE DROP DASHBOARD (CRM) ---
 @app.route('/amy-admin')
 def amy_admin():
     try:
@@ -111,16 +111,30 @@ def amy_admin():
 
     refined = []
     for b in bookings_raw:
-        # Columns: [Date, Contact, Email, School, Address, Count, Time, Notes, Status]
-        d_date = b[0]
-        refined.append({
-            "school": b[3],
-            "delivery_date": d_date,
-            "status": b[8] if len(b) > 8 else "New Booking",
-            "deadline": get_wednesday_deadline(d_date),
-            "anchor_sunday": get_sunday_anchor(d_date)
-        })
+        # Spreadsheet Mapping: [0:Date, 1:Contact, 2:Email, 3:School, 4:Address, 5:Staff, 6:Time, 7:Notes, 8:Status]
+        if len(b) >= 4:
+            d_date = b[0]
+            refined.append({
+                "delivery_date": d_date,
+                "contact": b[1],
+                "email": b[2],
+                "school": b[3],
+                "status": b[8] if len(b) > 8 else "New Booking",
+                "deadline": get_wednesday_deadline(d_date),
+                "anchor_sunday": get_sunday_anchor(d_date)
+            })
     return render_template('admin.html', bookings=refined)
+
+# --- SCHOOL PROFILE VIEW ---
+@app.route('/school-profile/<school_name>/<date>')
+def school_profile(school_name, date):
+    # In the future, we can fetch live order counts here
+    deadline = get_wednesday_deadline(date)
+    # We pass the full school details to the profile template
+    return render_template('profile.html', 
+                           school=school_name, 
+                           date=date, 
+                           deadline=deadline)
 
 # --- TEACHER ORDERING ---
 @app.route('/order/<delivery_date>')
@@ -142,7 +156,11 @@ def teacher_order(delivery_date):
                     menu_items.append({"id": m_id, "name": m_name})
     except: pass
 
-    return render_template('orderform.html', delivery_date=delivery_date, deadline=deadline, menu=menu_items, school_name=school_name)
+    return render_template('orderform.html', 
+                           delivery_date=delivery_date, 
+                           deadline=deadline, 
+                           menu=menu_items, 
+                           school_name=school_name)
 
 @app.route('/submit-order', methods=['POST'])
 def submit_order():
