@@ -129,16 +129,35 @@ def amy_admin():
 # --- TEACHER ORDERING LINK ---
 @app.route('/order/<delivery_date>')
 def teacher_order(delivery_date):
-    # This page uses the Sunday look-back to fetch the correct I-T items
+    # 1. Calculate the Sunday Anchor (e.g., March 2nd -> Feb 15th)
     anchor_sunday = get_sunday_anchor(delivery_date)
     
-    # This list will eventually be fetched live from your Google Sheet
-    menu_items = [
-        {"id": "509", "name": "Casanova Chicken Parm"},
-        {"id": "305", "name": "Halifax Hero Donair Bowl"},
-        {"id": "490", "name": "Winner Winner, Chicken Dinner"}
-    ]
-    
+    menu_items = []
+    try:
+        # 2. Call your Google Script to get the real menu from the Buffer sheet
+        response = requests.post(GOOGLE_SCRIPT_URL, json={
+            "action": "get_menu",
+            "sunday_anchor": anchor_sunday
+        }, timeout=10)
+        
+        if response.status_code == 200:
+            raw_data = response.json()
+            raw_menu = raw_data.get('menu', [])
+            
+            # 3. Clean the names (extract the #ID and the Name)
+            for item in raw_menu:
+                if item and str(item).strip():
+                    # Look for # followed by numbers (like #509)
+                    match = re.search(r'#(\d+)', str(item))
+                    m_id = match.group(1) if match else "000"
+                    # Remove the ID from the name so it looks clean
+                    m_name = str(item).split('#')[0].replace('\n', ' ').strip()
+                    menu_items.append({"id": m_id, "name": m_name})
+                    
+    except Exception as e:
+        print(f"Connection Error: {e}")
+
+    # 4. Send the real menu to the page
     return render_template('orderform.html', 
                            delivery_date=delivery_date, 
                            anchor=anchor_sunday, 
