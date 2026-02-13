@@ -1,84 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>BetterDay | Teacher Order</title>
+    <title>BetterDay Order</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --radius: 24px; }
-        body { background: var(--accent); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding-bottom: 140px; margin: 0; color: var(--dark); }
+        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --radius: 20px; }
+        body { background: var(--accent); font-family: -apple-system, sans-serif; padding-bottom: 120px; margin: 0; }
+        .header { background: var(--primary); padding: 20px; text-align: center; }
+        .logo { height: 45px; width: auto; }
+        .container { padding: 30px; max-width: 500px; margin: 0 auto; }
+        .school-header { font-size: 2.2rem; font-weight: 900; text-align: center; margin: 0; color: var(--dark); }
+        .deadline-notice { color: #e74c3c; font-weight: 800; text-align: center; margin-top: 10px; font-size: 1rem; }
         
-        /* Branded Header */
-        .header { background: var(--primary); padding: 25px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .logo { height: 50px; width: auto; }
+        .meal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .meal-card { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; border: 6px solid transparent; transition: 0.2s; }
+        .meal-card.selected { border-color: var(--primary); transform: translateY(-5px); }
+        .meal-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #eee; }
+        .meal-name { padding: 15px; font-weight: 800; font-size: 0.95rem; text-align: center; color: var(--dark); }
 
-        .container { padding: 30px; max-width: 550px; margin: 0 auto; }
-        .school-header { text-align: center; margin-bottom: 35px; }
-        .school-header h1 { font-size: 2.6rem; font-weight: 900; margin: 0; letter-spacing: -1.5px; line-height: 1; }
-        .deadline-badge { background: #fff1f0; color: #e74c3c; padding: 12px 20px; border-radius: 15px; font-weight: 800; font-size: 1rem; margin-top: 15px; display: inline-block; border: 2px solid #ffd1d1; }
-        
-        /* Name Input */
-        .input-group { background: white; padding: 30px; border-radius: var(--radius); margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .input-group label { display: block; font-weight: 900; font-size: 0.85rem; color: var(--primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .name-input { width: 100%; padding: 20px; border: 3px solid #f8f9fa; border-radius: 18px; font-size: 1.3rem; box-sizing: border-box; outline: none; transition: border-color 0.2s; }
-        .name-input:focus { border-color: var(--primary); }
-
-        /* Meal Grid */
-        .meal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .meal-card { 
-            background: white; border-radius: var(--radius); overflow: hidden; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.07); cursor: pointer; 
-            border: 6px solid transparent; transition: all 0.2s ease;
-        }
-        .meal-card.selected { border-color: var(--primary); transform: translateY(-8px); box-shadow: 0 15px 35px rgba(78, 162, 253, 0.2); }
-        
-        .photo-container { width: 100%; aspect-ratio: 1/1; background: #eee; position: relative; }
-        .meal-img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .meal-name { padding: 20px; font-weight: 800; font-size: 1rem; text-align: center; line-height: 1.2; display: flex; align-items: center; justify-content: center; min-height: 3.5em; }
-
-        /* Submit Bar */
-        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 30px; box-shadow: 0 -15px 40px rgba(0,0,0,0.1); display: flex; justify-content: center; z-index: 1000; }
-        .order-button { width: 100%; max-width: 450px; background: var(--dark); color: white; border: none; padding: 22px; border-radius: 60px; font-weight: 900; font-size: 1.3rem; cursor: pointer; transition: transform 0.1s; }
-        .order-button:active { transform: scale(0.98); }
+        .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 25px; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 100; }
+        .submit-btn { width: 100%; max-width: 450px; background: var(--dark); color: white; border: none; padding: 20px; border-radius: 50px; font-weight: 900; font-size: 1.2rem; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <header class="header">
-        <img src="https://www.eatbetterday.ca/cdn/shop/files/Logo_White_300x.png" class="logo">
-    </header>
+    <div class="header">
+        <img src="{{ url_for('static', filename='Logo.svg') }}" class="logo">
+    </div>
 
     <div class="container">
-        <div class="school-header">
-            <h1>{{ school_name }}</h1>
-            <div class="deadline-badge">⚠️ ORDER BY: {{ deadline }}</div>
-        </div>
+        <h1 class="school-header">{{ school_name }}</h1>
+        <div class="deadline-notice">⏰ Order By: Wednesday, {{ deadline }}</div>
 
         <form action="/submit-order" method="POST" id="orderForm">
+            <input type="hidden" name="meal_id" id="meal_id">
             <input type="hidden" name="delivery_date" value="{{ delivery_date }}">
             <input type="hidden" name="school_name" value="{{ school_name }}">
-            <input type="hidden" name="meal_id" id="meal_id">
 
-            <div class="input-group">
-                <label>First & Last Name</label>
-                <input type="text" name="teacher_name" required placeholder="Type your name..." class="name-input">
+            <div style="background: white; padding: 20px; border-radius: 20px; margin-top: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.03);">
+                <label style="font-weight: 900; font-size: 0.75rem; color: var(--primary); display: block; margin-bottom: 8px;">YOUR NAME</label>
+                <input type="text" name="teacher_name" required placeholder="Type name..." style="width:100%; padding:15px; border:2px solid #f2f2f2; border-radius:12px; font-size: 1rem; box-sizing: border-box;">
             </div>
 
             <div class="meal-grid">
                 {% for item in menu %}
                 <div class="meal-card" onclick="selectMeal(this, '{{ item.id }}')">
-                    <div class="photo-container">
-                        <img src="https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.png" 
-                             class="meal-img" 
-                             onerror="this.onerror=null; this.src='https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.jpg';">
-                    </div>
+                    <img src="https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.png" class="meal-img" onerror="this.onerror=null; this.src='https://www.eatbetterday.ca/cdn/shop/files/{{ item.id }}.jpg';">
                     <div class="meal-name">{{ item.name }}</div>
                 </div>
                 {% endfor %}
             </div>
 
-            <div class="footer">
-                <button type="submit" class="order-button">PLACE MY ORDER 🍎</button>
+            <div class="footer-bar">
+                <button type="submit" class="submit-btn">PLACE MY ORDER 🍎</button>
             </div>
         </form>
     </div>
@@ -89,14 +62,6 @@
             card.classList.add('selected');
             document.getElementById('meal_id').value = id;
         }
-
-        document.getElementById('orderForm').onsubmit = function() {
-            if (!document.getElementById('meal_id').value) {
-                alert("Please select a meal first!");
-                return false;
-            }
-            return true;
-        };
     </script>
 </body>
 </html>
