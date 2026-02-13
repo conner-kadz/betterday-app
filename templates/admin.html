@@ -6,10 +6,12 @@
     <title>BD Admin</title>
     <style>
         :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --gray: #f4f6f8; }
-        body { background: var(--gray); font-family: -apple-system, system-ui, sans-serif; margin: 0; padding-bottom: 50px; color: var(--dark); }
+        /* CHANGE: background set to var(--accent) for the cream color */
+        body { background: var(--accent); font-family: -apple-system, system-ui, sans-serif; margin: 0; padding-bottom: 50px; color: var(--dark); }
         
         /* Header */
-        .header { background: var(--primary); padding: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        /* Optional: Keep header white or make it primary/accent. White looks clean on cream. */
+        .header { background: var(--white); padding: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 30px; }
         .logo { height: 40px; }
 
         .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
@@ -30,7 +32,7 @@
 
         /* CARD STYLING */
         .menu-card { 
-            background: var(--primary); 
+            background: var(--white); 
             border-radius: 16px; 
             padding: 20px; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
@@ -67,7 +69,6 @@
             font-size: 0.7rem; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; 
             background: #eee; color: #666; display: inline-block; margin-bottom: 5px;
         }
-        /* Dynamic Status Colors could be added here if needed */
 
         /* Button */
         .btn-profile { 
