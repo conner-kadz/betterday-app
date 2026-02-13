@@ -80,4 +80,55 @@
 
         .footer { 
             display: flex; 
-            justify-content: space
+            justify-content: space-between; 
+            align-items: center; 
+            border-top: 1px solid #eee; 
+            padding-top: 15px; 
+            margin-top: 15px; 
+        }
+        .status-pill { background: #f8f9fa; padding: 6px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 800; color: #888; text-transform: uppercase; }
+        .view-more { color: var(--primary); font-weight: 900; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="{{ url_for('static', filename='Logo.svg') }}" class="logo">
+    </div>
+
+    <div class="container">
+        <h1 style="text-align: center; font-weight: 900; text-transform: uppercase; margin-bottom: 30px;">The Drop Dashboard</h1>
+
+        {% for b in bookings %}
+        <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date }}" class="card-link">
+            <div class="drop-card">
+                <div class="drop-bar"></div>
+                <div class="card-body">
+                    <h2 class="school-name">{{ b.school }}</h2>
+                    <div class="drop-date">📅 Drop: {{ b.delivery_date }}</div>
+
+                    <div class="progress-container">
+                        <div class="progress-fill {% if b.progress == 100 %}complete{% endif %}" style="width: {{ b.progress }}%;"></div>
+                    </div>
+
+                    <div class="deadline-badge">
+                        ⏰ DEADLINE: Wed, {{ b.deadline }}
+                    </div>
+
+                    <div class="footer">
+                        <span class="status-pill">{{ b.status }}</span>
+                        <span class="view-more">OPEN PROFILE →</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+        
+        {% if not bookings %}
+        <div style="text-align: center; padding: 40px; opacity: 0.5;">
+            <h3>No Active Drops</h3>
+            <p>Check the Google Sheet for new bookings.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
