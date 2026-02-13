@@ -4,154 +4,155 @@
     <title>{{ school }} Profile</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; }
-        body { background: var(--accent); font-family: -apple-system, sans-serif; padding: 20px; color: var(--dark); }
-        .header { background: var(--primary); padding: 15px; text-align: center; margin: -20px -20px 20px -20px; }
+        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --gray: #8898aa; }
+        body { background: var(--accent); font-family: -apple-system, system-ui, sans-serif; padding: 20px; color: var(--dark); }
+        .header { background: var(--primary); padding: 15px; text-align: center; margin: -20px -20px 20px -20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .logo { height: 40px; }
         
         .profile-container { max-width: 600px; margin: 0 auto; }
         
-        /* Navigation */
-        .nav-btn { display: inline-block; background: var(--white); padding: 8px 15px; border-radius: 8px; color: var(--dark); text-decoration: none; font-size: 0.8rem; margin-bottom: 20px; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* Nav */
+        .nav-btn { display: inline-flex; align-items: center; background: var(--white); padding: 8px 12px; border-radius: 8px; color: var(--dark); text-decoration: none; font-size: 0.8rem; margin-bottom: 20px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* Headers */
-        h1 { font-size: 1.8rem; font-weight: 800; margin: 0; line-height: 1.2; }
-        .date-sub { font-size: 1rem; color: #777; margin-bottom: 25px; }
+        /* Typography */
+        h1 { font-size: 1.5rem; font-weight: 800; margin: 0; line-height: 1.2; }
+        .date-sub { font-size: 0.95rem; color: #666; margin-bottom: 20px; font-weight: 500; }
         
-        h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #999; margin: 30px 0 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 5px; }
+        /* Card & Grid System */
+        .card { background: var(--white); border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 15px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-full { margin-top: 15px; }
 
-        /* White Cards */
-        .card { background: var(--white); border-radius: 20px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); margin-bottom: 20px; }
-
-        /* Data Points */
-        .data-row { display: flex; justify-content: space-between; margin-bottom: 12px; }
-        .data-label { color: #888; font-size: 0.9rem; }
-        .data-val { font-weight: 600; text-align: right; max-width: 60%; }
-
-        /* Inputs & Selects */
+        /* Field Styling (The "Tight" Look) */
+        .field-group { display: flex; flex-direction: column; }
+        .label { font-size: 0.65rem; text-transform: uppercase; color: var(--gray); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .value { font-size: 0.95rem; font-weight: 600; color: var(--dark); min-height: 20px; }
+        
+        /* Inputs & Selects - Compact */
         .edit-input { 
-            width: 100%; 
-            padding: 10px; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            font-size: 1rem; 
-            color: var(--dark); 
-            background: #f9f9f9;
-            box-sizing: border-box;
-            margin-top: 5px;
+            width: 100%; padding: 8px 10px; border: 1px solid #e0e0e0; border-radius: 6px; 
+            font-size: 0.95rem; color: var(--dark); background: #f8f9fa; box-sizing: border-box; 
         }
         .edit-select { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            background: white; 
-            font-size: 1rem; 
-            color: var(--dark); 
-            font-weight: 700;
+            width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px; 
+            background: #f8f9fa; font-size: 0.9rem; color: var(--dark); font-weight: 600; cursor: pointer;
         }
 
         /* Progress Bar */
-        .progress-bar { height: 10px; background: #eee; border-radius: 10px; overflow: hidden; margin-top: 10px; }
-        .progress-fill { height: 100%; background: var(--primary); }
+        .progress-label { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 5px; font-weight: 600; color: #666; }
+        .progress-track { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.5s ease; }
 
-        /* Buttons */
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn { display: block; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; }
-        .btn-sec { background: #f0f0f0; color: var(--dark); }
-        .btn-save { background: var(--dark); color: white; width: 100%; margin-top: 20px; font-size: 1rem; }
+        /* Links & Buttons */
+        .link-box { background: #f0f7ff; padding: 12px; border-radius: 8px; margin-top: 15px; border: 1px dashed #cce5ff; }
+        .url-text { font-family: monospace; color: var(--primary); font-size: 0.75rem; word-break: break-all; margin-bottom: 8px; display: block; }
         
-        .link-box { background: #eef6fc; padding: 15px; border-radius: 12px; margin-top: 25px; text-align: center; }
-        .url-text { font-family: monospace; color: var(--primary); background: rgba(255,255,255,0.5); padding: 8px; border-radius: 6px; font-size: 0.8rem; word-break: break-all; margin-bottom: 10px; }
+        .btn-link { font-size: 0.75rem; color: var(--primary); text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; }
+        .btn-link:hover { text-decoration: underline; }
+
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .btn { text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-sec { background: #f1f3f5; color: #495057; }
+        .btn-save { background: var(--dark); color: white; width: 100%; margin-top: 20px; font-size: 0.9rem; padding: 12px; box-shadow: 0 4px 12px rgba(0,70,94,0.2); }
+        .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0,70,94,0.3); }
+
+        .section-title { font-size: 0.8rem; font-weight: 800; color: #ccc; margin: 25px 0 10px 0; padding-left: 5px; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <div class="header"><img src="{{ url_for('static', filename='Logo.svg') }}" class="logo"></div>
     
     <div class="profile-container">
-        <a href="/BD-Admin" class="nav-btn">← Back to Admin</a>
+        <a href="/BD-Admin" class="nav-btn">← Back</a>
 
-        <h1>{{ school | decode_school }}</h1>
-        <div class="date-sub">{{ display_date }}</div>
+        <div style="margin: 10px 0 20px 5px;">
+            <h1>{{ school | decode_school }}</h1>
+            <div class="date-sub">{{ display_date }}</div>
+        </div>
 
         <form action="/update-booking" method="POST">
             <input type="hidden" name="school" value="{{ school }}">
             <input type="hidden" name="date" value="{{ date }}">
 
             <div class="card">
-                <div class="data-row" style="align-items: center;">
-                    <span class="data-label" style="font-weight: 800; color: var(--dark);">BOOKING STATUS</span>
-                </div>
-                <select name="status" class="edit-select">
-                    <option value="{{ info.status }}" selected>{{ info.status }}</option>
-                    <option disabled>──────────</option>
-                    <option value="🆕 New Booking">🆕 New Booking</option>
-                    <option value="🔗 Link Sent">🔗 Link Sent</option>
-                    <option value="⏳ In Progress">⏳ In Progress</option>
-                    <option value="🔒 Orders Locked">🔒 Orders Locked</option>
-                    <option value="🚚 Out for Delivery">🚚 Out for Delivery</option>
-                    <option value="✅ Completed">✅ Completed</option>
-                </select>
-
-                <div style="margin-top: 20px;">
-                    <div class="data-row">
-                        <span class="data-label">Staff Participation</span>
-                        <span class="data-val">{{ orders }} / {{ staff }}</span>
+                <div class="grid-2" style="align-items: end;">
+                    <div class="field-group">
+                        <label class="label">Current Status</label>
+                        <select name="status" class="edit-select">
+                            <option value="{{ info.status }}" selected>{{ info.status }}</option>
+                            <option disabled>──────────</option>
+                            <option value="🆕 New Booking">🆕 New Booking</option>
+                            <option value="🔗 Link Sent">🔗 Link Sent</option>
+                            <option value="⏳ In Progress">⏳ In Progress</option>
+                            <option value="🔒 Orders Locked">🔒 Orders Locked</option>
+                            <option value="🚚 Out for Delivery">🚚 Out for Delivery</option>
+                            <option value="✅ Completed">✅ Completed</option>
+                        </select>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: {{ (orders / (staff if staff > 0 else 1) * 100) }}%"></div>
+
+                    <div class="field-group">
+                        <div class="progress-label">
+                            <span>Participation</span>
+                            <span>{{ orders }} / {{ staff }}</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: {{ (orders / (staff if staff > 0 else 1) * 100) }}%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <h2>Primary Contact</h2>
+            <div class="section-title">Contact Details</div>
+            
             <div class="card">
-                <div class="data-row">
-                    <span class="data-label">Name</span>
-                    <span class="data-val">{{ info.contact }}</span>
-                </div>
-                
-                <div style="margin-top: 15px;">
-                    <span class="data-label">Email Address</span>
-                    <input type="email" name="email" class="edit-input" value="{{ info.email }}" placeholder="Enter email address...">
+                <div class="grid-2">
+                    <div class="field-group">
+                        <label class="label">Primary Contact</label>
+                        <div class="value">{{ info.contact }}</div>
+                    </div>
+                    
+                    <div class="field-group">
+                        <label class="label">Email Address</label>
+                        <input type="email" name="email" class="edit-input" value="{{ info.email }}" placeholder="Add email...">
+                    </div>
                 </div>
 
                 <div class="link-box">
-                    <div style="font-size: 0.7rem; text-transform: uppercase; color: #999; margin-bottom: 5px; font-weight: 700;">Order Link for Teachers</div>
-                    <div class="url-text">betterday-app.onrender.com/order/{{ date }}?school={{ school }}</div>
+                    <label class="label" style="color: #4ea2fd;">Teacher Order Link</label>
+                    <span class="url-text">betterday-app.onrender.com/order/{{ date }}?school={{ school }}</span>
                     
                     {% if info.email %}
-                    <a href="mailto:{{ info.email }}?subject=Lunch Order Link&body=Hi {{ info.contact }},%0D%0A%0D%0AHere is the link for your teachers to order lunch:%0D%0Ahttps://betterday-app.onrender.com/order/{{ date }}?school={{ school }}%0D%0A%0D%0APlease share this with your team!" class="btn" style="background: var(--primary); color: white;">Email Link to {{ info.contact }}</a>
+                    <a href="mailto:{{ info.email }}?subject=Lunch Order Link&body=Hi {{ info.contact }},%0D%0A%0D%0AHere is the link for your teachers to order lunch:%0D%0Ahttps://betterday-app.onrender.com/order/{{ date }}?school={{ school }}%0D%0A%0D%0APlease share this with your team!" class="btn-link">
+                        📧 Send Link to {{ info.contact }} →
+                    </a>
                     {% else %}
-                    <div style="color: #999; font-size: 0.8rem;">(Save an email address to enable the "Email Link" button)</div>
+                    <span style="font-size: 0.7rem; color: #999;">(Save email to enable 1-click send)</span>
                     {% endif %}
                 </div>
             </div>
 
-            <h2>Logistics</h2>
+            <div class="section-title">Logistics</div>
+
             <div class="card">
-                <div class="data-row">
-                    <span class="data-label">Delivery Address</span>
-                    <span class="data-val">{{ info.address }}</span>
+                <div class="grid-2">
+                    <div class="field-group">
+                        <label class="label">Address</label>
+                        <div class="value" style="font-size: 0.85rem;">{{ info.address }}</div>
+                    </div>
+                    <div class="field-group">
+                        <label class="label">Lunch Time</label>
+                        <div class="value">{{ info.lunch_hours }}</div>
+                    </div>
                 </div>
-                <div class="data-row">
-                    <span class="data-label">Lunch Hours</span>
-                    <span class="data-val">{{ info.lunch_hours }}</span>
+                
+                <div class="grid-full">
+                    <div class="field-group">
+                        <label class="label">Delivery Notes</label>
+                        <div class="value" style="font-size: 0.9rem; color: #555;">{{ info.notes }}</div>
+                    </div>
                 </div>
-                <div class="data-row" style="border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px;">
-                    <span class="data-label">Delivery Notes</span>
-                </div>
-                <div style="font-size: 0.9rem; color: #555; line-height: 1.4;">{{ info.notes }}</div>
             </div>
 
-            <h2>Downloads</h2>
             <div class="btn-grid">
-                <a href="/picklist/{{ school }}/{{ date }}" target="_blank" class="btn btn-sec">📄 PDF Picklist</a>
-                <a href="/download-csv/{{ school }}/{{ date }}" class="btn btn-sec">📊 Download CSV</a>
-            </div>
-
-            <button type="submit" class="btn btn-save">💾 SAVE CHANGES</button>
-        </form>
-    </div>
-</body>
-</html>
+                <a href="/picklist/{{ school }}/{{ date }}" target="_
