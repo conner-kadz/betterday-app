@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ school }} | School Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root { 
+            --primary: #4ea2fd; 
+            --accent: #faebda; 
+            --dark: #00465e; 
+            --white: #ffffff;
+            --red: #e74c3c;
+        }
+        
+        body { background: var(--accent); font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; color: var(--dark); padding: 20px; }
+        
+        .profile-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: var(--white); 
+            border-radius: 30px; 
+            padding: 40px; 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1); 
+        }
+
+        .back-btn { text-decoration: none; color: var(--primary); font-weight: 800; font-size: 1rem; margin-bottom: 30px; display: inline-block; }
+
+        h1 { font-size: 2.5rem; margin: 0; font-weight: 900; line-height: 1.1; }
+        .drop-subtitle { font-size: 1.2rem; font-weight: 700; color: var(--primary); margin: 10px 0 30px 0; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr; gap: 25px; border-top: 1px solid #eee; padding-top: 30px; }
+
+        .data-block { display: flex; flex-direction: column; }
+        .label { font-size: 0.8rem; font-weight: 900; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .value { font-size: 1.3rem; font-weight: 600; color: var(--dark); }
+
+        .deadline-card { 
+            background: #fff5f5; border: 2px solid #ffe3e3; padding: 20px; border-radius: 20px;
+            color: var(--red); text-align: center; margin-top: 10px;
+        }
+        .deadline-card .value { color: var(--red); font-size: 1.5rem; }
+
+        .teacher-link-box {
+            background: #f0f7ff; border: 2px dashed var(--primary); padding: 20px; border-radius: 20px; margin-top: 10px;
+        }
+
+        .btn-email { 
+            display: block; background: var(--primary); color: white; text-align: center; 
+            padding: 20px; border-radius: 15px; text-decoration: none; font-weight: 800; font-size: 1.1rem;
+            margin-top: 30px; box-shadow: 0 4px 15px rgba(78, 162, 253, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-container">
+        <a href="/amy-admin" class="back-btn">← Back to Hub</a>
+        
+        <h1>{{ school }}</h1>
+        <div class="drop-subtitle">Lunch Drop: {{ date }}</div>
+
+        <div class="info-grid">
+            <div class="data-block">
+                <div class="label">Production Deadline</div>
+                <div class="deadline-card">
+                    <div class="value">{{ deadline }}</div>
+                    <div style="font-size: 0.7rem; margin-top: 5px; font-weight: 800;">ORDERS LOCK AT 4:00 PM</div>
+                </div>
+            </div>
+
+            <div class="data-block">
+                <div class="label">Teacher Ordering Link</div>
+                <div class="teacher-link-box">
+                    <div class="value" style="font-size: 0.9rem; word-break: break-all;">
+                        https://betterday-app.onrender.com/order/{{ date }}?school={{ school | replace(' ', '+') }}
+                    </div>
+                </div>
+            </div>
+
+            </div>
+
+        <a href="mailto:?subject=BetterDay Lunch Ordering Link for {{ school }}&body=Hi! Here is the link for your teachers to select their meals for the drop on {{ date }}: https://betterday-app.onrender.com/order/{{ date }}?school={{ school | replace(' ', '+') }}" class="btn-email">
+            SHARE LINK WITH PRINCIPAL
+        </a>
+    </div>
+
+</body>
+</html>
