@@ -1,199 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BetterDay | Teacher Order</title>
+    <title>BetterDay | Order</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        :root { 
-            --primary: #4ea2fd; 
-            --accent: #faebda; 
-            --dark: #00465e; 
-            --white: #ffffff; 
-            --radius: 25px; 
-        }
-        body { 
-            background: var(--accent); 
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-            padding-bottom: 140px; 
-            margin: 0; 
-            color: var(--dark); 
-        }
-        
+        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --radius: 20px; }
+        body { background: var(--accent); font-family: sans-serif; margin: 0; padding-bottom: 120px; color: var(--dark); }
         .header { background: var(--primary); padding: 15px; text-align: center; }
-        .logo { height: 45px; }
+        .logo { height: 40px; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; } 
 
-        .container { padding: 25px; max-width: 450px; margin: 0 auto; }
-        .school-info { text-align: center; margin-bottom: 25px; }
-        .school-info h1 { font-size: 2rem; font-weight: 900; margin: 0; letter-spacing: -1px; }
-        .deadline-tag { background: #fff1f0; color: #e74c3c; padding: 8px 15px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; margin-top: 10px; display: inline-block; border: 1px solid #ffd1d1; }
+        .school-title { text-align: center; font-size: 1.8rem; font-weight: 700; margin: 20px 0 5px 0; }
+        .deadline { text-align: center; color: #e74c3c; font-size: 0.9rem; margin-bottom: 30px; }
+
+        /* FIX: box-sizing prevents overshoot */
+        .input-box { width: 100%; max-width: 400px; margin: 0 auto 40px auto; display: block; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 1rem; box-sizing: border-box; }
+
+        /* FIX: Responsive Grid (2 cols mobile, 4 cols desktop) */
+        .meal-grid { display: grid; gap: 20px; grid-template-columns: repeat(2, 1fr); }
+        @media (min-width: 768px) { .meal-grid { grid-template-columns: repeat(4, 1fr); } }
+
+        .card { background: white; border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: 0.2s; border: 4px solid transparent; position: relative; }
+        .card:hover { transform: translateY(-5px); }
+        .card.selected { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(78,162,253,0.2); }
         
-        /* The Vertical Stack Grid */
-        .meal-list { 
-            display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 25px; 
-            margin-top: 20px; 
-        }
+        .img-wrap { width: 100%; aspect-ratio: 1/1; background: #eee; position: relative; }
+        .img-wrap img { width: 100%; height: 100%; object-fit: cover; }
         
-        .meal-card { 
-            background: white; 
-            border-radius: var(--radius); 
-            overflow: hidden; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.06); 
-            cursor: pointer; 
-            border: 4px solid transparent; 
-            transition: all 0.3s ease;
-            position: relative;
-            display: flex;
-            flex-direction: column; /* Vertical Stack */
-        }
+        .card-body { padding: 15px; text-align: center; }
+        .name { font-weight: 700; font-size: 0.95rem; line-height: 1.3; margin-bottom: 5px; }
+        .info { font-size: 0.75rem; color: #999; text-decoration: none; border-bottom: 1px dashed #ccc; }
 
-        /* Large Hero Image */
-        .photo-wrap { 
-            width: 100%; 
-            height: 220px; 
-            background: #eee; 
-            position: relative;
-            overflow: hidden;
-        }
-        .meal-img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            transition: transform 0.5s; 
-        }
-        
-        /* Card Content */
-        .card-content { 
-            padding: 20px; 
-            text-align: center; 
-        }
-        .meal-name { 
-            font-weight: 800; 
-            font-size: 1.2rem; 
-            line-height: 1.3; 
-            margin-bottom: 10px; 
-            color: var(--dark);
-        }
-        
-        /* The "Info" Link */
-        .info-link {
-            display: inline-block;
-            font-size: 0.8rem;
-            color: #999;
-            text-decoration: none;
-            border-bottom: 1px dashed #ccc;
-            padding-bottom: 2px;
-            transition: 0.2s;
-            position: relative;
-            z-index: 10; /* Make sure it's clickable above the card click */
-        }
-        .info-link:hover { color: var(--primary); border-color: var(--primary); }
+        .check { position: absolute; top: 10px; right: 10px; background: var(--primary); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0); transition: 0.2s; }
+        .card.selected .check { opacity: 1; transform: scale(1); }
 
-        /* Selected State Animations */
-        .meal-card.selected { 
-            border-color: var(--primary); 
-            transform: translateY(-5px); 
-            box-shadow: 0 15px 35px rgba(78, 162, 253, 0.2);
-        }
-        .meal-card.selected .meal-img { transform: scale(1.05); }
-
-        .check-circle { 
-            position: absolute; 
-            top: 15px; 
-            right: 15px; 
-            background: var(--primary); 
-            color: white; 
-            width: 35px; 
-            height: 35px; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 1.2rem; 
-            opacity: 0; 
-            transform: scale(0); 
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 5;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-        .meal-card.selected .check-circle { opacity: 1; transform: scale(1); }
-
-        /* Sticky Footer */
-        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 25px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); display: flex; justify-content: center; z-index: 100; }
-        .submit-btn { width: 100%; max-width: 400px; background: #cbd5e0; color: #fff; border: none; padding: 20px; border-radius: 60px; font-weight: 900; font-size: 1.2rem; cursor: pointer; pointer-events: none; transition: 0.3s; }
-        .submit-btn.active { background: var(--dark); pointer-events: auto; box-shadow: 0 10px 25px rgba(0,70,94,0.3); }
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; display: flex; justify-content: center; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); }
+        .btn { background: #ccc; color: white; padding: 15px 40px; border-radius: 50px; font-weight: 700; border: none; font-size: 1.1rem; pointer-events: none; transition: 0.3s; }
+        .btn.active { background: var(--dark); pointer-events: auto; }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        <img src="{{ url_for('static', filename='Logo.svg') }}" class="logo">
-    </div>
-
+    <div class="header"><img src="{{ url_for('static', filename='Logo.svg') }}" class="logo"></div>
     <div class="container">
-        <div class="school-info">
-            <h1>{{ school_name }}</h1>
-            <div class="deadline-tag">⏰ Order By: Wednesday, {{ deadline }}</div>
-        </div>
+        <h1 class="school-title">{{ school_name | decode_school }}</h1>
+        <div class="deadline">Order By: Wednesday, {{ deadline }}</div>
 
-        <form action="/submit-order" method="POST" id="orderForm">
-            <input type="hidden" name="meal_id" id="meal_id">
-            <input type="hidden" name="delivery_date" value="{{ delivery_date }}">
+        <form action="/submit-order" method="POST" id="form">
+            <input type="hidden" name="meal_id" id="mid">
             <input type="hidden" name="school_name" value="{{ school_name }}">
+            <input type="hidden" name="delivery_date" value="{{ delivery_date }}">
+            
+            <input type="text" name="teacher_name" id="name" class="input-box" placeholder="Your Full Name" required>
 
-            <div style="background: white; padding: 20px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.03);">
-                <label style="font-weight: 900; color: var(--primary); font-size: 0.75rem; text-transform: uppercase;">Teacher Name</label>
-                <input type="text" name="teacher_name" id="tName" required placeholder="Type your full name..." style="width:100%; padding:15px; border:2px solid #f2f2f2; border-radius:12px; margin-top:8px; font-size: 1.1rem; outline: none;">
-            </div>
-
-            <div class="meal-list">
+            <div class="meal-grid">
                 {% for item in menu %}
-                <div class="meal-card" onclick="selectMeal(this, '{{ item.id }}')">
-                    
-                    <div class="photo-wrap">
-                        <img src="https://eatbetterday.ca/data/meals/{{ item.id }}.jpg" 
-                             class="meal-img" 
-                             onerror="this.src='{{ url_for('static', filename='Logo.svg') }}'; this.style.padding='40px'; this.style.objectFit='contain';">
-                        <div class="check-circle">✔</div>
+                <div class="card" onclick="pick(this, '{{ item.id }}')">
+                    <div class="img-wrap">
+                        <img src="https://eatbetterday.ca/data/meals/{{ item.id }}.jpg" onerror="this.src='{{ url_for('static', filename='Logo.svg') }}'">
+                        <div class="check">✔</div>
                     </div>
-                    
-                    <div class="card-content">
-                        <div class="meal-name">{{ item.name }}</div>
-                        <a href="https://eatbetterday.ca/meal/{{ item.id }}" target="_blank" class="info-link" onclick="event.stopPropagation();">
-                            View Ingredients & Info ↗
-                        </a>
+                    <div class="card-body">
+                        <div class="name">{{ item.name }}</div>
+                        <a href="https://eatbetterday.ca/meal/{{ item.id }}" target="_blank" class="info" onclick="event.stopPropagation()">View Ingredients</a>
                     </div>
-
                 </div>
                 {% endfor %}
             </div>
 
-            <div class="footer">
-                <button type="submit" id="subBtn" class="submit-btn">PICK A DISH</button>
-            </div>
+            <div class="footer"><button id="btn" class="btn">Pick Meal</button></div>
         </form>
     </div>
-
     <script>
-        function selectMeal(card, id) {
-            document.querySelectorAll('.meal-card').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-            document.getElementById('meal_id').value = id;
-            
-            const btn = document.getElementById('subBtn');
+        function pick(el, id) {
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('mid').value = id;
+            var btn = document.getElementById('btn');
             btn.classList.add('active');
-            btn.innerText = "PLACE MY ORDER 🍎";
+            btn.innerText = "Place Order";
         }
-
-        document.getElementById('orderForm').onsubmit = function() {
-            if (!document.getElementById('tName').value.trim()) {
-                alert("Please enter your name!");
-                return false;
-            }
-            return true;
-        };
     </script>
 </body>
 </html>
