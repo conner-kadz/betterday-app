@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Drop Dashboard</title>
+    <title>BD Admin</title>
     <style>
         :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; }
         body { background: var(--accent); font-family: -apple-system, sans-serif; margin: 0; padding-bottom: 50px; color: var(--dark); }
@@ -12,30 +12,29 @@
         .container { max-width: 500px; margin: 30px auto; padding: 0 20px; }
         
         .card-link { text-decoration: none; color: inherit; display: block; margin-bottom: 20px; }
-        .drop-card { background: var(--white); border-radius: 20px; display: flex; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s; }
+        .drop-card { background: var(--white); border-radius: 20px; display: flex; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s; position: relative; }
         .card-link:hover .drop-card { transform: translateY(-3px); }
         
         .drop-bar { width: 12px; background: var(--primary); flex-shrink: 0; }
         .card-body { padding: 20px; flex-grow: 1; }
 
-        .school-name { font-size: 1.4rem; font-weight: 700; margin: 0; }
-        
-        /* FIX: Date format is standard weight, grey */
+        .school-name { font-size: 1.4rem; font-weight: 800; margin: 0; line-height: 1.2; }
         .drop-date { font-size: 1rem; color: #666; margin-top: 5px; font-weight: 400; }
 
-        .footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #f0f0f0; }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; border-top: 1px solid #f5f5f5; padding-top: 15px; }
         
-        /* FIX: Cream background for status, non-bold */
-        .status-pill { background: var(--accent); padding: 5px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 500; color: var(--dark); border: 1px solid #eaddcf; }
+        .label { font-size: 0.65rem; text-transform: uppercase; color: #999; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
         
-        /* FIX: Small profile button, non-bold */
-        .btn-profile { background: #eee; color: #555; padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: 500; text-decoration: none; }
+        .big-num { font-size: 1.8rem; font-weight: 800; color: var(--dark); }
+        .status-pill { background: var(--accent); padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; color: var(--dark); display: inline-block; }
+        
+        .arrow { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); opacity: 0.2; font-size: 1.5rem; }
     </style>
 </head>
 <body>
     <div class="header"><img src="{{ url_for('static', filename='Logo.svg') }}" class="logo"></div>
     <div class="container">
-        <h1 style="text-align: center; font-weight: 800; text-transform: uppercase; font-size: 1.5rem;">Dashboard</h1>
+        <h1 style="text-align: center; font-weight: 900; text-transform: uppercase; font-size: 1.5rem;">Admin</h1>
         {% for b in bookings %}
         <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date_raw }}" class="card-link">
             <div class="drop-card">
@@ -43,11 +42,19 @@
                 <div class="card-body">
                     <div class="school-name">{{ b.school }}</div>
                     <div class="drop-date">{{ b.delivery_date_display }}</div>
-                    <div class="footer">
-                        <span class="status-pill">{{ b.status }}</span>
-                        <span class="btn-profile">Open Profile</span>
+
+                    <div class="data-grid">
+                        <div>
+                            <span class="label">Staff Count</span>
+                            <div class="big-num">{{ b.staff_count }}</div>
+                        </div>
+                        <div>
+                            <span class="label">Booking Status</span>
+                            <span class="status-pill">{{ b.status }}</span>
+                        </div>
                     </div>
                 </div>
+                <div class="arrow">→</div>
             </div>
         </a>
         {% endfor %}
