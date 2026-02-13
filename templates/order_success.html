@@ -28,8 +28,14 @@
 <body>
     <div class="card">
         <div class="icon">🍎</div>
+        
+        {% if existing %}
+        <h1>You've already ordered!</h1>
+        <p>We have your order for this date saved. See you on delivery day!</p>
+        {% else %}
         <h1>You're all set!</h1>
         <p>Your order has been sent to the kitchen. We'll see you on delivery day.</p>
+        {% endif %}
         
         <div class="share-box">
             <div class="share-title">Help your team order</div>
