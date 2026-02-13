@@ -40,7 +40,8 @@ def get_wednesday_deadline(delivery_date_str):
         days_to_subtract = (delivery_date.weekday() - 2) % 7
         if days_to_subtract <= 2: days_to_subtract += 7
         deadline = delivery_date - timedelta(days=days_to_subtract)
-        return deadline.strftime('%b %d') 
+        # UPDATE: Added time format
+        return deadline.strftime('%b %d @ 4:00 PM') 
     except: return "TBD"
 
 @app.template_filter('decode_school')
@@ -238,6 +239,15 @@ def picklist_print(school_name, date):
 
 @app.route('/order/<delivery_date>')
 def teacher_order(delivery_date):
+    # --- NEW: COOKIE GUARD ---
+    # 1. Check if they already have the cookie for this date
+    if request.cookies.get(f'ordered_{delivery_date}'):
+        # If yes, send them straight to success page with "existing=True"
+        school = request.args.get('school', 'BetterDay School')
+        share_link = url_for('teacher_order', delivery_date=delivery_date, school=school, _external=True)
+        return render_template('order_success.html', share_link=share_link, existing=True)
+
+    # 2. If no cookie, proceed normally
     anchor = get_sunday_anchor(delivery_date)
     school = request.args.get('school', 'BetterDay School')
     deadline = get_wednesday_deadline(delivery_date)
@@ -274,7 +284,15 @@ def submit_order():
     
     # Generate Share Link
     share_link = url_for('teacher_order', delivery_date=delivery_date, school=school_name, _external=True)
-    return render_template('order_success.html', share_link=share_link)
+    
+    # --- NEW: SET COOKIE ---
+    # Create the response object
+    resp = make_response(render_template('order_success.html', share_link=share_link, existing=False))
+    
+    # Stamp the browser with a 30-day cookie
+    resp.set_cookie(f'ordered_{delivery_date}', 'true', max_age=60*60*24*30)
+    
+    return resp
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5001)))
