@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Picklist</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; }
+        h1 { margin-bottom: 5px; }
+        .meta { color: #666; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        th { text-align: left; border-bottom: 2px solid #000; padding: 10px 0; }
+        td { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .summary-box { background: #f9f9f9; padding: 20px; border-radius: 10px; page-break-inside: avoid; }
+        .item-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #ccc; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body onload="window.print()">
+    <button class="no-print" onclick="window.print()" style="margin-bottom: 20px; padding: 10px;">Print PDF</button>
+    
+    <h1>{{ school }}</h1>
+    <div class="meta">Delivery: {{ date }}</div>
+
+    <h3>Teacher Orders</h3>
+    <table>
+        <tr><th>Teacher Name</th><th>Dish ID</th></tr>
+        {% for o in orders %}
+        <tr><td>{{ o.teacher }}</td><td>#{{ o.meal_id }}</td></tr>
+        {% endfor %}
+    </table>
+
+    <div class="summary-box">
+        <h3>Kitchen Summary</h3>
+        {% for id, count in summary.items() %}
+        <div class="item-row">
+            <span>Dish #{{ id }}</span>
+            <strong>x {{ count }}</strong>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
