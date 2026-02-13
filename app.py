@@ -208,3 +208,97 @@ def update_booking():
 @app.route('/download-csv/<school_name>/<date>')
 def download_csv(school_name, date):
     clean_school_name = school_name.replace('+', ' ')
+
+try:
+        # Get Orders
+        payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
+        r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
+        orders = r.json().get('orders', [])
+        # Get Names
+        menu_map = get_menu_map(date)
+    except: 
+        orders = []
+        menu_map = {}
+
+    si = io.StringIO()
+    cw = csv.writer(si)
+    cw.writerow(['Teacher Name', 'Dish ID', 'Dish Name']) 
+    for o in orders:
+        mid = str(o['meal_id']).strip()
+        cw.writerow([o['teacher'], mid, menu_map.get(mid, 'Unknown Dish')])
+        
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename={clean_school_name}_orders.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
+
+@app.route('/picklist/<school_name>/<date>')
+def picklist_print(school_name, date):
+    clean_school_name = school_name.replace('+', ' ')
+    try:
+        # Get Orders
+        payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
+        r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
+        orders = r.json().get('orders', [])
+        # Get Names
+        menu_map = get_menu_map(date)
+    except: 
+        orders = []
+        menu_map = {}
+    
+    # Summary
+    summary = {}
+    for o in orders:
+        mid = str(o['meal_id']).strip()
+        name = menu_map.get(mid, f"Dish #{mid}")
+        if name not in summary: summary[name] = {"id": mid, "count": 0}
+        summary[name]["count"] += 1
+        
+    return render_template('picklist.html', school=clean_school_name, date=date, summary=summary, total=len(orders))
+
+@app.route('/order/<delivery_date>')
+def teacher_order(delivery_date):
+    if request.cookies.get(f'ordered_{delivery_date}'):
+        school = request.args.get('school', 'BetterDay School')
+        share_link = url_for('teacher_order', delivery_date=delivery_date, school=school, _external=True)
+        return render_template('order_success.html', share_link=share_link, existing=True)
+
+    anchor = get_sunday_anchor(delivery_date)
+    school = request.args.get('school', 'BetterDay School')
+    deadline_obj = get_deadline_obj(delivery_date)
+    deadline_str = deadline_obj.strftime('%b %d @ 4:00 PM') if deadline_obj else "TBD"
+    
+    menu = []
+    try:
+        r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_menu", "sunday_anchor": anchor}, timeout=15)
+        if r.status_code == 200:
+            for item in r.json().get('menu', []):
+                if "#" in str(item):
+                    m = re.search(r'#(.*)', str(item))
+                    if m:
+                        menu.append({"id": m.group(1).strip(), "name": str(item).split('#')[0].strip()})
+    except: pass
+    return render_template('orderform.html', delivery_date=delivery_date, deadline=deadline_str, menu=menu, school_name=school)
+
+@app.route('/submit-order', methods=['POST'])
+def submit_order():
+    school = request.form.get('school_name')
+    date = request.form.get('delivery_date')
+    try:
+        requests.post(GOOGLE_SCRIPT_URL, json={
+            "action": "submit_teacher_order",
+            "name": request.form.get('teacher_name'),
+            "meal_id": request.form.get('meal_id'),
+            "delivery_date": date,
+            "school": school,
+            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }, timeout=5)
+    except: pass
+    
+    share_link = url_for('teacher_order', delivery_date=date, school=school, _external=True)
+    resp = make_response(render_template('order_success.html', share_link=share_link, existing=False))
+    resp.set_cookie(f'ordered_{date}', 'true', max_age=60*60*24*30)
+    return resp
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5001)))
