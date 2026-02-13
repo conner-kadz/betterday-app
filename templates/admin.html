@@ -5,115 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BD Admin</title>
     <style>
-        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; }
-        body { background: var(--accent); font-family: -apple-system, sans-serif; margin: 0; padding-bottom: 50px; color: var(--dark); }
-        .header { background: var(--primary); padding: 20px; text-align: center; }
-        .logo { height: 45px; }
+        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --gray: #f4f6f8; }
+        body { background: var(--gray); font-family: -apple-system, system-ui, sans-serif; margin: 0; padding-bottom: 50px; color: var(--dark); }
         
-        .container { max-width: 600px; margin: 30px auto; padding: 0 20px; }
+        /* Header */
+        .header { background: var(--primary); padding: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .logo { height: 40px; }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
         
-        /* Card Styling */
-        .drop-card { 
+        /* GRID LAYOUT (The Magic 3-Column Logic) */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Mobile: 1 column */
+            gap: 20px;
+        }
+        
+        /* Desktop Breakpoint: Switch to 3 columns */
+        @media (min-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(3, 1fr); 
+            }
+        }
+
+        /* CARD STYLING */
+        .menu-card { 
             background: var(--white); 
-            border-radius: 20px; 
-            display: flex; 
-            overflow: hidden; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.03); 
-            margin-bottom: 20px;
-            position: relative; 
+            border-radius: 16px; 
+            padding: 20px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid #eee;
+            position: relative;
+            overflow: hidden;
         }
         
-        .drop-bar { width: 12px; background: var(--primary); flex-shrink: 0; }
-        .card-body { padding: 20px; flex-grow: 1; }
+        .menu-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: var(--primary); }
 
-        /* Top Section */
-        .school-name { font-size: 1.4rem; font-weight: 800; margin: 0; line-height: 1.2; }
-        .drop-date { font-size: 1rem; color: #666; margin-top: 5px; font-weight: 400; }
+        /* Colored Top Bar for visual pop */
+        .card-top-bar { position: absolute; top: 0; left: 0; right: 0; height: 6px; background: var(--primary); }
 
-        /* Bottom Row Grid: 3 Columns */
-        .bottom-row { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr 1fr; /* Equal width columns */
-            align-items: end; /* Align to bottom */
-            margin-top: 25px; 
-            padding-top: 15px; 
-            border-top: 1px solid #f5f5f5; 
-        }
+        /* Card Content */
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; margin-top: 5px; }
+        .date-badge { background: var(--accent); color: var(--dark); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
         
-        /* Column Alignments */
-        .col-left { text-align: left; }
-        .col-mid { text-align: center; }
-        .col-right { text-align: right; }
+        .school-name { font-size: 1.25rem; font-weight: 800; margin: 10px 0 5px 0; line-height: 1.2; flex-grow: 1; }
+        .deadline-text { font-size: 0.8rem; color: #888; margin-bottom: 20px; }
 
-        /* Typography */
-        .label { font-size: 0.65rem; text-transform: uppercase; color: #999; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
-        .big-num { font-size: 1.5rem; font-weight: 800; color: var(--dark); line-height: 1; }
+        /* Stats Row */
+        .stats-row { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: auto; }
         
+        .stat-group { display: flex; flex-direction: column; }
+        .label { font-size: 0.65rem; text-transform: uppercase; color: #999; font-weight: 700; letter-spacing: 0.5px; }
+        .big-num { font-size: 1.4rem; font-weight: 800; color: var(--dark); line-height: 1; margin-top: 2px; }
+
         /* Status Pill */
         .status-pill { 
-            background: var(--accent); 
-            padding: 6px 10px; 
-            border-radius: 8px; 
-            font-size: 0.7rem; 
-            font-weight: 700; 
-            color: var(--dark); 
-            display: inline-block; 
-            white-space: nowrap;
+            font-size: 0.7rem; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; 
+            background: #eee; color: #666; display: inline-block; margin-bottom: 5px;
         }
+        /* Dynamic Status Colors could be added here if needed */
 
-        /* Profile Button */
+        /* Button */
         .btn-profile { 
-            background: var(--dark); 
-            color: white; 
-            padding: 10px 18px; 
-            border-radius: 12px; 
-            text-decoration: none; 
-            font-size: 0.8rem; 
-            font-weight: 700; 
-            display: inline-block; 
-            transition: 0.2s;
-            box-shadow: 0 4px 10px rgba(0,70,94,0.2);
+            background: var(--dark); color: white; text-decoration: none; 
+            padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; 
+            transition: 0.2s; 
         }
-        .btn-profile:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,70,94,0.3); }
+        .btn-profile:hover { background: var(--primary); }
 
     </style>
 </head>
 <body>
     <div class="header"><img src="{{ url_for('static', filename='Logo.svg') }}" class="logo"></div>
+    
     <div class="container">
-        <h1 style="text-align: center; font-weight: 900; text-transform: uppercase; font-size: 1.5rem;">Admin</h1>
+        <h1 style="font-weight: 900; text-transform: uppercase; font-size: 1.5rem; margin-bottom: 25px; color: var(--dark);">Dashboard</h1>
         
-        {% for b in bookings %}
-        <div class="drop-card">
-            <div class="drop-bar"></div>
-            <div class="card-body">
-                <div class="school-name">{{ b.school }}</div>
-                <div class="drop-date">{{ b.delivery_date_display }}</div>
+        <div class="dashboard-grid">
+            {% for b in bookings %}
+            <div class="menu-card">
+                <div class="card-top-bar"></div>
+                
+                <div class="card-header">
+                    <div class="date-badge">{{ b.delivery_date_display }}</div>
+                </div>
+                
+                <div class="status-pill">{{ b.status }}</div>
 
-                <div class="bottom-row">
-                    <div class="col-left">
-                        <span class="label">Staff</span>
+                <div class="school-name">{{ b.school }}</div>
+                <div class="deadline-text">Deadline: {{ b.deadline }}</div>
+
+                <div class="stats-row">
+                    <div class="stat-group">
+                        <span class="label">Staff Count</span>
                         <div class="big-num">{{ b.staff_count }}</div>
                     </div>
-
-                    <div class="col-mid">
-                        <span class="label">Status</span>
-                        <span class="status-pill">{{ b.status }}</span>
-                    </div>
-
-                    <div class="col-right">
-                        <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date_raw }}" class="btn-profile">
-                            Profile &rarr;
-                        </a>
-                    </div>
+                    <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date_raw }}" class="btn-profile">
+                        Manage &rarr;
+                    </a>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
         
         {% if not bookings %}
         <div style="text-align: center; opacity: 0.5; margin-top: 50px;">
-            <h3>No Bookings Found</h3>
+            <h3>No Active Bookings</h3>
+            <p>Check back later for new requests.</p>
         </div>
         {% endif %}
     </div>
