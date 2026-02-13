@@ -3,211 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Drop Dashboard | BetterDay Admin</title>
+    <title>The Drop Dashboard</title>
     <style>
-        :root { 
-            --primary: #4ea2fd; 
-            --accent: #faebda; 
-            --dark: #00465e; 
-            --white: #ffffff;
-            --red: #e74c3c;
-            --yellow: #ffd54f;
-        }
+        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --done: #27ae60; }
+        body { background: var(--accent); font-family: -apple-system, system-ui, sans-serif; margin: 0; padding-bottom: 50px; }
+        .header { background: var(--primary); padding: 20px; text-align: center; }
+        .logo { height: 50px; width: auto; }
+        .container { max-width: 650px; margin: 30px auto; padding: 0 20px; }
         
-        body { 
-            background-color: var(--accent); 
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-            margin: 0; 
-            padding-bottom: 50px;
-            color: var(--dark);
-        }
-
-        /* Fixed Brand Header */
-        .header { 
-            background: var(--primary); 
-            padding: 20px; 
-            text-align: center; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .header img { 
-            height: 50px; 
-            width: auto; 
-            display: block; 
-            margin: 0 auto; 
-        }
-
-        .container { 
-            max-width: 700px; 
-            margin: 40px auto; 
-            padding: 0 20px; 
-        }
-
-        .dashboard-title { 
-            font-size: 2.2rem; 
-            font-weight: 900; 
-            text-align: center; 
-            margin-bottom: 40px; 
-            text-transform: uppercase;
-            letter-spacing: -1px;
-        }
-
-        /* The Card Link */
-        .card-link {
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            margin-bottom: 25px;
-        }
-
-        /* The Drop Card Layout */
+        .card-link { text-decoration: none; color: inherit; display: block; margin-bottom: 25px; }
         .drop-card { 
-            background: var(--white); 
-            border-radius: 25px; 
-            display: flex; 
-            overflow: hidden; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            transition: transform 0.2s ease;
+            background: var(--white); border-radius: 25px; display: flex; 
+            overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.06); transition: 0.2s;
+        }
+        .card-link:hover { transform: translateY(-5px); }
+        .drop-bar { width: 15px; background: var(--primary); flex-shrink: 0; }
+        .card-body { padding: 30px; flex-grow: 1; }
+
+        .school-name { font-size: 1.8rem; font-weight: 900; margin: 0; color: var(--dark); }
+        .drop-date { font-size: 1.1rem; color: var(--primary); font-weight: 700; margin-top: 5px; }
+
+        /* Progress Bar Styling */
+        .progress-container { background: #f0f0f0; border-radius: 10px; height: 8px; margin: 20px 0; overflow: hidden; }
+        .progress-fill { 
+            height: 100%; background: var(--primary); 
+            transition: width 1s ease-in-out; 
+            border-radius: 10px;
+        }
+        .progress-fill.complete { background: var(--done); }
+        
+        .deadline-badge { 
+            background: #fff5f5; border: 1px solid #ffe3e3; padding: 15px; border-radius: 15px;
+            color: #e74c3c; font-weight: 800; font-size: 0.95rem;
         }
 
-        .card-link:hover .drop-card {
-            transform: translateY(-5px);
-        }
-
-        /* The Stylized Blue Accent Bar (The Drop Bar) */
-        .drop-bar { 
-            width: 16px; 
-            background-color: var(--primary); 
-            flex-shrink: 0; 
-        }
-
-        .card-body { 
-            padding: 30px; 
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px; 
-        }
-
-        .card-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-start; 
-        }
-
-        .school-name { 
-            margin: 0; 
-            font-size: 1.8rem; 
-            font-weight: 800; 
-            line-height: 1.1;
-        }
-
-        .delivery-date { 
-            color: var(--primary); 
-            font-weight: 700; 
-            font-size: 1.15rem; 
-            margin-top: 5px;
-        }
-
-        .anchor-pill { 
-            background: var(--yellow); 
-            padding: 6px 12px; 
-            border-radius: 8px; 
-            font-size: 0.65rem; 
-            font-weight: 900; 
-            color: var(--dark);
-            text-transform: uppercase;
-        }
-
-        /* Urgent Deadline Area */
-        .deadline-area { 
-            background: #fff5f5; 
-            border: 1px solid #ffe3e3; 
-            padding: 15px; 
-            border-radius: 15px; 
-            color: var(--red); 
-            font-weight: 800; 
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-footer { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-top: 1px solid #f0f0f0; 
-            padding-top: 20px;
-            margin-top: 5px;
-        }
-
-        .status-badge {
-            background: #f0f4f8;
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--dark);
-        }
-
-        .view-profile-hint { 
-            font-weight: 800; 
-            color: var(--primary); 
-            font-size: 0.85rem; 
-        }
-
-        @media (max-width: 500px) {
-            .school-name { font-size: 1.4rem; }
-            .dashboard-title { font-size: 1.6rem; }
-        }
+        .footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 20px; margin-top: 5px; }
+        .status-pill { background: #f8f9fa; padding: 8px 16px; border-radius: 50px; font-size: 0.8rem; font-weight: 800; }
+        .view-more { color: var(--primary); font-weight: 900; font-size: 0.85rem; }
     </style>
 </head>
 <body>
-
     <div class="header">
-        <img src="{{ url_for('static', filename='Logo.svg') }}" alt="BetterDay Logo">
+        <img src="{{ url_for('static', filename='Logo.svg') }}" class="logo">
     </div>
 
     <div class="container">
-        <h1 class="dashboard-title">School Lunch Drop Dashboard</h1>
+        <h1 style="text-align: center; font-weight: 900; text-transform: uppercase;">The Drop Dashboard</h1>
 
         {% for b in bookings %}
-        {% if b.school %}
         <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date }}" class="card-link">
             <div class="drop-card">
                 <div class="drop-bar"></div>
                 <div class="card-body">
-                    
-                    <div class="card-header">
-                        <div>
-                            <h3 class="school-name">{{ b.school }}</h3>
-                            <div class="delivery-date">🚚 Drop: {{ b.delivery_date }}</div>
-                        </div>
-                        <div class="anchor-pill">Menu Anchor: {{ b.anchor_sunday }}</div>
+                    <h2 class="school-name">{{ b.school }}</h2>
+                    <div class="drop-date">📅 Drop: {{ b.delivery_date }}</div>
+
+                    <div class="progress-container">
+                        <div class="progress-fill {% if b.progress == 100 %}complete{% endif %}" style="width: {{ b.progress }}%;"></div>
                     </div>
 
-                    <div class="deadline-area">
+                    <div class="deadline-badge">
                         ⏰ ORDER DEADLINE: Wed, {{ b.deadline }} @ 4 PM
                     </div>
 
-                    <div class="card-footer">
-                        <div class="status-badge">{{ b.status }}</div>
-                        <div class="view-profile-hint">VIEW FULL PROFILE →</div>
+                    <div class="footer">
+                        <span class="status-pill">{{ b.status }}</span>
+                        <span class="view-more">VIEW PROFILE →</span>
                     </div>
-                    
                 </div>
             </div>
         </a>
-        {% endif %}
         {% endfor %}
-
-        {% if not bookings %}
-        <div style="text-align: center; padding: 60px; opacity: 0.5;">
-            <h2 style="font-weight: 900;">No drops currently scheduled.</h2>
-            <p>New bookings will appear here automatically.</p>
-        </div>
-        {% endif %}
     </div>
-
 </body>
 </html>
