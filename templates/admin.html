@@ -5,75 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Drop Dashboard</title>
     <style>
-        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --done: #27ae60; }
-        body { background: var(--accent); font-family: -apple-system, system-ui, sans-serif; margin: 0; padding-bottom: 50px; }
-        .header { background: var(--primary); padding: 20px; text-align: center; }
-        .logo { height: 50px; width: auto; }
-        .container { max-width: 650px; margin: 30px auto; padding: 0 20px; }
+        :root { 
+            --primary: #4ea2fd; 
+            --accent: #faebda; 
+            --dark: #00465e; 
+            --white: #ffffff; 
+            --done: #27ae60; 
+        }
+        body { 
+            background: var(--accent); 
+            font-family: -apple-system, system-ui, sans-serif; 
+            margin: 0; 
+            padding-bottom: 50px; 
+        }
+        
+        .header { 
+            background: var(--primary); 
+            padding: 20px; 
+            text-align: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .logo { height: 45px; width: auto; }
+
+        /* NARROWER CONTAINER for sleek cards */
+        .container { 
+            max-width: 500px; 
+            margin: 30px auto; 
+            padding: 0 20px; 
+        }
         
         .card-link { text-decoration: none; color: inherit; display: block; margin-bottom: 25px; }
+        
         .drop-card { 
-            background: var(--white); border-radius: 25px; display: flex; 
-            overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.06); transition: 0.2s;
+            background: var(--white); 
+            border-radius: 25px; 
+            display: flex; 
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06); 
+            transition: transform 0.2s ease;
         }
-        .card-link:hover { transform: translateY(-5px); }
-        .drop-bar { width: 15px; background: var(--primary); flex-shrink: 0; }
-        .card-body { padding: 30px; flex-grow: 1; }
+        .card-link:hover .drop-card { transform: translateY(-5px); }
 
-        .school-name { font-size: 1.8rem; font-weight: 900; margin: 0; color: var(--dark); }
+        .drop-bar { width: 15px; background: var(--primary); flex-shrink: 0; }
+        .card-body { padding: 25px; flex-grow: 1; }
+
+        .school-name { font-size: 1.6rem; font-weight: 900; margin: 0; color: var(--dark); line-height: 1.1; }
         .drop-date { font-size: 1.1rem; color: var(--primary); font-weight: 700; margin-top: 5px; }
 
         /* Progress Bar Styling */
-        .progress-container { background: #f0f0f0; border-radius: 10px; height: 8px; margin: 20px 0; overflow: hidden; }
+        .progress-container { 
+            background: #f0f0f0; 
+            border-radius: 10px; 
+            height: 8px; 
+            margin: 15px 0; 
+            overflow: hidden; 
+        }
         .progress-fill { 
-            height: 100%; background: var(--primary); 
+            height: 100%; 
+            background: var(--primary); 
             transition: width 1s ease-in-out; 
             border-radius: 10px;
         }
         .progress-fill.complete { background: var(--done); }
         
         .deadline-badge { 
-            background: #fff5f5; border: 1px solid #ffe3e3; padding: 15px; border-radius: 15px;
-            color: #e74c3c; font-weight: 800; font-size: 0.95rem;
+            background: #fff5f5; 
+            border: 1px solid #ffe3e3; 
+            padding: 12px; 
+            border-radius: 12px;
+            color: #e74c3c; 
+            font-weight: 800; 
+            font-size: 0.9rem;
         }
 
-        .footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 20px; margin-top: 5px; }
-        .status-pill { background: #f8f9fa; padding: 8px 16px; border-radius: 50px; font-size: 0.8rem; font-weight: 800; }
-        .view-more { color: var(--primary); font-weight: 900; font-size: 0.85rem; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <img src="{{ url_for('static', filename='Logo.svg') }}" class="logo">
-    </div>
-
-    <div class="container">
-        <h1 style="text-align: center; font-weight: 900; text-transform: uppercase;">The Drop Dashboard</h1>
-
-        {% for b in bookings %}
-        <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date }}" class="card-link">
-            <div class="drop-card">
-                <div class="drop-bar"></div>
-                <div class="card-body">
-                    <h2 class="school-name">{{ b.school }}</h2>
-                    <div class="drop-date">📅 Drop: {{ b.delivery_date }}</div>
-
-                    <div class="progress-container">
-                        <div class="progress-fill {% if b.progress == 100 %}complete{% endif %}" style="width: {{ b.progress }}%;"></div>
-                    </div>
-
-                    <div class="deadline-badge">
-                        ⏰ ORDER DEADLINE: Wed, {{ b.deadline }} @ 4 PM
-                    </div>
-
-                    <div class="footer">
-                        <span class="status-pill">{{ b.status }}</span>
-                        <span class="view-more">VIEW PROFILE →</span>
-                    </div>
-                </div>
-            </div>
-        </a>
-        {% endfor %}
-    </div>
-</body>
-</html>
+        .footer { 
+            display: flex; 
+            justify-content: space
