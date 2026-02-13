@@ -64,33 +64,60 @@ def is_past_filter(date_str):
 def index():
     taken = []
     try:
-        # We fetch bookings to see what dates are taken
         r = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=8)
         taken_raw = r.json() if r.status_code == 200 else []
-        
-        # Extract just the dates for the calendar
         for row in taken_raw:
             if row and len(row) > 0 and "Date" not in str(row[0]):
                 taken.append(str(row[0]).split('T')[0])
     except: pass
     
+    # 1. Determine "Now" and "View"
     now = datetime.now()
-    view_m, view_y = int(request.args.get('m', now.month)), int(request.args.get('y', now.year))
+    current_m = now.month
+    current_y = now.year
+    
+    # Get view from URL, default to current
+    view_m = int(request.args.get('m', current_m))
+    view_y = int(request.args.get('y', current_y))
+
+    # 2. Logic for "Next Month" button
+    # We only want to allow 1 month ahead
+    if view_m == current_m:
+        # If looking at current month, Next -> Next Month
+        next_m = view_m + 1 if view_m < 12 else 1
+        next_y = view_y if view_m < 12 else view_y + 1
+        next_url = url_for('index', m=next_m, y=next_y)
+        prev_url = None # Can't go back past today
+    elif (view_m == current_m + 1) or (current_m == 12 and view_m == 1):
+        # If looking at next month, Prev -> Current Month
+        # Next -> None (Limit reached)
+        prev_url = url_for('index', m=current_m, y=current_y)
+        next_url = None
+    else:
+        # Fallback if someone manually types a far-out date: redirect to home
+        return redirect(url_for('index'))
+
+    # 3. Build the Calendar Grid
     num_days = calendar.monthrange(view_y, view_m)[1]
     valid_dates = []
     
     for d in range(1, num_days + 1):
         date_obj = datetime(view_y, view_m, d)
-        # Only show Mon-Wed (0, 1, 2)
-        if date_obj.weekday() < 3: 
+        if date_obj.weekday() < 3: # Mon-Wed only
             ds = date_obj.strftime('%Y-%m-%d')
             valid_dates.append({
                 'raw_date': ds, 
-                'display': date_obj.strftime('%b %d'), 
+                'display': date_obj.strftime('%A, %b %d'), # "Monday, Feb 16"
                 'taken': ds in taken, 
                 'past': date_obj.date() < now.date()
             })
-    return render_template('index.html', dates=valid_dates, month_name=calendar.month_name[view_m], year=view_y)
+
+    return render_template('index.html', 
+                         dates=valid_dates, 
+                         month_name=calendar.month_name[view_m], 
+                         year=view_y,
+                         prev_url=prev_url,
+                         next_url=next_url)
 
 @app.route('/book/<date_raw>', methods=['GET', 'POST'])
 def book(date_raw):
