@@ -144,6 +144,35 @@ def teacher_order(delivery_date):
                            anchor=anchor_sunday, 
                            menu=menu_items)
 
+@app.route('/submit-order', methods=['POST'])
+def submit_order():
+    # Data from the Teacher
+    teacher_name = request.form.get('teacher_name')
+    meal_id = request.form.get('meal_id')
+    
+    # Metadata to keep Amy's CRM organized
+    delivery_date = request.form.get('delivery_date')
+    school_name = request.form.get('school_name')
+
+    # The payload for Google Sheets
+    order_data = {
+        "action": "submit_teacher_order",
+        "name": teacher_name,
+        "meal_id": meal_id,
+        "delivery_date": delivery_date,
+        "school": school_name,
+        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+
+    try:
+        # Pushing to your GOOGLE_SCRIPT_URL
+        response = requests.post(GOOGLE_SCRIPT_URL, json=order_data, timeout=5)
+        
+        # We need a success page to tell the teacher "You're all set!"
+        return render_template('order_success.html', name=teacher_name, date=delivery_date)
+    except Exception as e:
+        return f"CRM Error: Could not save order. Details: {str(e)}"
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
     app.run(host='0.0.0.0', port=port)
