@@ -6,19 +6,15 @@ import calendar
 import re
 import csv
 import io
+import collections
 
 app = Flask(__name__)
 
-# ==============================================================================
 # CONFIGURATION
-# ==============================================================================
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
-# Replace with your actual Google Sheet URL for the "Teacher Bookings" button
 TEACHER_SHEET_URL = "https://docs.google.com/spreadsheets" 
 
-# ==============================================================================
 # HELPERS
-# ==============================================================================
 def get_nice_date(date_str):
     try:
         dt = datetime.strptime(str(date_str).split('T')[0], '%Y-%m-%d')
@@ -39,27 +35,22 @@ def get_deadline_obj(delivery_date_str):
     try:
         clean_date = str(delivery_date_str).split('T')[0]
         delivery_date = datetime.strptime(clean_date, '%Y-%m-%d')
-        # Deadline is Wednesday of the week *before* delivery
         days_to_subtract = (delivery_date.weekday() - 2) % 7
         if days_to_subtract <= 2: days_to_subtract += 7
         deadline_date = delivery_date - timedelta(days=days_to_subtract)
         return deadline_date.replace(hour=16, minute=0, second=0)
     except: return None
 
-def get_menu_map(delivery_date):
-    # Helper to get ID -> Name mapping
-    anchor = get_sunday_anchor(delivery_date)
+def get_menu_map(sunday_anchor):
+    # Returns a flat map for CSV/Picklist generation
     mapping = {}
     try:
-        r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_menu", "sunday_anchor": anchor}, timeout=10)
+        r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_menu", "sunday_anchor": sunday_anchor}, timeout=10)
         if r.status_code == 200:
-            for item in r.json().get('menu', []):
-                if "#" in str(item):
-                    m = re.search(r'#(.*)', str(item)) # Capture everything after #
-                    if m:
-                        m_id = m.group(1).strip()
-                        m_name = str(item).split('#')[0].strip()
-                        mapping[m_id] = m_name
+            data = r.json()
+            # Combine both lists for the map
+            for item in data.get('meat', []) + data.get('vegan', []):
+                mapping[str(item['id'])] = item['name']
     except: pass
     return mapping
 
@@ -67,10 +58,7 @@ def get_menu_map(delivery_date):
 def decode_school_filter(s):
     return str(s).replace('+', ' ')
 
-# ==============================================================================
 # ROUTES
-# ==============================================================================
-
 @app.route('/')
 def index():
     taken = []
@@ -86,7 +74,6 @@ def index():
     view_m = int(request.args.get('m', now.month))
     view_y = int(request.args.get('y', now.year))
 
-    # Next/Prev Logic
     if view_m == now.month:
         next_m = view_m + 1 if view_m < 12 else 1
         next_y = view_y if view_m < 12 else view_y + 1
@@ -95,12 +82,10 @@ def index():
     elif (view_m == now.month + 1) or (now.month == 12 and view_m == 1):
         prev_url = url_for('index', m=now.month, y=now.year)
         next_url = None
-    else:
-        return redirect(url_for('index'))
+    else: return redirect(url_for('index'))
 
     num_days = calendar.monthrange(view_y, view_m)[1]
     valid_dates = []
-    
     for d in range(1, num_days + 1):
         date_obj = datetime(view_y, view_m, d)
         if date_obj.weekday() < 3: 
@@ -111,7 +96,6 @@ def index():
                 'taken': ds in taken, 
                 'past': date_obj.date() < now.date()
             })
-
     return render_template('index.html', dates=valid_dates, month_name=calendar.month_name[view_m], year=view_y, prev_url=prev_url, next_url=next_url)
 
 @app.route('/book/<date_raw>', methods=['GET', 'POST'])
@@ -123,7 +107,7 @@ def book(date_raw):
         "action": "book_principal",
         "date": date_raw,
         "contact_name": request.form.get("contact_name"),
-        "email": request.form.get("email"), # <--- NEW FIELD
+        "email": request.form.get("email"),
         "school_name": request.form.get("school_name"),
         "address": request.form.get("address"),
         "staff_count": request.form.get("staff_count"),
@@ -142,23 +126,64 @@ def bd_admin():
         bookings_raw = response.json() if response.status_code == 200 else []
     except: bookings_raw = []
 
-    refined = []
+    # Group by Production Sunday (The New Row Logic)
+    production_weeks = {} 
+
     for b in bookings_raw:
         try:
             if "Date" in str(b[0]) or str(b[2]).isdigit(): continue
             d_date = str(b[0]).split('T')[0]
+            anchor = get_sunday_anchor(d_date)
+            if not anchor: continue
+
             deadline_obj = get_deadline_obj(d_date)
-            
-            refined.append({
+            school_name = str(b[2])
+            is_office = "Health" in school_name or "Headversity" in school_name # Logic for badge
+
+            booking_obj = {
                 "delivery_date_raw": d_date,
                 "delivery_date_display": get_nice_date(d_date),
-                "school": str(b[2]),
+                "school": school_name,
                 "status": str(b[7]) if len(b) > 7 else "New Booking",
                 "staff_count": str(b[4]) if len(b) > 4 else "0",
-                "deadline": deadline_obj.strftime('%b %d') if deadline_obj else "TBD"
-            })
+                "deadline": deadline_obj.strftime('%b %d') if deadline_obj else "TBD",
+                "type": "Office" if is_office else "School"
+            }
+
+            if anchor not in production_weeks: production_weeks[anchor] = []
+            production_weeks[anchor].append(booking_obj)
         except: continue
-    return render_template('admin.html', bookings=refined)
+    
+    # Sort weeks so upcoming ones are first
+    sorted_weeks = dict(sorted(production_weeks.items()))
+
+    return render_template('admin.html', weeks=sorted_weeks)
+
+@app.route('/culinary-summary/<sunday>')
+def culinary_summary(sunday):
+    # 1. Fetch ALL orders
+    try:
+        r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_all_orders"}, timeout=20)
+        all_orders = r.json()
+    except: all_orders = []
+
+    # 2. Fetch Menu Names (Combined Map)
+    menu_map = get_menu_map(sunday)
+
+    # 3. Filter & Aggregate
+    totals = {}
+    total_count = 0
+    
+    for o in all_orders:
+        anchor = get_sunday_anchor(o['date'])
+        if anchor == sunday:
+            mid = str(o['meal_id']).strip()
+            name = menu_map.get(mid, f"Dish #{mid}")
+            if name not in totals: totals[name] = {"id": mid, "count": 0}
+            totals[name]["count"] += 1
+            total_count += 1
+
+    return render_template('culinary_picklist.html', sunday=sunday, totals=totals, total_count=total_count)
 
 @app.route('/school-profile/<school_name>/<date>')
 def school_profile(school_name, date):
@@ -170,7 +195,6 @@ def school_profile(school_name, date):
         data = r.json()
     except: pass
 
-    # Countdown Logic
     deadline_obj = get_deadline_obj(date)
     days_left = (deadline_obj - datetime.now()).days if deadline_obj else -1
     deadline_str = deadline_obj.strftime('%b %d @ 4:00 PM') if deadline_obj else "TBD"
@@ -209,15 +233,13 @@ def update_booking():
 def download_csv(school_name, date):
     clean_school_name = school_name.replace('+', ' ')
     try:
-        # Get Orders
         payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
         r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
         orders = r.json().get('orders', [])
-        # Get Names
-        menu_map = get_menu_map(date)
-    except: 
-        orders = []
-        menu_map = {}
+        # We need the anchor to get the menu map
+        anchor = get_sunday_anchor(date)
+        menu_map = get_menu_map(anchor)
+    except: orders = []; menu_map = {}
 
     si = io.StringIO()
     cw = csv.writer(si)
@@ -235,17 +257,13 @@ def download_csv(school_name, date):
 def picklist_print(school_name, date):
     clean_school_name = school_name.replace('+', ' ')
     try:
-        # Get Orders
         payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
         r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
         orders = r.json().get('orders', [])
-        # Get Names
-        menu_map = get_menu_map(date)
-    except: 
-        orders = []
-        menu_map = {}
+        anchor = get_sunday_anchor(date)
+        menu_map = get_menu_map(anchor)
+    except: orders = []; menu_map = {}
     
-    # Summary
     summary = {}
     for o in orders:
         mid = str(o['meal_id']).strip()
@@ -267,17 +285,23 @@ def teacher_order(delivery_date):
     deadline_obj = get_deadline_obj(delivery_date)
     deadline_str = deadline_obj.strftime('%b %d @ 4:00 PM') if deadline_obj else "TBD"
     
-    menu = []
+    # NEW: Fetch separated menu
+    meat_menu = []
+    vegan_menu = []
     try:
         r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_menu", "sunday_anchor": anchor}, timeout=15)
         if r.status_code == 200:
-            for item in r.json().get('menu', []):
-                if "#" in str(item):
-                    m = re.search(r'#(.*)', str(item))
-                    if m:
-                        menu.append({"id": m.group(1).strip(), "name": str(item).split('#')[0].strip()})
+            data = r.json()
+            meat_menu = data.get('meat', [])
+            vegan_menu = data.get('vegan', [])
     except: pass
-    return render_template('orderform.html', delivery_date=delivery_date, deadline=deadline_str, menu=menu, school_name=school)
+    
+    return render_template('orderform.html', 
+                         delivery_date=delivery_date, 
+                         deadline=deadline_str, 
+                         meat_menu=meat_menu, 
+                         vegan_menu=vegan_menu, 
+                         school_name=school)
 
 @app.route('/submit-order', methods=['POST'])
 def submit_order():
