@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --radius: 20px; }
+        html { scroll-behavior: smooth; }
         body { background: var(--accent); font-family: -apple-system, sans-serif; margin: 0; padding-bottom: 140px; color: var(--dark); }
         .header { background: var(--primary); padding: 15px; text-align: center; }
         .logo { height: 40px; }
@@ -15,28 +16,41 @@
         .center-wrap { text-align: center; }
 
         /* Instructions Box */
-        .instruct-box { background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .instruct-box { background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .instruct-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 5px; }
         .instruct-text { color: #666; font-size: 0.9rem; margin-bottom: 15px; }
-
-        /* Input */
+        
         .input-box { width: 100%; max-width: 400px; margin: 10px auto 0 auto; display: block; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 1rem; box-sizing: border-box; }
 
-        /* SECTIONS - NEW */
+        /* STICKY NAV */
+        .sticky-nav-container {
+            position: sticky; top: 0; z-index: 900; background: rgba(250, 235, 218, 0.95);
+            padding: 15px 0; backdrop-filter: blur(5px); margin: 0 -20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .nav-pills { display: flex; justify-content: center; gap: 15px; }
+        .nav-pill {
+            background: white; color: var(--dark); padding: 12px 25px; border-radius: 50px;
+            text-decoration: none; font-weight: 800; font-size: 0.95rem; border: 2px solid transparent;
+            transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .nav-pill:hover, .nav-pill.active { background: var(--dark); color: white; transform: translateY(-2px); }
+
+        /* SECTIONS */
+        .section-anchor { scroll-margin-top: 100px; } /* Offset for sticky header */
+        
         .menu-section-title {
-            text-align: center; margin-top: 40px; margin-bottom: 20px;
-            text-transform: uppercase; color: var(--dark); font-weight: 900; font-size: 1.2rem;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+            text-align: center; margin-top: 40px; margin-bottom: 25px;
+            text-transform: uppercase; color: var(--dark); font-weight: 900; font-size: 1.4rem; letter-spacing: 1px;
+            display: flex; align-items: center; justify-content: center; gap: 15px;
         }
         .menu-section-title::before, .menu-section-title::after {
-            content: ""; display: block; height: 2px; background: rgba(0,70,94,0.1); width: 50px;
+            content: ""; display: block; height: 3px; background: rgba(0,70,94,0.1); width: 60px; border-radius: 3px;
         }
 
-        /* Grid */
+        /* GRID & CARDS */
         .meal-grid { display: grid; gap: 20px; grid-template-columns: repeat(2, 1fr); }
         @media (min-width: 768px) { .meal-grid { grid-template-columns: repeat(4, 1fr); } }
 
-        /* Cards */
         .card { background: white; border-radius: var(--radius); overflow: hidden; transition: 0.2s; border: 3px solid transparent; position: relative; display: flex; flex-direction: column; }
         .card.selected { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(78,162,253,0.2); }
         
@@ -45,25 +59,23 @@
         
         .card-body { padding: 15px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; }
         .name { font-weight: 700; font-size: 0.95rem; line-height: 1.3; margin-bottom: 5px; flex-grow: 1; }
-        .info { font-size: 0.75rem; color: #999; text-decoration: none; border-bottom: 1px dashed #ccc; align-self: center; margin-bottom: 15px; }
+        .info { font-size: 0.75rem; color: #999; text-decoration: none; border-bottom: 1px dashed #ccc; align-self: center; margin-bottom: 15px; font-weight: 600; }
 
-        /* Select Button on Card */
         .card-btn { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #eee; background: white; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s; }
         .card.selected .card-btn { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* Sticky Footer */
+        /* FOOTER */
         .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; display: flex; justify-content: center; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 100; }
         .btn-submit { background: #ccc; color: white; padding: 15px 40px; border-radius: 50px; font-weight: 800; border: none; font-size: 1.1rem; pointer-events: none; transition: 0.3s; width: 100%; max-width: 400px; }
         .btn-submit.active { background: var(--dark); pointer-events: auto; cursor: pointer; }
 
-        /* Modal Popup */
+        /* MODAL */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
         .modal { background: white; padding: 30px; border-radius: 25px; max-width: 400px; text-align: center; animation: popUp 0.3s ease-out; }
         @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal h2 { margin-top: 0; color: var(--dark); font-weight: 900; }
         .modal p { color: #666; line-height: 1.5; margin-bottom: 25px; }
         .modal-btn { background: var(--primary); color: white; padding: 15px 30px; border-radius: 50px; border: none; font-weight: 800; font-size: 1rem; width: 100%; cursor: pointer; }
-
         .hidden { display: none; }
     </style>
 </head>
@@ -73,16 +85,7 @@
             <div style="font-size: 3rem; margin-bottom: 10px;">👋</div>
             <h2>Welcome to BetterDay</h2>
             <p>Your Admin has organized a team lunch for <strong>{{ delivery_date }}</strong>!</p>
-            <p style="font-size: 0.9rem; background: #f0f7ff; padding: 10px; border-radius: 10px;">
-                <strong>How it works:</strong><br>
-                1. Enter your name<br>
-                2. Pick 1 delicious dish<br>
-                3. We deliver it fresh to the school
-            </p>
             <button class="modal-btn" onclick="closeModal()">Let's Eat! 😋</button>
-            <div style="margin-top: 15px;">
-                <a href="https://eatbetterday.ca" target="_blank" style="color: #999; font-size: 0.8rem; text-decoration: none;">Visit Main Website</a>
-            </div>
         </div>
     </div>
 
@@ -96,6 +99,8 @@
 
         <form action="/submit-order" method="POST" id="form">
             <input type="hidden" name="meal_id" id="mid">
+            <input type="hidden" name="dish_name" id="dname">
+            <input type="hidden" name="dish_diet" id="ddiet">
             <input type="hidden" name="school_name" value="{{ school_name }}">
             <input type="hidden" name="delivery_date" value="{{ delivery_date }}">
             
@@ -105,39 +110,50 @@
                 <input type="text" name="teacher_name" id="name" class="input-box" placeholder="e.g. Ms. Robinson" required onkeyup="checkForm()">
             </div>
 
-            {% if meat_menu %}
-            <div class="menu-section-title">🥩 Meat Options</div>
-            <div class="meal-grid">
-                {% for item in meat_menu %}
-                <div class="card" id="card-{{ item.id }}" onclick="pick('{{ item.id }}')">
-                    <div class="img-wrap">
-                        <img src="https://eatbetterday.ca/data/meals/{{ item.id }}.jpg" onerror="this.src='{{ url_for('static', filename='Logo.svg') }}'">
-                    </div>
-                    <div class="card-body">
-                        <div class="name">{{ item.name }}</div>
-                        <a href="https://eatbetterday.ca/meal/{{ item.id }}" target="_blank" class="info" onclick="event.stopPropagation()">View Ingredients</a>
-                        <button type="button" class="card-btn" id="btn-{{ item.id }}">Select Dish</button>
-                    </div>
+            <div class="sticky-nav-container">
+                <div class="nav-pills">
+                    <a href="#meat-section" class="nav-pill" onclick="setActive(this)">Meat Options</a>
+                    <a href="#vegan-section" class="nav-pill" onclick="setActive(this)">Plant-Based</a>
                 </div>
-                {% endfor %}
+            </div>
+
+            {% if meat_menu %}
+            <div id="meat-section" class="section-anchor">
+                <div class="menu-section-title">Meat Options</div>
+                <div class="meal-grid">
+                    {% for item in meat_menu %}
+                    <div class="card" id="card-{{ item.id }}" onclick="pick('{{ item.id }}', '{{ item.name | replace("'", "") }}', 'Meat')">
+                        <div class="img-wrap">
+                            <img src="{{ item.image }}" onerror="this.src='{{ url_for('static', filename='Logo.svg') }}'">
+                        </div>
+                        <div class="card-body">
+                            <div class="name">{{ item.name }}</div>
+                            <a href="https://eatbetterday.ca/meal/{{ item.id | replace('#', '') }}" target="_blank" class="info" onclick="event.stopPropagation()">+ More Info</a>
+                            <button type="button" class="card-btn" id="btn-{{ item.id }}">Select Dish</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
             {% endif %}
 
             {% if vegan_menu %}
-            <div class="menu-section-title">🌿 Plant-Based Options</div>
-            <div class="meal-grid">
-                {% for item in vegan_menu %}
-                <div class="card" id="card-{{ item.id }}" onclick="pick('{{ item.id }}')">
-                    <div class="img-wrap">
-                        <img src="https://eatbetterday.ca/data/meals/{{ item.id }}.jpg" onerror="this.src='{{ url_for('static', filename='Logo.svg') }}'">
+            <div id="vegan-section" class="section-anchor">
+                <div class="menu-section-title">Plant-Based Options</div>
+                <div class="meal-grid">
+                    {% for item in vegan_menu %}
+                    <div class="card" id="card-{{ item.id }}" onclick="pick('{{ item.id }}', '{{ item.name | replace("'", "") }}', 'Plant-Based')">
+                        <div class="img-wrap">
+                            <img src="{{ item.image }}" onerror="this.src='{{ url_for('static', filename='Logo.svg') }}'">
+                        </div>
+                        <div class="card-body">
+                            <div class="name">{{ item.name }}</div>
+                            <a href="https://eatbetterday.ca/meal/{{ item.id | replace('#', '') }}" target="_blank" class="info" onclick="event.stopPropagation()">+ More Info</a>
+                            <button type="button" class="card-btn" id="btn-{{ item.id }}">Select Dish</button>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="name">{{ item.name }}</div>
-                        <a href="https://eatbetterday.ca/meal/{{ item.id }}" target="_blank" class="info" onclick="event.stopPropagation()">View Ingredients</a>
-                        <button type="button" class="card-btn" id="btn-{{ item.id }}">Select Dish</button>
-                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
             {% endif %}
 
@@ -148,14 +164,15 @@
     </div>
 
     <script>
-        // Modal Logic
-        function closeModal() {
-            document.getElementById('introModal').classList.add('hidden');
+        function closeModal() { document.getElementById('introModal').classList.add('hidden'); }
+
+        function setActive(el) {
+            document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
         }
 
-        // Selection Logic
-        function pick(id) {
-            // Reset all cards (both meat and vegan)
+        function pick(id, name, diet) {
+            // Reset UI
             document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
             document.querySelectorAll('.card-btn').forEach(b => {
                 b.innerText = "Select Dish";
@@ -163,15 +180,16 @@
                 b.style.color = "#888";
             });
 
-            // Highlight selected
+            // Select Card
             const card = document.getElementById('card-' + id);
             const btn = document.getElementById('btn-' + id);
-            
             card.classList.add('selected');
             btn.innerText = "Selected ✔";
             
-            // Set Hidden Value
+            // Populate Hidden Fields
             document.getElementById('mid').value = id;
+            document.getElementById('dname').value = name;
+            document.getElementById('ddiet').value = diet;
             
             checkForm();
         }
@@ -180,7 +198,6 @@
             const name = document.getElementById('name').value;
             const mid = document.getElementById('mid').value;
             const btn = document.getElementById('submitBtn');
-
             if (name.length > 1 && mid) {
                 btn.classList.add('active');
                 btn.innerText = "Place Order";
