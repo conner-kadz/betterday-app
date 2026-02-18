@@ -123,6 +123,7 @@ def book(date_raw):
         "action": "book_principal",
         "date": date_raw,
         "contact_name": request.form.get("contact_name"),
+        "email": request.form.get("email"), # <--- NEW FIELD
         "school_name": request.form.get("school_name"),
         "address": request.form.get("address"),
         "staff_count": request.form.get("staff_count"),
