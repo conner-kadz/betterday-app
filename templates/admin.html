@@ -3,122 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BD Admin</title>
+    <title>BD Admin Command Center</title>
     <style>
         :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --gray: #f4f6f8; }
-        /* CHANGE: background set to var(--accent) for the cream color */
         body { background: var(--accent); font-family: -apple-system, system-ui, sans-serif; margin: 0; padding-bottom: 50px; color: var(--dark); }
         
-        /* Header */
-        /* Optional: Keep header white or make it primary/accent. White looks clean on cream. */
-        .header { background: var(--white); padding: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        .logo { height: 40px; }
+        .header { background: var(--white); padding: 15px 30px; display: flex; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .logo { height: 40px; margin-right: 20px; }
+        .header-title { font-weight: 900; font-size: 1.2rem; text-transform: uppercase; color: var(--dark); }
 
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 40px; }
         
-        /* GRID LAYOUT (The Magic 3-Column Logic) */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr; /* Mobile: 1 column */
+        /* WEEK ROW STYLING */
+        .week-row { margin-bottom: 50px; border-bottom: 2px dashed rgba(0,70,94,0.1); padding-bottom: 40px; }
+        .week-row:last-child { border-bottom: none; }
+
+        .week-header { display: flex; align-items: flex-end; margin-bottom: 20px; gap: 20px; }
+        .week-title { font-size: 1.5rem; font-weight: 900; color: var(--dark); line-height: 1; }
+        .week-sub { font-size: 0.9rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* CONTROL PANEL (Left Side Buttons) */
+        .week-controls { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-action { 
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 800; text-decoration: none; transition: 0.2s; 
+        }
+        .btn-culinary { background: var(--dark); color: white; box-shadow: 0 4px 10px rgba(0,70,94,0.2); }
+        .btn-culinary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,70,94,0.3); }
+        
+        .btn-invoice { background: white; color: var(--dark); border: 2px solid var(--dark); }
+        .btn-invoice:hover { background: #f0f7ff; }
+
+        /* HORIZONTAL SCROLL CONTAINER */
+        .cards-scroller {
+            display: flex;
             gap: 20px;
+            overflow-x: auto;
+            padding: 10px 5px 20px 5px; /* Padding for shadow clipping */
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
         
-        /* Desktop Breakpoint: Switch to 3 columns */
-        @media (min-width: 900px) {
-            .dashboard-grid {
-                grid-template-columns: repeat(3, 1fr); 
-            }
-        }
+        /* Custom Scrollbar */
+        .cards-scroller::-webkit-scrollbar { height: 8px; }
+        .cards-scroller::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 4px; }
+        .cards-scroller::-webkit-scrollbar-thumb { background: rgba(0,70,94,0.2); border-radius: 4px; }
+        .cards-scroller::-webkit-scrollbar-thumb:hover { background: rgba(0,70,94,0.4); }
 
         /* CARD STYLING */
         .menu-card { 
             background: var(--white); 
             border-radius: 16px; 
             padding: 20px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            transition: transform 0.2s;
+            display: flex; flex-direction: column; justify-content: space-between;
             border: 1px solid #eee;
-            position: relative;
-            overflow: hidden;
+            position: relative; overflow: hidden;
+            min-width: 280px; width: 280px; /* Fixed width for horizontal scroll */
         }
+        .menu-card:hover { transform: translateY(-4px); border-color: var(--primary); }
+
+        /* Card Top Bar - Dynamic Colors */
+        .card-top-bar { position: absolute; top: 0; left: 0; right: 0; height: 6px; }
+        .bar-school { background: var(--primary); }
+        .bar-office { background: #e67e22; } /* Orange for Office */
+
+        .card-header { display: flex; justify-content: space-between; margin-top: 10px; margin-bottom: 5px; }
+        .date-badge { background: #f0f7ff; color: var(--dark); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
         
-        .menu-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: var(--primary); }
+        /* Office Badge */
+        .type-badge { font-size: 0.65rem; text-transform: uppercase; font-weight: 900; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px; }
+        .tb-school { color: #aaa; border: 1px solid #eee; }
+        .tb-office { background: #fff3e0; color: #d35400; border: 1px solid #ffe0b2; }
 
-        /* Colored Top Bar for visual pop */
-        .card-top-bar { position: absolute; top: 0; left: 0; right: 0; height: 6px; background: var(--primary); }
-
-        /* Card Content */
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; margin-top: 5px; }
-        .date-badge { background: var(--accent); color: var(--dark); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+        .client-name { font-size: 1.2rem; font-weight: 800; margin: 5px 0; line-height: 1.2; color: var(--dark); height: 56px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
         
-        .school-name { font-size: 1.25rem; font-weight: 800; margin: 10px 0 5px 0; line-height: 1.2; flex-grow: 1; }
-        .deadline-text { font-size: 0.8rem; color: #888; margin-bottom: 20px; }
-
-        /* Stats Row */
+        .deadline-text { font-size: 0.8rem; color: #e74c3c; font-weight: 600; margin-bottom: 15px; }
+        
         .stats-row { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: auto; }
-        
         .stat-group { display: flex; flex-direction: column; }
-        .label { font-size: 0.65rem; text-transform: uppercase; color: #999; font-weight: 700; letter-spacing: 0.5px; }
-        .big-num { font-size: 1.4rem; font-weight: 800; color: var(--dark); line-height: 1; margin-top: 2px; }
+        .label { font-size: 0.65rem; text-transform: uppercase; color: #999; font-weight: 700; }
+        .big-num { font-size: 1.4rem; font-weight: 800; color: var(--dark); line-height: 1; }
 
-        /* Status Pill */
-        .status-pill { 
-            font-size: 0.7rem; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; 
-            background: #eee; color: #666; display: inline-block; margin-bottom: 5px;
-        }
+        .btn-manage { background: #f8f9fa; color: var(--dark); text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; transition: 0.2s; }
+        .btn-manage:hover { background: var(--dark); color: white; }
 
-        /* Button */
-        .btn-profile { 
-            background: var(--dark); color: white; text-decoration: none; 
-            padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; 
-            transition: 0.2s; 
-        }
-        .btn-profile:hover { background: var(--primary); }
-
+        /* Empty State */
+        .empty-state { text-align: center; opacity: 0.6; padding: 60px; }
     </style>
 </head>
 <body>
-    <div class="header"><img src="{{ url_for('static', filename='Logo.svg') }}" class="logo"></div>
+    <div class="header">
+        <img src="{{ url_for('static', filename='Logo.svg') }}" class="logo">
+        <div class="header-title">Admin Command Center</div>
+    </div>
     
     <div class="container">
-        <h1 style="font-weight: 900; text-transform: uppercase; font-size: 1.5rem; margin-bottom: 25px; color: var(--dark);">Dashboard</h1>
         
-        <div class="dashboard-grid">
-            {% for b in bookings %}
-            <div class="menu-card">
-                <div class="card-top-bar"></div>
-                
-                <div class="card-header">
-                    <div class="date-badge">{{ b.delivery_date_display }}</div>
-                </div>
-                
-                <div class="status-pill">{{ b.status }}</div>
-
-                <div class="school-name">{{ b.school }}</div>
-                <div class="deadline-text">Deadline: {{ b.deadline }}</div>
-
-                <div class="stats-row">
-                    <div class="stat-group">
-                        <span class="label">Staff Count</span>
-                        <div class="big-num">{{ b.staff_count }}</div>
+        {% if weeks %}
+            {% for anchor, bookings in weeks.items() %}
+            <div class="week-row">
+                <div class="week-header">
+                    <div>
+                        <div class="week-sub">Production Week</div>
+                        <div class="week-title">Week of {{ anchor }}</div>
                     </div>
-                    <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date_raw }}" class="btn-profile">
-                        Manage &rarr;
+                </div>
+
+                <div class="week-controls">
+                    <a href="/culinary-summary/{{ anchor }}" target="_blank" class="btn-action btn-culinary">
+                        👨‍🍳 Culinary Picklist
                     </a>
+                    <a href="#" class="btn-action btn-invoice" onclick="alert('Batch Invoice printing coming soon!')">
+                        📄 Print Invoices
+                    </a>
+                </div>
+
+                <div class="cards-scroller">
+                    {% for b in bookings %}
+                    <div class="menu-card">
+                        <div class="card-top-bar {% if b.type == 'Office' %}bar-office{% else %}bar-school{% endif %}"></div>
+                        
+                        <div class="card-header">
+                            <div class="date-badge">{{ b.delivery_date_display }}</div>
+                            <div class="type-badge {% if b.type == 'Office' %}tb-office{% else %}tb-school{% endif %}">
+                                {{ b.type }}
+                            </div>
+                        </div>
+
+                        <div class="client-name">{{ b.school }}</div>
+                        <div class="deadline-text">Cutoff: {{ b.deadline }}</div>
+
+                        <div class="stats-row">
+                            <div class="stat-group">
+                                <span class="label">Headcount</span>
+                                <div class="big-num">{{ b.staff_count }}</div>
+                            </div>
+                            <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date_raw }}" class="btn-manage">
+                                Manage &rarr;
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
             {% endfor %}
-        </div>
         
-        {% if not bookings %}
-        <div style="text-align: center; opacity: 0.5; margin-top: 50px;">
-            <h3>No Active Bookings</h3>
-            <p>Check back later for new requests.</p>
-        </div>
+        {% else %}
+            <div class="empty-state">
+                <h1>No Active Bookings Found</h1>
+                <p>Check your Google Sheet to ensure bookings have valid dates.</p>
+            </div>
         {% endif %}
+
     </div>
 </body>
 </html>
