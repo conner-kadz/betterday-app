@@ -12,7 +12,6 @@
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { margin: 0; background: var(--accent); color: var(--dark); min-height: 100vh; }
         
-        /* The Header Logo is now a clear "Back" path */
         .app-header { 
             background: var(--primary); 
             padding: 12px 24px; 
@@ -74,7 +73,6 @@
         }
         .btn-submit:hover { transform: translateY(-2px); background: #3b8cd9; }
 
-        /* THE NEW BACK BUTTON STYLE */
         .back-link {
             display: inline-block;
             margin-top: 25px;
@@ -107,6 +105,11 @@
                 <div class="form-group">
                     <label>Your Name</label>
                     <input type="text" name="contact_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Your Email Address</label>
+                    <input type="email" name="email" placeholder="name@school.edu" required>
                 </div>
 
                 <div class="form-group">
