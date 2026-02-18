@@ -18,14 +18,22 @@
         .instruct-box { background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .instruct-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 5px; }
         .instruct-text { color: #666; font-size: 0.9rem; margin-bottom: 15px; }
-        .view-more { color: var(--primary); font-weight: 700; text-decoration: none; font-size: 0.9rem; }
 
         /* Input */
         .input-box { width: 100%; max-width: 400px; margin: 10px auto 0 auto; display: block; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 1rem; box-sizing: border-box; }
-        .input-label { display: block; font-size: 0.8rem; font-weight: 700; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* SECTIONS - NEW */
+        .menu-section-title {
+            text-align: center; margin-top: 40px; margin-bottom: 20px;
+            text-transform: uppercase; color: var(--dark); font-weight: 900; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .menu-section-title::before, .menu-section-title::after {
+            content: ""; display: block; height: 2px; background: rgba(0,70,94,0.1); width: 50px;
+        }
 
         /* Grid */
-        .meal-grid { display: grid; gap: 20px; grid-template-columns: repeat(2, 1fr); margin-top: 30px; }
+        .meal-grid { display: grid; gap: 20px; grid-template-columns: repeat(2, 1fr); }
         @media (min-width: 768px) { .meal-grid { grid-template-columns: repeat(4, 1fr); } }
 
         /* Cards */
@@ -93,14 +101,14 @@
             
             <div class="instruct-box">
                 <div class="instruct-title">Who is this meal for?</div>
-                <div class="instruct-text">Please enter your full name so we can keep your delivery organized!</div>
+                <div class="instruct-text">Please enter your full name so we can label your meal.</div>
                 <input type="text" name="teacher_name" id="name" class="input-box" placeholder="e.g. Ms. Robinson" required onkeyup="checkForm()">
             </div>
 
-            <h3 style="text-align: center; margin-top: 30px; text-transform: uppercase; color: #999; font-size: 0.9rem;">Select One Dish</h3>
-
+            {% if meat_menu %}
+            <div class="menu-section-title">🥩 Meat Options</div>
             <div class="meal-grid">
-                {% for item in menu %}
+                {% for item in meat_menu %}
                 <div class="card" id="card-{{ item.id }}" onclick="pick('{{ item.id }}')">
                     <div class="img-wrap">
                         <img src="https://eatbetterday.ca/data/meals/{{ item.id }}.jpg" onerror="this.src='{{ url_for('static', filename='Logo.svg') }}'">
@@ -113,6 +121,25 @@
                 </div>
                 {% endfor %}
             </div>
+            {% endif %}
+
+            {% if vegan_menu %}
+            <div class="menu-section-title">🌿 Plant-Based Options</div>
+            <div class="meal-grid">
+                {% for item in vegan_menu %}
+                <div class="card" id="card-{{ item.id }}" onclick="pick('{{ item.id }}')">
+                    <div class="img-wrap">
+                        <img src="https://eatbetterday.ca/data/meals/{{ item.id }}.jpg" onerror="this.src='{{ url_for('static', filename='Logo.svg') }}'">
+                    </div>
+                    <div class="card-body">
+                        <div class="name">{{ item.name }}</div>
+                        <a href="https://eatbetterday.ca/meal/{{ item.id }}" target="_blank" class="info" onclick="event.stopPropagation()">View Ingredients</a>
+                        <button type="button" class="card-btn" id="btn-{{ item.id }}">Select Dish</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
 
             <div class="footer">
                 <button id="submitBtn" class="btn-submit">Complete Order</button>
@@ -128,7 +155,7 @@
 
         // Selection Logic
         function pick(id) {
-            // Reset all cards
+            // Reset all cards (both meat and vegan)
             document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
             document.querySelectorAll('.card-btn').forEach(b => {
                 b.innerText = "Select Dish";
