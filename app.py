@@ -103,6 +103,7 @@ def index():
         })
         
     return render_template('index.html', weeks=weeks)
+
 @app.route('/book/<date_raw>', methods=['GET', 'POST'])
 def book(date_raw):
     if request.method == 'GET':
@@ -132,6 +133,12 @@ def bd_admin():
         r_orders = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_all_orders"}, timeout=10)
         all_orders = r_orders.json() if r_orders.status_code == 200 else []
     except: all_orders = []
+
+    # FETCH BLOCKED DATES FOR THE TOGGLE PANEL
+    try:
+        r_block = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_blocked_dates"}, timeout=8)
+        blocked_dates = r_block.json() if r_block.status_code == 200 else []
+    except: blocked_dates = []
 
     order_counts = {}
     if isinstance(all_orders, list):
@@ -174,7 +181,45 @@ def bd_admin():
             except: continue
     
     sorted_weeks = dict(sorted(production_weeks.items()))
-    return render_template('admin.html', weeks=sorted_weeks)
+
+    # BUILD THE 10-WEEK TOGGLE PANEL
+    start_date = datetime(2026, 3, 9)
+    today = datetime.now()
+    today_date = today.replace(hour=0, minute=0, second=0, microsecond=0)
+    if today_date > start_date:
+        start_date = today_date - timedelta(days=today_date.weekday())
+
+    toggle_weeks = []
+    for i in range(10):
+        monday = start_date + timedelta(weeks=i)
+        tuesday = monday + timedelta(days=1)
+        wednesday = monday + timedelta(days=2)
+        
+        days = []
+        for d in [monday, tuesday, wednesday]:
+            d_str = d.strftime('%Y-%m-%d')
+            days.append({
+                'raw_date': d_str,
+                'display': d.strftime('%a, %b %d'),
+                'blocked': d_str in blocked_dates,
+                'past': d < today_date
+            })
+        
+        toggle_weeks.append({
+            'week_label': monday.strftime('Week of %b %d'),
+            'days': days
+        })
+
+    return render_template('admin.html', weeks=sorted_weeks, toggle_weeks=toggle_weeks)
+
+# NEW ROUTE: TOGGLE DATE BLOCK
+@app.route('/toggle-date', methods=['POST'])
+def toggle_date():
+    date_raw = request.form.get('date')
+    try:
+        requests.post(GOOGLE_SCRIPT_URL, json={"action": "toggle_block_date", "date": date_raw}, timeout=8)
+    except: pass
+    return redirect('/BD-Admin')
 
 @app.route('/culinary-summary/<sunday>')
 def culinary_summary(sunday):
