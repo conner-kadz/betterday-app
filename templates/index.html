@@ -1,115 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>BetterDay Booking</title>
+    <title>BetterDay | Book a Delivery</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        :root {
-            --primary: #4ea2fd;    --accent: #faebda;
-            --dark: #00465e;       --bus-yellow: #ffd54f;
-            --status-open: #27ae60; --radius-lg: 18px;
-            --shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-            --error-red: #e74c3c;
-        }
-        * { box-sizing: border-box; font-family: -apple-system, sans-serif; }
-        body { margin: 0; background: var(--accent); color: var(--dark); padding-bottom: 50px; }
+        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; }
+        body { font-family: -apple-system, sans-serif; background: var(--accent); color: var(--dark); margin: 0; padding-bottom: 60px; }
         
-        /* Centered Header with Logo */
-        .app-header { 
-            background: var(--primary); 
-            padding: 12px 24px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            box-shadow: var(--shadow); 
+        .header { background: var(--primary); padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .logo { height: 45px; }
+
+        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        
+        .hero { text-align: center; margin-bottom: 40px; }
+        .hero h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; }
+        .hero p { font-size: 1.1rem; color: #555; }
+
+        .week-block { background: var(--white); border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .week-title { font-size: 1.2rem; font-weight: 800; border-bottom: 2px dashed #eee; padding-bottom: 10px; margin-bottom: 20px; text-transform: uppercase; color: var(--dark); }
+
+        .days-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        @media (max-width: 600px) { .days-grid { grid-template-columns: 1fr; } }
+
+        .day-card { 
+            background: #f8f9fa; border: 2px solid #eee; border-radius: 12px; padding: 15px; 
+            text-align: center; text-decoration: none; color: var(--dark); font-weight: 700; 
+            transition: 0.2s; display: block;
         }
         
-        .app-main { padding: 30px 20px; max-width: 500px; margin: 0 auto; }
-        
-        .intro-section { text-align: center; margin-bottom: 30px; }
-        .intro-section h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
-        .intro-section p { font-size: 1rem; opacity: 0.9; font-weight: 400; line-height: 1.4; }
+        /* Available */
+        .day-card.available { background: white; border-color: var(--primary); color: var(--primary); }
+        .day-card.available:hover { background: var(--primary); color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(78, 162, 253, 0.3); }
 
-        .scroller-nav {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 25px; background: white; padding: 15px 20px;
-            border-radius: 50px; box-shadow: var(--shadow);
-        }
-        .nav-arrow { 
-            color: var(--dark); 
-            text-decoration: none; 
-            font-size: 1.5rem; 
-            font-weight: 800; 
-            width: 40px; 
-            height: 40px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            border-radius: 50%;
-        }
-        .nav-arrow:hover { background: #f0f0f0; }
-        
-        .month-label h2 { margin: 0; font-size: 1.3rem; font-weight: 900; text-transform: uppercase; }
-
-        .booking-list { 
-            background: white; border-radius: var(--radius-lg); padding: 10px 25px; box-shadow: var(--shadow); 
-        }
-
-        .date-row { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #f2f2f2; }
-        .date-row:last-child { border-bottom: none; }
-        .date-text { font-weight: 700; font-size: 1rem; }
-
-        .btn-select { background: var(--primary); color: white; text-decoration: none; padding: 10px 22px; border-radius: 99px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; }
-        .status-taken { background: var(--bus-yellow); color: #5d4037; padding: 8px 14px; border-radius: 99px; font-size: 0.65rem; font-weight: 900; }
+        /* Blocked / Past */
+        .day-card.unavailable { opacity: 0.5; cursor: not-allowed; pointer-events: none; background: #eee; border-color: #ddd; }
+        .status-badge { font-size: 0.7rem; text-transform: uppercase; font-weight: 900; background: #ddd; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; }
+        .day-card.available .status-badge { display: none; }
     </style>
 </head>
 <body>
-    <header class="app-header">
-        <a href="/">
-            <img src="{{ url_for('static', filename='Logo.svg') }}" alt="BetterDay Logo" style="height: 40px; width: auto; display: block;">
-        </a>
-    </header>
+    <div class="header">
+        <img src="{{ url_for('static', filename='Logo.svg') }}" class="logo">
+    </div>
 
-    <main class="app-main">
-        <div class="intro-section">
-            <h1>School Lunch Drop-off 🍎</h1>
-            <p>Choose a date below to lock in your school's lunch delivery.<br>Mon, Tue, Wed available.</p>
+    <div class="container">
+        <div class="hero">
+            <h1>Schedule a Delivery</h1>
+            <p>Select an available date below to secure a delivery slot for your team.</p>
         </div>
 
-        <div class="scroller-nav">
-            {% if prev_url %}
-                <a href="{{ prev_url }}" class="nav-arrow">←</a>
-            {% else %}
-                <span class="nav-arrow" style="opacity:0.2; cursor:default;">←</span>
-            {% endif %}
-
-            <div class="month-label" style="text-align: center;">
-                <h2>{{ month_name }} {{ year }}</h2>
-            </div>
-            
-            {% if next_url %}
-                <a href="{{ next_url }}" class="nav-arrow">→</a>
-            {% else %}
-                <span class="nav-arrow" style="opacity:0.2; cursor:default;">→</span>
-            {% endif %}
-        </div>
-
-        <div class="booking-list">
-            {% for date in dates %}
-            <div class="date-row">
-                <div class="date-text">{{ date.display }}</div>
-                <div class="action-zone">
-                    {% if date.past %}
-                        <span style="color:#adb5bd; font-size:0.7rem; font-weight:800;">PASSED</span>
-                    {% elif date.taken %}
-                        <span class="status-taken">TAKEN ❌</span>
+        {% for week in weeks %}
+        <div class="week-block">
+            <div class="week-title">{{ week.week_label }}</div>
+            <div class="days-grid">
+                {% for day in week.days %}
+                    {% if day.past or day.blocked %}
+                        <div class="day-card unavailable">
+                            {{ day.display }}<br>
+                            <span class="status-badge">{% if day.past %}Passed{% else %}Fully Booked{% endif %}</span>
+                        </div>
                     {% else %}
-                        <a href="/book/{{ date.raw_date }}" class="btn-select">Select</a>
+                        <a href="/book/{{ day.raw_date }}" class="day-card available">
+                            {{ day.display }}<br>
+                            <span style="font-size: 0.8rem; font-weight: 600; opacity: 0.8; margin-top:5px; display:block;">Select &rarr;</span>
+                        </a>
                     {% endif %}
-                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
-    </main>
+        {% endfor %}
+    </div>
 </body>
 </html>
