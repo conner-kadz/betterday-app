@@ -85,6 +85,29 @@
     </div>
     
     <div class="container">
+        
+        <div style="background: white; border-radius: 16px; padding: 25px; margin-bottom: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <h2 style="margin-top: 0; font-size: 1.2rem; font-weight: 900; text-transform: uppercase;">📅 Calendar Availability</h2>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Toggle days to control if new Schools can book them on the homepage.</p>
+            
+            <div class="cards-scroller" style="padding: 0; gap: 15px;">
+                {% for w in toggle_weeks %}
+                <div style="background: #f8f9fa; border: 1px solid #eee; border-radius: 12px; padding: 15px; min-width: 200px;">
+                    <div style="font-weight: 800; font-size: 0.85rem; color: #888; text-transform: uppercase; margin-bottom: 10px; text-align: center;">{{ w.week_label }}</div>
+                    
+                    {% for day in w.days %}
+                    <form action="/toggle-date" method="POST" style="margin-bottom: 8px;">
+                        <input type="hidden" name="date" value="{{ day.raw_date }}">
+                        <button type="submit" style="width: 100%; padding: 8px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; border: 2px solid {% if day.blocked %}#eee{% else %}#4ea2fd{% endif %}; background: {% if day.blocked %}#eee{% else %}#f0f7ff{% endif %}; color: {% if day.blocked %}#999{% else %}#00465e{% endif %};">
+                            {{ day.display }}: {% if day.blocked %}🔒 Blocked{% else %}🟢 Open{% endif %}
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
         {% if weeks %}
             {% for anchor, details in weeks.items() %}
             <div class="week-row">
