@@ -101,11 +101,10 @@ def index():
             })
         
         weeks.append({
-            'week_label': monday.strftime('Week of %B %d, %Y'),
+            'week_label': monday.strftime('Week of %b %d'), # Changed to standard casing
             'days': days
         })
         
-    # Pass the booked_date_nice to the template so it can show the banner
     return render_template('index.html', weeks=weeks, booked_date=booked_date_nice)
 
 @app.route('/book/<date_raw>', methods=['GET', 'POST'])
@@ -122,7 +121,9 @@ def book(date_raw):
     try:
         requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=10)
     except: pass
-    resp = make_response(render_template('success.html'))
+    
+    # Send them directly back to the index to see the banner!
+    resp = make_response(redirect(url_for('index')))
     resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
     return resp
 
@@ -216,14 +217,14 @@ def bd_admin():
 
     return render_template('admin.html', weeks=sorted_weeks, toggle_weeks=toggle_weeks)
 
-# NEW ROUTE: TOGGLE DATE BLOCK
+# BACKGROUND TOGGLE ROUTE
 @app.route('/toggle-date', methods=['POST'])
 def toggle_date():
     date_raw = request.form.get('date')
     try:
         requests.post(GOOGLE_SCRIPT_URL, json={"action": "toggle_block_date", "date": date_raw}, timeout=8)
     except: pass
-    return redirect('/BD-Admin')
+    return "OK", 200 # Responds instantly in the background
 
 @app.route('/culinary-summary/<sunday>')
 def culinary_summary(sunday):
@@ -386,19 +387,16 @@ def submit_order():
 
 @app.route('/batch-invoices/<sunday>')
 def batch_invoices(sunday):
-    # 1. Fetch Bookings to know which schools are scheduled this week
     try:
         r_books = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=10)
         bookings_raw = r_books.json() if r_books.status_code == 200 else []
     except: bookings_raw = []
 
-    # 2. Fetch ALL Orders
     try:
         r_orders = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_all_orders"}, timeout=10)
         all_orders = r_orders.json() if r_orders.status_code == 200 else []
     except: all_orders = []
 
-    # 3. Find schools belonging to this specific week
     schools_this_week = {}
     if isinstance(bookings_raw, list):
         for b in bookings_raw:
@@ -412,7 +410,6 @@ def batch_invoices(sunday):
                     schools_this_week[school_name] = get_nice_date(d_date)
             except: continue
 
-    # 4. Group orders by school
     summaries = {}
     for school_name, nice_date in schools_this_week.items():
         summaries[school_name] = {"delivery_date": nice_date, "dishes": {}, "total": 0}
