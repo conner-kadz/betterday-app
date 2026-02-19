@@ -49,9 +49,12 @@ def get_deadline_obj(delivery_date_str):
 def decode_school_filter(s):
     return str(s).replace('+', ' ')
 
-# ROUTES
 @app.route('/')
 def index():
+    # Check if they just booked (reads the cookie we set in the /book route)
+    booked_date_raw = request.cookies.get('user_booked_date')
+    booked_date_nice = get_nice_date(booked_date_raw) if booked_date_raw else None
+
     # 1. Fetch Auto-Blocked Dates (Schools that have already booked)
     taken_dates = []
     try:
@@ -93,7 +96,7 @@ def index():
             days.append({
                 'raw_date': d_str,
                 'display': d.strftime('%A, %b %d'),
-                'blocked': d_str in all_unavailable_dates, # Uses the combined list!
+                'blocked': d_str in all_unavailable_dates, 
                 'past': d < today_date
             })
         
@@ -102,7 +105,8 @@ def index():
             'days': days
         })
         
-    return render_template('index.html', weeks=weeks)
+    # Pass the booked_date_nice to the template so it can show the banner
+    return render_template('index.html', weeks=weeks, booked_date=booked_date_nice)
 
 @app.route('/book/<date_raw>', methods=['GET', 'POST'])
 def book(date_raw):
