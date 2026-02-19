@@ -44,8 +44,6 @@
 
         /* WEEK BLOCKS */
         .week-block { background: var(--white); border-radius: var(--radius-lg); padding: 25px; margin-bottom: 30px; box-shadow: var(--shadow-soft); }
-        
-        /* Fixed: No more uppercase! */
         .week-title { font-size: 1.3rem; font-weight: 800; border-bottom: 2px solid rgba(0,70,94,0.08); padding-bottom: 12px; margin-bottom: 20px; color: var(--dark); }
 
         .days-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
@@ -53,24 +51,37 @@
 
         /* DAY CARDS */
         .day-card { 
-            background: #fdfdfd; border: 2px solid #f0f4f8; border-radius: 16px; padding: 18px 15px; 
-            text-align: center; text-decoration: none; color: var(--dark); font-weight: 800; 
+            border-radius: 16px; padding: 18px 15px; 
+            text-align: center; text-decoration: none; font-weight: 800; 
             transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         
         .day-date-text { font-size: 1.05rem; margin-bottom: 10px; }
 
-        /* Available Styling */
-        .day-card.available { background: white; border-color: #e2eeff; }
-        .select-pill { 
-            background: #f0f7ff; color: var(--primary); padding: 6px 16px; border-radius: 50px; 
-            font-size: 0.8rem; font-weight: 800; transition: 0.2s; 
+        /* 🔥 UPDATED: Bold Blue Available Styling */
+        .day-card.available { 
+            background: var(--primary); 
+            border: 2px solid var(--primary); 
+            color: white; 
+            box-shadow: 0 6px 15px rgba(78, 162, 253, 0.25);
         }
-        .day-card.available:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(78, 162, 253, 0.15); }
-        .day-card.available:hover .select-pill { background: var(--primary); color: white; }
+        .select-pill { 
+            background: white; color: var(--primary); padding: 6px 18px; border-radius: 50px; 
+            font-size: 0.8rem; font-weight: 900; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .day-card.available:hover { 
+            background: #3b8cd9; /* Slightly deeper blue on hover */
+            border-color: #3b8cd9; 
+            transform: translateY(-4px); 
+            box-shadow: 0 10px 25px rgba(78, 162, 253, 0.4); 
+        }
+        .day-card.available:hover .select-pill { transform: scale(1.05); }
 
         /* Unavailable Styling */
-        .day-card.unavailable { opacity: 0.6; cursor: not-allowed; pointer-events: none; background: #f4f6f8; border-color: #e9ecef; }
+        .day-card.unavailable { 
+            opacity: 0.6; cursor: not-allowed; pointer-events: none; 
+            background: #f4f6f8; border: 2px solid #e9ecef; color: var(--dark); 
+        }
         .status-badge { 
             font-size: 0.7rem; text-transform: uppercase; font-weight: 900; letter-spacing: 0.5px;
             padding: 5px 12px; border-radius: 50px; display: inline-block; 
