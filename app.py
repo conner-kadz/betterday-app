@@ -23,7 +23,7 @@ def get_nice_date(date_str):
 def format_week_header(date_str):
     try:
         dt = datetime.strptime(str(date_str), '%Y-%m-%d')
-        return dt.strftime('%b %d, %Y') # "Feb 23, 2026"
+        return dt.strftime('%b %d, %Y')
     except: return date_str
 
 def get_sunday_anchor(delivery_date_str):
@@ -56,9 +56,10 @@ def index():
     try:
         r = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=8)
         taken_raw = r.json() if r.status_code == 200 else []
-        for row in taken_raw:
-            if row and len(row) > 0 and "Date" not in str(row[0]):
-                taken.append(str(row[0]).split('T')[0])
+        if isinstance(taken_raw, list):
+            for row in taken_raw:
+                if isinstance(row, list) and len(row) > 0 and "Date" not in str(row[0]):
+                    taken.append(str(row[0]).split('T')[0])
     except: pass
     
     now = datetime.now()
@@ -98,7 +99,9 @@ def book(date_raw):
         "staff_count": request.form.get("staff_count"), "lunch_time": request.form.get("lunch_time"),
         "delivery_notes": request.form.get("delivery_notes")
     }
-    requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=10)
+    try:
+        requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=10)
+    except: pass
     resp = make_response(render_template('success.html'))
     resp.set_cookie('user_booked_date', date_raw, max_age=60*60*24*30)
     return resp
@@ -115,38 +118,50 @@ def bd_admin():
         all_orders = r_orders.json() if r_orders.status_code == 200 else []
     except: all_orders = []
 
+    # Safe Counting
     order_counts = {}
-    for o in all_orders:
-        key = f"{o.get('school')}_{o.get('date')}"
-        order_counts[key] = order_counts.get(key, 0) + 1
+    if isinstance(all_orders, list):
+        for o in all_orders:
+            if isinstance(o, dict):
+                key = f"{o.get('school')}_{o.get('date')}"
+                order_counts[key] = order_counts.get(key, 0) + 1
 
     production_weeks = {} 
-    for b in bookings_raw:
-        try:
-            if "Date" in str(b[0]) or str(b[2]).isdigit(): continue
-            d_date = str(b[0]).split('T')[0]
-            anchor = get_sunday_anchor(d_date)
-            if not anchor: continue
+    if isinstance(bookings_raw, list):
+        for b in bookings_raw:
+            try:
+                if not isinstance(b, list) or len(b) < 3: continue
+                if "Date" in str(b[0]) or str(b[2]).isdigit(): continue
+                
+                d_date = str(b[0]).split('T')[0]
+                anchor = get_sunday_anchor(d_date)
+                if not anchor: continue
 
-            deadline_obj = get_deadline_obj(d_date)
-            school_name = str(b[2])
-            is_office = "Health" in school_name or "Headversity" in school_name
-            meals_ordered = order_counts.get(f"{school_name}_{d_date}", 0)
+                deadline_obj = get_deadline_obj(d_date)
+                school_name = str(b[2])
+                is_office = "Health" in school_name or "Headversity" in school_name
+                meals_ordered = order_counts.get(f"{school_name}_{d_date}", 0)
 
-            booking_obj = {
-                "delivery_date_raw": d_date, "delivery_date_display": get_nice_date(d_date),
-                "school": school_name, "status": str(b[7]) if len(b) > 7 else "New Booking",
-                "staff_count": str(b[4]) if len(b) > 4 else "0", "meals_ordered": meals_ordered,
-                "deadline": deadline_obj.strftime('%b %d') if deadline_obj else "TBD",
-                "type": "Office" if is_office else "School"
-            }
+                booking_obj = {
+                    "delivery_date_raw": d_date, "delivery_date_display": get_nice_date(d_date),
+                    "school": school_name, "status": str(b[7]) if len(b) > 7 else "New Booking",
+                    "staff_count": str(b[4]) if len(b) > 4 else "0", "meals_ordered": meals_ordered,
+                    "deadline": deadline_obj.strftime('%b %d') if deadline_obj else "TBD",
+                    "type": "Office" if is_office else "School"
+                }
 
-            formatted_anchor = format_week_header(anchor)
-            if formatted_anchor not in production_weeks: 
-                production_weeks[formatted_anchor] = {"anchor_id": anchor, "bookings": []}
-            production_weeks[formatted_anchor]["bookings"].append(booking_obj)
-        except: continue
+                # Use the raw date (anchor) as the dictionary key to ensure chronological sorting
+                if anchor not in production_weeks: 
+                    production_weeks[anchor] = {
+                        "nice_date": format_week_header(anchor), 
+                        "anchor_id": anchor, 
+                        "bookings": []
+                    }
+                production_weeks[anchor]["bookings"].append(booking_obj)
+            except Exception as e: 
+                continue
     
+    # Sort chronologically by the YYYY-MM-DD anchor key
     sorted_weeks = dict(sorted(production_weeks.items()))
     return render_template('admin.html', weeks=sorted_weeks)
 
@@ -160,19 +175,21 @@ def culinary_summary(sunday):
     totals = {"Meat": {}, "Plant-Based": {}}
     total_count = 0
     
-    for o in all_orders:
-        anchor = get_sunday_anchor(o.get('date'))
-        if anchor == sunday:
-            dish_name = str(o.get('dish_name') or f"Dish #{o.get('meal_id')}")
-            diet = str(o.get('diet') or "Unknown")
+    if isinstance(all_orders, list):
+        for o in all_orders:
+            if not isinstance(o, dict): continue
             
-            cat = "Plant-Based" if "Plant" in diet or "Vegan" in diet else "Meat"
-            if dish_name not in totals[cat]: totals[cat][dish_name] = 0
-            
-            totals[cat][dish_name] += 1
-            total_count += 1
+            anchor = get_sunday_anchor(o.get('date'))
+            if anchor == sunday:
+                dish_name = str(o.get('dish_name') or f"Dish #{o.get('meal_id')}")
+                diet = str(o.get('diet') or "Unknown")
+                
+                cat = "Plant-Based" if "Plant" in diet or "Vegan" in diet else "Meat"
+                if dish_name not in totals[cat]: totals[cat][dish_name] = 0
+                
+                totals[cat][dish_name] += 1
+                total_count += 1
 
-    # Sort dishes alphabetically within their categories
     for cat in totals:
         totals[cat] = dict(sorted(totals[cat].items()))
 
@@ -199,8 +216,9 @@ def school_profile(school_name, date):
     return render_template('profile.html', 
                          school=clean_school_name, date=date, display_date=get_nice_date(date),
                          deadline=deadline_str, countdown=countdown_text,
-                         staff=int(data.get('staff_count', 0)), orders=len(data.get('orders', [])),
-                         info=data) 
+                         staff=int(data.get('staff_count', 0) if isinstance(data, dict) else 0), 
+                         orders=len(data.get('orders', []) if isinstance(data, dict) else []),
+                         info=data if isinstance(data, dict) else {}) 
 
 @app.route('/update-booking', methods=['POST'])
 def update_booking():
@@ -220,13 +238,14 @@ def download_csv(school_name, date):
     try:
         payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
         r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
-        orders = r.json().get('orders', [])
+        orders = r.json().get('orders', []) if isinstance(r.json(), dict) else []
     except: orders = []
 
     si = io.StringIO()
     cw = csv.writer(si)
     cw.writerow(['Teacher Name', 'Diet', 'Dish ID', 'Dish Name']) 
     for o in orders:
+        if not isinstance(o, dict): continue
         mid = str(o.get('meal_id', '')).strip()
         d_name = o.get('dish_name', 'Unknown Dish')
         d_diet = o.get('diet', 'Unknown')
@@ -243,11 +262,12 @@ def picklist_print(school_name, date):
     try:
         payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
         r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
-        orders = r.json().get('orders', [])
+        orders = r.json().get('orders', []) if isinstance(r.json(), dict) else []
     except: orders = []
     
     summary = {}
     for o in orders:
+        if not isinstance(o, dict): continue
         mid = str(o.get('meal_id', '')).strip()
         name = o.get('dish_name') or f"Dish #{mid}"
         if name not in summary: summary[name] = {"id": mid, "count": 0}
@@ -273,8 +293,9 @@ def teacher_order(delivery_date):
         r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_menu", "sunday_anchor": anchor}, timeout=15)
         if r.status_code == 200:
             data = r.json()
-            meat_menu = data.get('meat', [])
-            vegan_menu = data.get('vegan', [])
+            if isinstance(data, dict):
+                meat_menu = data.get('meat', [])
+                vegan_menu = data.get('vegan', [])
     except: pass
     
     return render_template('orderform.html', 
