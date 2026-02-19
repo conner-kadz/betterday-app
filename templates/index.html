@@ -16,6 +16,25 @@
         .hero h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; }
         .hero p { font-size: 1.1rem; color: #555; }
 
+        /* SUCCESS BANNER STYLING */
+        .success-banner {
+            background: white; border-radius: 16px; padding: 30px; margin-bottom: 40px;
+            text-align: center; box-shadow: 0 10px 25px rgba(39, 174, 96, 0.15);
+            border: 3px solid #27ae60; position: relative; overflow: hidden;
+        }
+        .success-icon {
+            width: 60px; height: 60px; background: #27ae60; color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem;
+            margin: 0 auto 15px auto;
+        }
+        .success-title { font-size: 1.5rem; font-weight: 900; color: #27ae60; margin: 0 0 10px 0; }
+        .success-text { font-size: 1.1rem; color: #555; margin: 0 0 20px 0; line-height: 1.4; }
+        .contact-btn {
+            display: inline-block; background: var(--dark); color: white; padding: 12px 25px;
+            border-radius: 50px; text-decoration: none; font-weight: 800; transition: 0.2s;
+        }
+        .contact-btn:hover { background: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(78,162,253,0.3); }
+
         .week-block { background: var(--white); border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .week-title { font-size: 1.2rem; font-weight: 800; border-bottom: 2px dashed #eee; padding-bottom: 10px; margin-bottom: 20px; text-transform: uppercase; color: var(--dark); }
 
@@ -28,11 +47,9 @@
             transition: 0.2s; display: block;
         }
         
-        /* Available */
         .day-card.available { background: white; border-color: var(--primary); color: var(--primary); }
         .day-card.available:hover { background: var(--primary); color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(78, 162, 253, 0.3); }
 
-        /* Blocked / Past */
         .day-card.unavailable { opacity: 0.5; cursor: not-allowed; pointer-events: none; background: #eee; border-color: #ddd; }
         .status-badge { font-size: 0.7rem; text-transform: uppercase; font-weight: 900; background: #ddd; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; }
         .day-card.available .status-badge { display: none; }
@@ -44,6 +61,21 @@
     </div>
 
     <div class="container">
+        
+        {% if booked_date %}
+        <div class="success-banner">
+            <div class="success-icon">✓</div>
+            <h2 class="success-title">Booking Confirmed!</h2>
+            <p class="success-text">
+                Your school lunch drop-off is officially scheduled for <strong>{{ booked_date }}</strong>.<br>
+                Our team will be reviewing the details shortly.
+            </p>
+            <a href="mailto:amy@eatbetterday.ca?subject=Next Steps for {{ booked_date }} Delivery" class="contact-btn">
+                ✉️ Email us to discuss next steps
+            </a>
+        </div>
+        {% endif %}
+
         <div class="hero">
             <h1>Schedule a Delivery</h1>
             <p>Select an available date below to secure a delivery slot for your team.</p>
