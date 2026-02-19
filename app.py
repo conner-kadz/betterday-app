@@ -118,7 +118,6 @@ def bd_admin():
         all_orders = r_orders.json() if r_orders.status_code == 200 else []
     except: all_orders = []
 
-    # Safe Counting
     order_counts = {}
     if isinstance(all_orders, list):
         for o in all_orders:
@@ -150,7 +149,6 @@ def bd_admin():
                     "type": "Office" if is_office else "School"
                 }
 
-                # Use the raw date (anchor) as the dictionary key to ensure chronological sorting
                 if anchor not in production_weeks: 
                     production_weeks[anchor] = {
                         "nice_date": format_week_header(anchor), 
@@ -158,10 +156,8 @@ def bd_admin():
                         "bookings": []
                     }
                 production_weeks[anchor]["bookings"].append(booking_obj)
-            except Exception as e: 
-                continue
+            except: continue
     
-    # Sort chronologically by the YYYY-MM-DD anchor key
     sorted_weeks = dict(sorted(production_weeks.items()))
     return render_template('admin.html', weeks=sorted_weeks)
 
