@@ -52,42 +52,57 @@ def decode_school_filter(s):
 # ROUTES
 @app.route('/')
 def index():
-    taken = []
+    # 1. Fetch Auto-Blocked Dates (Schools that have already booked)
+    taken_dates = []
     try:
-        r = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=8)
-        taken_raw = r.json() if r.status_code == 200 else []
+        r_taken = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=8)
+        taken_raw = r_taken.json() if r_taken.status_code == 200 else []
         if isinstance(taken_raw, list):
             for row in taken_raw:
                 if isinstance(row, list) and len(row) > 0 and "Date" not in str(row[0]):
-                    taken.append(str(row[0]).split('T')[0])
+                    taken_dates.append(str(row[0]).split('T')[0])
     except: pass
+
+    # 2. Fetch Manually Blocked Dates (Admin Toggle)
+    try:
+        r_block = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_blocked_dates"}, timeout=8)
+        blocked_dates = r_block.json() if r_block.status_code == 200 else []
+    except: blocked_dates = []
+
+    # Combine both lists so the calendar knows exactly what is unavailable
+    all_unavailable_dates = set(taken_dates + blocked_dates)
     
-    now = datetime.now()
-    view_m = int(request.args.get('m', now.month))
-    view_y = int(request.args.get('y', now.year))
+    # 3. 10 Rolling Weeks Logic - Starting March 9, 2026
+    start_date = datetime(2026, 3, 9)
+    today = datetime.now()
+    today_date = today.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # If we pass March 9, start from the current week's Monday instead
+    if today_date > start_date:
+        start_date = today_date - timedelta(days=today_date.weekday())
 
-    if view_m == now.month:
-        next_m = view_m + 1 if view_m < 12 else 1
-        next_y = view_y if view_m < 12 else view_y + 1
-        next_url = url_for('index', m=next_m, y=next_y)
-        prev_url = None 
-    elif (view_m == now.month + 1) or (now.month == 12 and view_m == 1):
-        prev_url = url_for('index', m=now.month, y=now.year)
-        next_url = None
-    else: return redirect(url_for('index'))
-
-    num_days = calendar.monthrange(view_y, view_m)[1]
-    valid_dates = []
-    for d in range(1, num_days + 1):
-        date_obj = datetime(view_y, view_m, d)
-        if date_obj.weekday() < 3: 
-            ds = date_obj.strftime('%Y-%m-%d')
-            valid_dates.append({
-                'raw_date': ds, 'display': date_obj.strftime('%A, %b %d'), 
-                'taken': ds in taken, 'past': date_obj.date() < now.date()
+    weeks = []
+    for i in range(10):
+        monday = start_date + timedelta(weeks=i)
+        tuesday = monday + timedelta(days=1)
+        wednesday = monday + timedelta(days=2)
+        
+        days = []
+        for d in [monday, tuesday, wednesday]:
+            d_str = d.strftime('%Y-%m-%d')
+            days.append({
+                'raw_date': d_str,
+                'display': d.strftime('%A, %b %d'),
+                'blocked': d_str in all_unavailable_dates, # Uses the combined list!
+                'past': d < today_date
             })
-    return render_template('index.html', dates=valid_dates, month_name=calendar.month_name[view_m], year=view_y, prev_url=prev_url, next_url=next_url)
-
+        
+        weeks.append({
+            'week_label': monday.strftime('Week of %B %d, %Y'),
+            'days': days
+        })
+        
+    return render_template('index.html', weeks=weeks)
 @app.route('/book/<date_raw>', methods=['GET', 'POST'])
 def book(date_raw):
     if request.method == 'GET':
