@@ -4,55 +4,79 @@
     <title>BetterDay | Book a Delivery</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; }
+        :root { 
+            --primary: #4ea2fd; 
+            --accent: #faebda; 
+            --dark: #00465e; 
+            --white: #ffffff; 
+            --radius-lg: 18px;
+            --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.06);
+        }
         body { font-family: -apple-system, sans-serif; background: var(--accent); color: var(--dark); margin: 0; padding-bottom: 60px; }
         
-        .header { background: var(--primary); padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .logo { height: 45px; }
+        .header { background: var(--primary); padding: 15px 24px; display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow-soft); }
+        .logo { height: 40px; }
 
         .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
         
         .hero { text-align: center; margin-bottom: 40px; }
-        .hero h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; }
-        .hero p { font-size: 1.1rem; color: #555; }
+        .hero h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; letter-spacing: -0.5px; }
+        .hero p { font-size: 1.1rem; color: #50657a; font-weight: 500; }
 
-        /* SUCCESS BANNER STYLING */
+        /* SUCCESS BANNER */
         .success-banner {
-            background: white; border-radius: 16px; padding: 30px; margin-bottom: 40px;
+            background: white; border-radius: var(--radius-lg); padding: 30px; margin-bottom: 40px;
             text-align: center; box-shadow: 0 10px 25px rgba(39, 174, 96, 0.15);
-            border: 3px solid #27ae60; position: relative; overflow: hidden;
+            border: 2px solid #27ae60;
         }
         .success-icon {
-            width: 60px; height: 60px; background: #27ae60; color: white; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; font-size: 2rem;
-            margin: 0 auto 15px auto;
+            width: 56px; height: 56px; background: #27ae60; color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+            margin: 0 auto 15px auto; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);
         }
         .success-title { font-size: 1.5rem; font-weight: 900; color: #27ae60; margin: 0 0 10px 0; }
-        .success-text { font-size: 1.1rem; color: #555; margin: 0 0 20px 0; line-height: 1.4; }
+        .success-text { font-size: 1.05rem; color: #50657a; margin: 0 0 20px 0; line-height: 1.5; font-weight: 500; }
         .contact-btn {
             display: inline-block; background: var(--dark); color: white; padding: 12px 25px;
             border-radius: 50px; text-decoration: none; font-weight: 800; transition: 0.2s;
         }
-        .contact-btn:hover { background: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(78,162,253,0.3); }
+        .contact-btn:hover { background: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(78,162,253,0.3); }
 
-        .week-block { background: var(--white); border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .week-title { font-size: 1.2rem; font-weight: 800; border-bottom: 2px dashed #eee; padding-bottom: 10px; margin-bottom: 20px; text-transform: uppercase; color: var(--dark); }
+        /* WEEK BLOCKS */
+        .week-block { background: var(--white); border-radius: var(--radius-lg); padding: 25px; margin-bottom: 30px; box-shadow: var(--shadow-soft); }
+        
+        /* Fixed: No more uppercase! */
+        .week-title { font-size: 1.3rem; font-weight: 800; border-bottom: 2px solid rgba(0,70,94,0.08); padding-bottom: 12px; margin-bottom: 20px; color: var(--dark); }
 
         .days-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         @media (max-width: 600px) { .days-grid { grid-template-columns: 1fr; } }
 
+        /* DAY CARDS */
         .day-card { 
-            background: #f8f9fa; border: 2px solid #eee; border-radius: 12px; padding: 15px; 
-            text-align: center; text-decoration: none; color: var(--dark); font-weight: 700; 
-            transition: 0.2s; display: block;
+            background: #fdfdfd; border: 2px solid #f0f4f8; border-radius: 16px; padding: 18px 15px; 
+            text-align: center; text-decoration: none; color: var(--dark); font-weight: 800; 
+            transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         
-        .day-card.available { background: white; border-color: var(--primary); color: var(--primary); }
-        .day-card.available:hover { background: var(--primary); color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(78, 162, 253, 0.3); }
+        .day-date-text { font-size: 1.05rem; margin-bottom: 10px; }
 
-        .day-card.unavailable { opacity: 0.5; cursor: not-allowed; pointer-events: none; background: #eee; border-color: #ddd; }
-        .status-badge { font-size: 0.7rem; text-transform: uppercase; font-weight: 900; background: #ddd; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; }
-        .day-card.available .status-badge { display: none; }
+        /* Available Styling */
+        .day-card.available { background: white; border-color: #e2eeff; }
+        .select-pill { 
+            background: #f0f7ff; color: var(--primary); padding: 6px 16px; border-radius: 50px; 
+            font-size: 0.8rem; font-weight: 800; transition: 0.2s; 
+        }
+        .day-card.available:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(78, 162, 253, 0.15); }
+        .day-card.available:hover .select-pill { background: var(--primary); color: white; }
+
+        /* Unavailable Styling */
+        .day-card.unavailable { opacity: 0.6; cursor: not-allowed; pointer-events: none; background: #f4f6f8; border-color: #e9ecef; }
+        .status-badge { 
+            font-size: 0.7rem; text-transform: uppercase; font-weight: 900; letter-spacing: 0.5px;
+            padding: 5px 12px; border-radius: 50px; display: inline-block; 
+        }
+        .status-passed { background: #e9ecef; color: #8898aa; }
+        .status-booked { background: #ffe3e3; color: #e74c3c; }
     </style>
 </head>
 <body>
@@ -88,13 +112,17 @@
                 {% for day in week.days %}
                     {% if day.past or day.blocked %}
                         <div class="day-card unavailable">
-                            {{ day.display }}<br>
-                            <span class="status-badge">{% if day.past %}Passed{% else %}Fully Booked{% endif %}</span>
+                            <div class="day-date-text">{{ day.display }}</div>
+                            {% if day.past %}
+                                <span class="status-badge status-passed">Passed</span>
+                            {% else %}
+                                <span class="status-badge status-booked">Fully Booked</span>
+                            {% endif %}
                         </div>
                     {% else %}
                         <a href="/book/{{ day.raw_date }}" class="day-card available">
-                            {{ day.display }}<br>
-                            <span style="font-size: 0.8rem; font-weight: 600; opacity: 0.8; margin-top:5px; display:block;">Select &rarr;</span>
+                            <div class="day-date-text">{{ day.display }}</div>
+                            <div class="select-pill">Select &rarr;</div>
                         </a>
                     {% endif %}
                 {% endfor %}
