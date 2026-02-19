@@ -11,15 +11,13 @@
         .logo { height: 40px; }
         .container { max-width: 1000px; margin: 0 auto; padding: 20px; } 
 
-        .school-title { text-align: center; font-size: 1.6rem; font-weight: 800; margin: 20px 0 5px 0; line-height: 1.2; }
-        .deadline { text-align: center; color: #e74c3c; font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; background: rgba(231, 76, 60, 0.1); display: inline-block; padding: 5px 15px; border-radius: 50px; }
+        .school-title { text-align: center; font-size: 1.8rem; font-weight: 900; margin: 20px 0 10px 0; line-height: 1.2; letter-spacing: -0.5px; }
+        .deadline { text-align: center; color: #e74c3c; font-size: 0.9rem; margin-bottom: 25px; font-weight: 800; background: rgba(231, 76, 60, 0.1); display: inline-block; padding: 6px 18px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.5px;}
         .center-wrap { text-align: center; }
 
-        .instruct-box { background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .instruct-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 5px; }
-        .instruct-text { color: #666; font-size: 0.9rem; margin-bottom: 15px; }
-        
-        .input-box { width: 100%; max-width: 400px; margin: 10px auto 0 auto; display: block; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 1rem; box-sizing: border-box; }
+        .intro-box { background: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .intro-emoji { font-size: 2.5rem; margin-bottom: 10px; }
+        .intro-text { color: #50657a; font-size: 1.05rem; line-height: 1.5; margin: 0; font-weight: 500; }
 
         .sticky-nav-container {
             position: sticky; top: 0; z-index: 900; background: rgba(250, 235, 218, 0.95);
@@ -64,31 +62,44 @@
         .btn-submit { background: #ccc; color: white; padding: 15px 40px; border-radius: 50px; font-weight: 800; border: none; font-size: 1.1rem; pointer-events: none; transition: 0.3s; width: 100%; max-width: 400px; }
         .btn-submit.active { background: var(--dark); pointer-events: auto; cursor: pointer; }
 
+        /* NAME CAPTURE MODAL */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
-        .modal { background: white; padding: 30px; border-radius: 25px; max-width: 400px; text-align: center; animation: popUp 0.3s ease-out; }
+        .modal { background: white; padding: 30px; border-radius: 25px; max-width: 450px; width: 100%; text-align: center; animation: popUp 0.3s ease-out; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
         @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal h2 { margin-top: 0; color: var(--dark); font-weight: 900; }
-        .modal p { color: #666; line-height: 1.5; margin-bottom: 25px; }
-        .modal-btn { background: var(--primary); color: white; padding: 15px 30px; border-radius: 50px; border: none; font-weight: 800; font-size: 1rem; width: 100%; cursor: pointer; }
-        .hidden { display: none; }
+        .modal h2 { margin-top: 0; color: var(--dark); font-weight: 900; font-size: 1.6rem; }
+        .modal p { color: #50657a; line-height: 1.5; margin-bottom: 25px; font-size: 1.05rem; }
+        
+        .input-box { width: 100%; padding: 16px; border: 2px solid #e9ecef; border-radius: 12px; font-size: 1.1rem; box-sizing: border-box; background: #f8f9fa; transition: 0.2s; margin-bottom: 20px; text-align: center; color: var(--dark); font-weight: 600;}
+        .input-box:focus { outline: none; border-color: var(--primary); background: white; }
+
+        .modal-btn { background: var(--primary); color: white; padding: 16px 30px; border-radius: 50px; border: none; font-weight: 800; font-size: 1.1rem; width: 100%; cursor: pointer; transition: 0.2s; }
+        .modal-btn:hover { background: #3b8cd9; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(78, 162, 253, 0.3); }
+        .modal-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .close-link { display: block; margin-top: 15px; color: #999; font-size: 0.85rem; font-weight: 700; text-decoration: none; cursor: pointer; }
+        .close-link:hover { color: var(--dark); }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <div class="modal-overlay" id="introModal">
-        <div class="modal">
-            <div style="font-size: 3rem; margin-bottom: 10px;">👋</div>
-            <h2>Welcome to BetterDay</h2>
-            <p>Your Admin has organized a team lunch for <strong>{{ delivery_date }}</strong>!</p>
-            <button class="modal-btn" onclick="closeModal()">Let's Eat! 😋</button>
-        </div>
-    </div>
 
     <div class="header"><img src="{{ url_for('static', filename='Logo.svg') }}" class="logo"></div>
     
     <div class="container">
+        
         <h1 class="school-title">{{ school_name | decode_school }}</h1>
         <div class="center-wrap">
-            <div class="deadline">⏰ Orders close Wednesday @ 4:00 PM</div>
+            <div class="deadline">📅 Delivery Date: {{ delivery_date }}</div>
+        </div>
+
+        <div class="intro-box">
+            <div class="intro-emoji">🎉</div>
+            <p class="intro-text">
+                <strong>We are so excited to treat you and your team!</strong><br>
+                Your admin has organized a complimentary BetterDay lunch drop-off for your school. 
+                Please select your favorite meal from the options below!
+            </p>
         </div>
 
         <form action="/submit-order" method="POST" id="form">
@@ -97,16 +108,10 @@
             <input type="hidden" name="dish_diet" id="ddiet">
             <input type="hidden" name="school_name" value="{{ school_name }}">
             <input type="hidden" name="delivery_date" value="{{ delivery_date }}">
-            
-            <div class="instruct-box">
-                <div class="instruct-title">Who is this meal for?</div>
-                <div class="instruct-text">Please enter your full name so we can label your meal.</div>
-                <input type="text" name="teacher_name" id="name" class="input-box" placeholder="e.g. Ms. Robinson" required onkeyup="checkForm()">
-            </div>
 
             <div class="sticky-nav-container">
                 <div class="nav-pills">
-                    <a href="#meat-section" class="nav-pill" onclick="setActive(this)">Meat Options</a>
+                    <a href="#meat-section" class="nav-pill active" onclick="setActive(this)">Meat Options</a>
                     <a href="#vegan-section" class="nav-pill" onclick="setActive(this)">Plant-Based</a>
                 </div>
             </div>
@@ -152,21 +157,33 @@
             {% endif %}
 
             <div class="footer">
-                <button id="submitBtn" class="btn-submit">Complete Order</button>
+                <button type="button" id="triggerModalBtn" class="btn-submit" onclick="openNameModal()">Complete Order</button>
             </div>
+
+            <div class="modal-overlay hidden" id="nameModal">
+                <div class="modal">
+                    <h2>Almost done! 🏷️</h2>
+                    <p>To help us keep things smooth and organized on Game Day, please enter your full name below.</p>
+                    
+                    <input type="text" name="teacher_name" id="teacherNameInput" class="input-box" placeholder="e.g. Jane Doe" onkeyup="checkName()">
+                    
+                    <button type="submit" id="finalSubmitBtn" class="modal-btn" disabled>Place My Order</button>
+                    
+                    <a onclick="closeNameModal()" class="close-link">← Wait, I want to change my dish</a>
+                </div>
+            </div>
+
         </form>
     </div>
 
     <script>
-        function closeModal() { document.getElementById('introModal').classList.add('hidden'); }
-
         function setActive(el) {
             document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
         }
 
-        // CORRECTED FUNCTION TO ACCEPT 3 VARIABLES
         function pick(id, name, diet) {
+            // Reset UI
             document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
             document.querySelectorAll('.card-btn').forEach(b => {
                 b.innerText = "Select Dish";
@@ -174,29 +191,43 @@
                 b.style.color = "#888";
             });
 
+            // Select clicked card
             const card = document.getElementById('card-' + id);
             const btn = document.getElementById('btn-' + id);
             card.classList.add('selected');
             btn.innerText = "Selected ✔";
             
-            // SET ALL 3 VARIABLES FOR GOOGLE SHEETS
+            // Set Hidden Variables
             document.getElementById('mid').value = id;
             document.getElementById('dname').value = name;
             document.getElementById('ddiet').value = diet;
             
-            checkForm();
+            // Activate the bottom footer button
+            const mainBtn = document.getElementById('triggerModalBtn');
+            mainBtn.classList.add('active');
+            mainBtn.innerText = "Continue →";
         }
 
-        function checkForm() {
-            const name = document.getElementById('name').value;
-            const mid = document.getElementById('mid').value;
-            const btn = document.getElementById('submitBtn');
-            if (name.length > 1 && mid) {
-                btn.classList.add('active');
-                btn.innerText = "Place Order";
+        function openNameModal() {
+            // Only open if they have selected a meal
+            if (document.getElementById('mid').value !== "") {
+                document.getElementById('nameModal').classList.remove('hidden');
+                document.getElementById('teacherNameInput').focus();
+            }
+        }
+
+        function closeNameModal() {
+            document.getElementById('nameModal').classList.add('hidden');
+        }
+
+        function checkName() {
+            const nameVal = document.getElementById('teacherNameInput').value;
+            const finalBtn = document.getElementById('finalSubmitBtn');
+            
+            if (nameVal.trim().length > 1) {
+                finalBtn.disabled = false;
             } else {
-                btn.classList.remove('active');
-                btn.innerText = "Complete Order";
+                finalBtn.disabled = true;
             }
         }
     </script>
