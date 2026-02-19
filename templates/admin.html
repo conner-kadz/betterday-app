@@ -22,7 +22,7 @@
         .week-title { font-size: 1.5rem; font-weight: 900; color: var(--dark); line-height: 1; }
         .week-sub { font-size: 0.9rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* CONTROL PANEL (Left Side Buttons) */
+        /* CONTROL PANEL */
         .week-controls { display: flex; gap: 10px; margin-bottom: 20px; }
         .btn-action { 
             display: inline-flex; align-items: center; gap: 8px;
@@ -34,62 +34,47 @@
         .btn-invoice { background: white; color: var(--dark); border: 2px solid var(--dark); }
         .btn-invoice:hover { background: #f0f7ff; }
 
-        /* HORIZONTAL SCROLL CONTAINER */
+        /* SCROLLER */
         .cards-scroller {
-            display: flex;
-            gap: 20px;
-            overflow-x: auto;
-            padding: 10px 5px 20px 5px; /* Padding for shadow clipping */
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
+            display: flex; gap: 20px; overflow-x: auto;
+            padding: 10px 5px 20px 5px; scroll-behavior: smooth;
         }
-        
-        /* Custom Scrollbar */
         .cards-scroller::-webkit-scrollbar { height: 8px; }
         .cards-scroller::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 4px; }
         .cards-scroller::-webkit-scrollbar-thumb { background: rgba(0,70,94,0.2); border-radius: 4px; }
-        .cards-scroller::-webkit-scrollbar-thumb:hover { background: rgba(0,70,94,0.4); }
 
-        /* CARD STYLING */
+        /* CARDS */
         .menu-card { 
-            background: var(--white); 
-            border-radius: 16px; 
-            padding: 20px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            transition: transform 0.2s;
+            background: var(--white); border-radius: 16px; padding: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s;
             display: flex; flex-direction: column; justify-content: space-between;
-            border: 1px solid #eee;
-            position: relative; overflow: hidden;
-            min-width: 280px; width: 280px; /* Fixed width for horizontal scroll */
+            border: 1px solid #eee; position: relative; overflow: hidden;
+            min-width: 280px; width: 280px; 
         }
         .menu-card:hover { transform: translateY(-4px); border-color: var(--primary); }
 
-        /* Card Top Bar - Dynamic Colors */
         .card-top-bar { position: absolute; top: 0; left: 0; right: 0; height: 6px; }
         .bar-school { background: var(--primary); }
-        .bar-office { background: #e67e22; } /* Orange for Office */
+        .bar-office { background: #e67e22; } 
 
         .card-header { display: flex; justify-content: space-between; margin-top: 10px; margin-bottom: 5px; }
         .date-badge { background: #f0f7ff; color: var(--dark); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
         
-        /* Office Badge */
         .type-badge { font-size: 0.65rem; text-transform: uppercase; font-weight: 900; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px; }
         .tb-school { color: #aaa; border: 1px solid #eee; }
         .tb-office { background: #fff3e0; color: #d35400; border: 1px solid #ffe0b2; }
 
         .client-name { font-size: 1.2rem; font-weight: 800; margin: 5px 0; line-height: 1.2; color: var(--dark); height: 56px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        
         .deadline-text { font-size: 0.8rem; color: #e74c3c; font-weight: 600; margin-bottom: 15px; }
         
-        .stats-row { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: auto; }
-        .stat-group { display: flex; flex-direction: column; }
-        .label { font-size: 0.65rem; text-transform: uppercase; color: #999; font-weight: 700; }
-        .big-num { font-size: 1.4rem; font-weight: 800; color: var(--dark); line-height: 1; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+        .stat-box { text-align: left; }
+        .stat-label { font-size: 0.6rem; text-transform: uppercase; color: #999; font-weight: 700; display: block; }
+        .stat-num { font-size: 1.2rem; font-weight: 800; color: var(--dark); }
 
-        .btn-manage { background: #f8f9fa; color: var(--dark); text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; transition: 0.2s; }
+        .btn-manage { background: #f8f9fa; color: var(--dark); text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; transition: 0.2s; display: block; text-align: center; margin-top: 15px; }
         .btn-manage:hover { background: var(--dark); color: white; }
 
-        /* Empty State */
         .empty-state { text-align: center; opacity: 0.6; padding: 60px; }
     </style>
 </head>
@@ -100,19 +85,18 @@
     </div>
     
     <div class="container">
-        
         {% if weeks %}
-            {% for anchor, bookings in weeks.items() %}
+            {% for anchor, details in weeks.items() %}
             <div class="week-row">
                 <div class="week-header">
                     <div>
                         <div class="week-sub">Production Week</div>
-                        <div class="week-title">Week of {{ anchor }}</div>
+                        <div class="week-title">Week of {{ details.nice_date }}</div>
                     </div>
                 </div>
 
                 <div class="week-controls">
-                    <a href="/culinary-summary/{{ anchor }}" target="_blank" class="btn-action btn-culinary">
+                    <a href="/culinary-summary/{{ details.anchor_id }}" target="_blank" class="btn-action btn-culinary">
                         👨‍🍳 Culinary Picklist
                     </a>
                     <a href="#" class="btn-action btn-invoice" onclick="alert('Batch Invoice printing coming soon!')">
@@ -121,7 +105,7 @@
                 </div>
 
                 <div class="cards-scroller">
-                    {% for b in bookings %}
+                    {% for b in details.bookings %}
                     <div class="menu-card">
                         <div class="card-top-bar {% if b.type == 'Office' %}bar-office{% else %}bar-school{% endif %}"></div>
                         
@@ -135,28 +119,29 @@
                         <div class="client-name">{{ b.school }}</div>
                         <div class="deadline-text">Cutoff: {{ b.deadline }}</div>
 
-                        <div class="stats-row">
-                            <div class="stat-group">
-                                <span class="label">Headcount</span>
-                                <div class="big-num">{{ b.staff_count }}</div>
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <span class="stat-label">Meals</span>
+                                <span class="stat-num">{{ b.meals_ordered }}</span>
                             </div>
-                            <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date_raw }}" class="btn-manage">
-                                Manage &rarr;
-                            </a>
+                            <div class="stat-box">
+                                <span class="stat-label">Headcount</span>
+                                <span class="stat-num">{{ b.staff_count }}</span>
+                            </div>
                         </div>
+
+                        <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date_raw }}" class="btn-manage">Manage &rarr;</a>
                     </div>
                     {% endfor %}
                 </div>
             </div>
             {% endfor %}
-        
         {% else %}
             <div class="empty-state">
                 <h1>No Active Bookings Found</h1>
                 <p>Check your Google Sheet to ensure bookings have valid dates.</p>
             </div>
         {% endif %}
-
     </div>
 </body>
 </html>
