@@ -320,5 +320,54 @@ def submit_order():
     resp.set_cookie(f'ordered_{date}', 'true', max_age=60*60*24*30)
     return resp
 
+@app.route('/batch-invoices/<sunday>')
+def batch_invoices(sunday):
+    # 1. Fetch Bookings to know which schools are scheduled this week
+    try:
+        r_books = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=10)
+        bookings_raw = r_books.json() if r_books.status_code == 200 else []
+    except: bookings_raw = []
+
+    # 2. Fetch ALL Orders
+    try:
+        r_orders = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_all_orders"}, timeout=10)
+        all_orders = r_orders.json() if r_orders.status_code == 200 else []
+    except: all_orders = []
+
+    # 3. Find schools belonging to this specific week
+    schools_this_week = {}
+    if isinstance(bookings_raw, list):
+        for b in bookings_raw:
+            try:
+                if not isinstance(b, list) or len(b) < 3: continue
+                if "Date" in str(b[0]) or str(b[2]).isdigit(): continue
+                d_date = str(b[0]).split('T')[0]
+                anchor = get_sunday_anchor(d_date)
+                if anchor == sunday:
+                    school_name = str(b[2])
+                    schools_this_week[school_name] = get_nice_date(d_date)
+            except: continue
+
+    # 4. Group orders by school
+    summaries = {}
+    for school_name, nice_date in schools_this_week.items():
+        summaries[school_name] = {"delivery_date": nice_date, "dishes": {}, "total": 0}
+
+    if isinstance(all_orders, list):
+        for o in all_orders:
+            if not isinstance(o, dict): continue
+            school_name = o.get('school')
+            anchor = get_sunday_anchor(o.get('date'))
+            
+            if anchor == sunday and school_name in summaries:
+                dish_name = str(o.get('dish_name') or f"Dish #{o.get('meal_id')}")
+                if dish_name not in summaries[school_name]["dishes"]:
+                    summaries[school_name]["dishes"][dish_name] = 0
+                
+                summaries[school_name]["dishes"][dish_name] += 1
+                summaries[school_name]["total"] += 1
+
+    return render_template('batch_invoices.html', sunday=format_week_header(sunday), summaries=summaries)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5001)))
