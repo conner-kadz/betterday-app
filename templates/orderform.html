@@ -15,14 +15,12 @@
         .deadline { text-align: center; color: #e74c3c; font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; background: rgba(231, 76, 60, 0.1); display: inline-block; padding: 5px 15px; border-radius: 50px; }
         .center-wrap { text-align: center; }
 
-        /* Instructions Box */
-        .instruct-box { background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .instruct-box { background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .instruct-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 5px; }
         .instruct-text { color: #666; font-size: 0.9rem; margin-bottom: 15px; }
         
         .input-box { width: 100%; max-width: 400px; margin: 10px auto 0 auto; display: block; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 1rem; box-sizing: border-box; }
 
-        /* STICKY NAV */
         .sticky-nav-container {
             position: sticky; top: 0; z-index: 900; background: rgba(250, 235, 218, 0.95);
             padding: 15px 0; backdrop-filter: blur(5px); margin: 0 -20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
@@ -35,8 +33,7 @@
         }
         .nav-pill:hover, .nav-pill.active { background: var(--dark); color: white; transform: translateY(-2px); }
 
-        /* SECTIONS */
-        .section-anchor { scroll-margin-top: 100px; } /* Offset for sticky header */
+        .section-anchor { scroll-margin-top: 100px; } 
         
         .menu-section-title {
             text-align: center; margin-top: 40px; margin-bottom: 25px;
@@ -47,7 +44,6 @@
             content: ""; display: block; height: 3px; background: rgba(0,70,94,0.1); width: 60px; border-radius: 3px;
         }
 
-        /* GRID & CARDS */
         .meal-grid { display: grid; gap: 20px; grid-template-columns: repeat(2, 1fr); }
         @media (min-width: 768px) { .meal-grid { grid-template-columns: repeat(4, 1fr); } }
 
@@ -64,12 +60,10 @@
         .card-btn { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #eee; background: white; font-weight: 700; color: #888; cursor: pointer; transition: 0.2s; }
         .card.selected .card-btn { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* FOOTER */
         .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; display: flex; justify-content: center; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 100; }
         .btn-submit { background: #ccc; color: white; padding: 15px 40px; border-radius: 50px; font-weight: 800; border: none; font-size: 1.1rem; pointer-events: none; transition: 0.3s; width: 100%; max-width: 400px; }
         .btn-submit.active { background: var(--dark); pointer-events: auto; cursor: pointer; }
 
-        /* MODAL */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
         .modal { background: white; padding: 30px; border-radius: 25px; max-width: 400px; text-align: center; animation: popUp 0.3s ease-out; }
         @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -171,8 +165,8 @@
             el.classList.add('active');
         }
 
+        // CORRECTED FUNCTION TO ACCEPT 3 VARIABLES
         function pick(id, name, diet) {
-            // Reset UI
             document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
             document.querySelectorAll('.card-btn').forEach(b => {
                 b.innerText = "Select Dish";
@@ -180,13 +174,12 @@
                 b.style.color = "#888";
             });
 
-            // Select Card
             const card = document.getElementById('card-' + id);
             const btn = document.getElementById('btn-' + id);
             card.classList.add('selected');
             btn.innerText = "Selected ✔";
             
-            // Populate Hidden Fields
+            // SET ALL 3 VARIABLES FOR GOOGLE SHEETS
             document.getElementById('mid').value = id;
             document.getElementById('dname').value = name;
             document.getElementById('ddiet').value = diet;
