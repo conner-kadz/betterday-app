@@ -8,72 +8,81 @@
         :root { --primary: #4ea2fd; --accent: #faebda; --dark: #00465e; --white: #ffffff; --gray: #f4f6f8; }
         body { background: var(--accent); font-family: -apple-system, system-ui, sans-serif; margin: 0; padding-bottom: 50px; color: var(--dark); }
         
-        .header { background: var(--white); padding: 15px 30px; display: flex; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        .logo { height: 40px; margin-right: 20px; }
-        .header-title { font-weight: 900; font-size: 1.2rem; text-transform: uppercase; color: var(--dark); }
+        .header { background: var(--white); padding: 12px 30px; display: flex; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        .logo { height: 35px; margin-right: 20px; }
+        .header-title { font-weight: 900; font-size: 1.1rem; text-transform: uppercase; color: var(--dark); }
 
-        .container { max-width: 1400px; margin: 0 auto; padding: 0 40px; }
+        .container { max-width: 1500px; margin: 0 auto; padding: 0 30px; }
         
         /* WEEK ROW STYLING */
-        .week-row { margin-bottom: 50px; border-bottom: 2px dashed rgba(0,70,94,0.1); padding-bottom: 40px; }
+        .week-row { margin-bottom: 35px; border-bottom: 2px dashed rgba(0,70,94,0.1); padding-bottom: 25px; }
         .week-row:last-child { border-bottom: none; }
 
-        .week-header { display: flex; align-items: flex-end; margin-bottom: 20px; gap: 20px; }
-        .week-title { font-size: 1.5rem; font-weight: 900; color: var(--dark); line-height: 1; }
-        .week-sub { font-size: 0.9rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-
-        /* CONTROL PANEL */
-        .week-controls { display: flex; gap: 10px; margin-bottom: 20px; }
-        .btn-action { 
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 800; text-decoration: none; transition: 0.2s; 
+        /* HEADER & CONTROLS ON ONE LINE */
+        .week-header-bar { 
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; 
+            margin-bottom: 15px; gap: 15px;
         }
-        .btn-culinary { background: var(--dark); color: white; box-shadow: 0 4px 10px rgba(0,70,94,0.2); }
-        .btn-culinary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,70,94,0.3); }
         
+        .week-title-group { display: flex; align-items: center; gap: 15px; }
+        .week-title { font-size: 1.3rem; font-weight: 900; color: var(--dark); margin: 0; }
+        .cutoff-pill { background: #ffe3e3; color: #e74c3c; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .week-controls { display: flex; gap: 10px; margin: 0; }
+        .btn-action { 
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; text-decoration: none; transition: 0.2s; 
+        }
+        .btn-culinary { background: var(--dark); color: white; box-shadow: 0 2px 8px rgba(0,70,94,0.2); }
+        .btn-culinary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,70,94,0.3); }
         .btn-invoice { background: white; color: var(--dark); border: 2px solid var(--dark); }
         .btn-invoice:hover { background: #f0f7ff; }
 
         /* SCROLLER */
         .cards-scroller {
-            display: flex; gap: 20px; overflow-x: auto;
-            padding: 10px 5px 20px 5px; scroll-behavior: smooth;
+            display: flex; gap: 15px; overflow-x: auto;
+            padding: 5px 5px 15px 5px; scroll-behavior: smooth;
         }
-        .cards-scroller::-webkit-scrollbar { height: 8px; }
+        .cards-scroller::-webkit-scrollbar { height: 6px; }
         .cards-scroller::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 4px; }
         .cards-scroller::-webkit-scrollbar-thumb { background: rgba(0,70,94,0.2); border-radius: 4px; }
 
-        /* CARDS */
+        /* COMPACT CARDS */
         .menu-card { 
-            background: var(--white); border-radius: 16px; padding: 20px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s;
+            background: var(--white); border-radius: 12px; padding: 15px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04); transition: transform 0.2s;
             display: flex; flex-direction: column; justify-content: space-between;
             border: 1px solid #eee; position: relative; overflow: hidden;
-            min-width: 280px; width: 280px; 
+            min-width: 250px; width: 250px; gap: 8px;
         }
-        .menu-card:hover { transform: translateY(-4px); border-color: var(--primary); }
+        .menu-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
 
-        .card-top-bar { position: absolute; top: 0; left: 0; right: 0; height: 6px; }
+        .card-top-bar { position: absolute; top: 0; left: 0; right: 0; height: 5px; }
         .bar-school { background: var(--primary); }
         .bar-office { background: #e67e22; } 
 
-        .card-header { display: flex; justify-content: space-between; margin-top: 10px; margin-bottom: 5px; }
-        .date-badge { background: #f0f7ff; color: var(--dark); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+        .date-badge { background: #f0f7ff; color: var(--dark); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
         
-        .type-badge { font-size: 0.65rem; text-transform: uppercase; font-weight: 900; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px; }
+        .type-badge { font-size: 0.6rem; text-transform: uppercase; font-weight: 900; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px; }
         .tb-school { color: #aaa; border: 1px solid #eee; }
         .tb-office { background: #fff3e0; color: #d35400; border: 1px solid #ffe0b2; }
 
-        .client-name { font-size: 1.2rem; font-weight: 800; margin: 5px 0; line-height: 1.2; color: var(--dark); height: 56px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .deadline-text { font-size: 0.8rem; color: #e74c3c; font-weight: 600; margin-bottom: 15px; }
+        .client-name { font-size: 1.05rem; font-weight: 800; margin: 4px 0 0 0; line-height: 1.3; color: var(--dark); height: 2.6em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
         
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
-        .stat-box { text-align: left; }
-        .stat-label { font-size: 0.6rem; text-transform: uppercase; color: #999; font-weight: 700; display: block; }
-        .stat-num { font-size: 1.2rem; font-weight: 800; color: var(--dark); }
+        /* ACTION ROW (Stats + Button) */
+        .stats-action-row { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #f0f0f0; padding-top: 12px; margin-top: 4px; }
+        .stats-compact { display: flex; gap: 15px; }
+        .stat-box { display: flex; flex-direction: column; }
+        .stat-label { font-size: 0.55rem; text-transform: uppercase; color: #999; font-weight: 800; margin-bottom: 2px; }
+        .stat-num { font-size: 1.1rem; font-weight: 900; color: var(--dark); line-height: 1; }
 
-        .btn-manage { background: #f8f9fa; color: var(--dark); text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; transition: 0.2s; display: block; text-align: center; margin-top: 15px; }
-        .btn-manage:hover { background: var(--dark); color: white; }
+        .btn-manage-compact { 
+            background: var(--primary); color: white; text-decoration: none; 
+            padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; 
+            transition: 0.2s; box-shadow: 0 2px 6px rgba(78, 162, 253, 0.3); 
+        }
+        .btn-manage-compact:hover { background: var(--dark); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0, 70, 94, 0.3); }
 
         .empty-state { text-align: center; opacity: 0.6; padding: 60px; }
     </style>
@@ -86,20 +95,22 @@
     
     <div class="container">
         
-        <div style="background: white; border-radius: 16px; padding: 25px; margin-bottom: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <h2 style="margin-top: 0; font-size: 1.2rem; font-weight: 900; text-transform: uppercase;">📅 Calendar Availability</h2>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Toggle days to control if new Schools can book them on the homepage.</p>
+        <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin: 0; font-size: 1.1rem; font-weight: 900; text-transform: uppercase;">📅 Calendar Control</h2>
+                <span style="font-size: 0.75rem; color: #888; font-weight: bold; text-transform: uppercase;">Public Booking Visibility</span>
+            </div>
             
-            <div class="cards-scroller" style="padding: 0; gap: 15px;">
+            <div class="cards-scroller" style="padding: 0; gap: 12px;">
                 {% for w in toggle_weeks %}
-                <div style="background: #f8f9fa; border: 1px solid #eee; border-radius: 12px; padding: 15px; min-width: 200px;">
-                    <div style="font-weight: 800; font-size: 0.85rem; color: #888; text-transform: uppercase; margin-bottom: 10px; text-align: center;">{{ w.week_label }}</div>
+                <div style="background: #f8f9fa; border: 1px solid #eee; border-radius: 10px; padding: 12px; min-width: 180px;">
+                    <div style="font-weight: 800; font-size: 0.75rem; color: #888; text-transform: uppercase; margin-bottom: 10px; text-align: center;">{{ w.week_label }}</div>
                     
                     {% for day in w.days %}
-                    <form action="/toggle-date" method="POST" style="margin-bottom: 8px;">
+                    <form action="/toggle-date" method="POST" style="margin-bottom: 6px;">
                         <input type="hidden" name="date" value="{{ day.raw_date }}">
-                        <button type="submit" style="width: 100%; padding: 8px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; border: 2px solid {% if day.blocked %}#eee{% else %}#4ea2fd{% endif %}; background: {% if day.blocked %}#eee{% else %}#f0f7ff{% endif %}; color: {% if day.blocked %}#999{% else %}#00465e{% endif %};">
-                            {{ day.display }}: {% if day.blocked %}🔒 Blocked{% else %}🟢 Open{% endif %}
+                        <button type="submit" style="width: 100%; padding: 6px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; cursor: pointer; border: 2px solid {% if day.blocked %}#eee{% else %}#4ea2fd{% endif %}; background: {% if day.blocked %}#eee{% else %}#f0f7ff{% endif %}; color: {% if day.blocked %}#999{% else %}#00465e{% endif %}; transition: 0.2s;">
+                            {{ day.display }} {% if day.blocked %}🔒{% else %}🟢{% endif %}
                         </button>
                     </form>
                     {% endfor %}
@@ -111,20 +122,23 @@
         {% if weeks %}
             {% for anchor, details in weeks.items() %}
             <div class="week-row">
-                <div class="week-header">
-                    <div>
-                        <div class="week-sub">Production Week</div>
+                
+                <div class="week-header-bar">
+                    <div class="week-title-group">
                         <div class="week-title">Week of {{ details.nice_date }}</div>
+                        {% if details.bookings|length > 0 %}
+                        <div class="cutoff-pill">Order Cutoff: {{ details.bookings[0].deadline }}</div>
+                        {% endif %}
                     </div>
-                </div>
-
-                <div class="week-controls">
-                    <a href="/culinary-summary/{{ details.anchor_id }}" target="_blank" class="btn-action btn-culinary">
-                        👨‍🍳 Culinary Picklist
-                    </a>
-                    <a href="/batch-invoices/{{ details.anchor_id }}" target="_blank" class="btn-action btn-invoice">
-                        📄 Print Invoices
-                    </a>
+                    
+                    <div class="week-controls">
+                        <a href="/culinary-summary/{{ details.anchor_id }}" target="_blank" class="btn-action btn-culinary">
+                            👨‍🍳 Culinary Picklist
+                        </a>
+                        <a href="/batch-invoices/{{ details.anchor_id }}" target="_blank" class="btn-action btn-invoice">
+                            📄 Print Invoices
+                        </a>
+                    </div>
                 </div>
 
                 <div class="cards-scroller">
@@ -140,20 +154,20 @@
                         </div>
 
                         <div class="client-name">{{ b.school }}</div>
-                        <div class="deadline-text">Cutoff: {{ b.deadline }}</div>
 
-                        <div class="stats-grid">
-                            <div class="stat-box">
-                                <span class="stat-label">Meals</span>
-                                <span class="stat-num">{{ b.meals_ordered }}</span>
+                        <div class="stats-action-row">
+                            <div class="stats-compact">
+                                <div class="stat-box">
+                                    <span class="stat-label">Meals</span>
+                                    <span class="stat-num">{{ b.meals_ordered }}</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Staff</span>
+                                    <span class="stat-num">{{ b.staff_count }}</span>
+                                </div>
                             </div>
-                            <div class="stat-box">
-                                <span class="stat-label">Headcount</span>
-                                <span class="stat-num">{{ b.staff_count }}</span>
-                            </div>
+                            <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date_raw }}" class="btn-manage-compact">Manage &rarr;</a>
                         </div>
-
-                        <a href="/school-profile/{{ b.school | replace(' ', '+') }}/{{ b.delivery_date_raw }}" class="btn-manage">Manage &rarr;</a>
                     </div>
                     {% endfor %}
                 </div>
@@ -161,7 +175,7 @@
             {% endfor %}
         {% else %}
             <div class="empty-state">
-                <h1>No Active Bookings Found</h1>
+                <h1 style="color: var(--dark); font-weight: 900;">No Active Bookings</h1>
                 <p>Check your Google Sheet to ensure bookings have valid dates.</p>
             </div>
         {% endif %}
