@@ -14,11 +14,9 @@
 
         .container { max-width: 1500px; margin: 0 auto; padding: 0 30px; }
         
-        /* WEEK ROW STYLING */
         .week-row { margin-bottom: 35px; border-bottom: 2px dashed rgba(0,70,94,0.1); padding-bottom: 25px; }
         .week-row:last-child { border-bottom: none; }
 
-        /* HEADER & CONTROLS ON ONE LINE */
         .week-header-bar { 
             display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; 
             margin-bottom: 15px; gap: 15px;
@@ -38,7 +36,6 @@
         .btn-invoice { background: white; color: var(--dark); border: 2px solid var(--dark); }
         .btn-invoice:hover { background: #f0f7ff; }
 
-        /* SCROLLER */
         .cards-scroller {
             display: flex; gap: 15px; overflow-x: auto;
             padding: 5px 5px 15px 5px; scroll-behavior: smooth;
@@ -47,7 +44,6 @@
         .cards-scroller::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 4px; }
         .cards-scroller::-webkit-scrollbar-thumb { background: rgba(0,70,94,0.2); border-radius: 4px; }
 
-        /* COMPACT CARDS */
         .menu-card { 
             background: var(--white); border-radius: 12px; padding: 15px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.04); transition: transform 0.2s;
@@ -70,7 +66,6 @@
 
         .client-name { font-size: 1.05rem; font-weight: 800; margin: 4px 0 0 0; line-height: 1.3; color: var(--dark); height: 2.6em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
         
-        /* ACTION ROW (Stats + Button) */
         .stats-action-row { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #f0f0f0; padding-top: 12px; margin-top: 4px; }
         .stats-compact { display: flex; gap: 15px; }
         .stat-box { display: flex; flex-direction: column; }
@@ -85,6 +80,30 @@
         .btn-manage-compact:hover { background: var(--dark); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0, 70, 94, 0.3); }
 
         .empty-state { text-align: center; opacity: 0.6; padding: 60px; }
+
+        /* --- ACCORDION CALENDAR TOGGLE STYLES --- */
+        .calendar-control-panel { background: white; border-radius: 12px; padding: 15px 20px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .calendar-header-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .calendar-title { margin: 0; font-size: 1rem; font-weight: 900; text-transform: uppercase; color: var(--dark); display: flex; align-items: center; gap: 10px; }
+        .calendar-sub { font-size: 0.7rem; color: #888; font-weight: bold; text-transform: uppercase; }
+        
+        .chevron { transition: transform 0.3s ease; color: var(--dark); font-size: 1.2rem; font-weight: bold; }
+        .expanded .chevron { transform: rotate(180deg); }
+        
+        .calendar-content { display: none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        .expanded .calendar-content { display: block; }
+
+        /* Narrower week boxes */
+        .toggle-week-card { background: #fdfdfd; border: 1px solid #eee; border-radius: 8px; padding: 10px; min-width: 135px; width: 135px; }
+        .toggle-week-label { font-weight: 800; font-size: 0.7rem; color: #888; text-transform: uppercase; margin-bottom: 10px; text-align: center; letter-spacing: -0.2px; }
+        
+        /* Smaller buttons inside */
+        .toggle-btn {
+            width: 100%; padding: 5px; border-radius: 6px; font-weight: 800; font-size: 0.7rem; cursor: pointer; transition: 0.2s; margin-bottom: 5px;
+        }
+        .toggle-btn:last-child { margin-bottom: 0; }
+        .toggle-open { border: 2px solid #4ea2fd; background: #f0f7ff; color: #00465e; }
+        .toggle-blocked { border: 2px solid #eee; background: #eee; color: #999; }
     </style>
 </head>
 <body>
@@ -95,27 +114,31 @@
     
     <div class="container">
         
-        <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2 style="margin: 0; font-size: 1.1rem; font-weight: 900; text-transform: uppercase;">📅 Calendar Control</h2>
-                <span style="font-size: 0.75rem; color: #888; font-weight: bold; text-transform: uppercase;">Public Booking Visibility</span>
+        <div class="calendar-control-panel" id="calendarPanel">
+            <div class="calendar-header-row" onclick="toggleCalendar()">
+                <div class="calendar-title">
+                    📅 Calendar Control
+                    <span class="calendar-sub">Public Booking Visibility</span>
+                </div>
+                <div class="chevron">▼</div>
             </div>
             
-            <div class="cards-scroller" style="padding: 0; gap: 12px;">
-                {% for w in toggle_weeks %}
-                <div style="background: #f8f9fa; border: 1px solid #eee; border-radius: 10px; padding: 12px; min-width: 180px;">
-                    <div style="font-weight: 800; font-size: 0.75rem; color: #888; text-transform: uppercase; margin-bottom: 10px; text-align: center;">{{ w.week_label }}</div>
-                    
-                    {% for day in w.days %}
-                    <form action="/toggle-date" method="POST" style="margin-bottom: 6px;">
-                        <input type="hidden" name="date" value="{{ day.raw_date }}">
-                        <button type="submit" style="width: 100%; padding: 6px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; cursor: pointer; border: 2px solid {% if day.blocked %}#eee{% else %}#4ea2fd{% endif %}; background: {% if day.blocked %}#eee{% else %}#f0f7ff{% endif %}; color: {% if day.blocked %}#999{% else %}#00465e{% endif %}; transition: 0.2s;">
+            <div class="calendar-content">
+                <div class="cards-scroller" style="padding: 0; gap: 10px;">
+                    {% for w in toggle_weeks %}
+                    <div class="toggle-week-card">
+                        <div class="toggle-week-label">{{ w.week_label }}</div>
+                        
+                        {% for day in w.days %}
+                        <button type="button" class="toggle-btn {% if day.blocked %}toggle-blocked{% else %}toggle-open{% endif %}" 
+                                data-date="{{ day.raw_date }}" data-display="{{ day.display }}" 
+                                onclick="flipToggle(this)">
                             {{ day.display }} {% if day.blocked %}🔒{% else %}🟢{% endif %}
                         </button>
-                    </form>
+                        {% endfor %}
+                    </div>
                     {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </div>
 
@@ -180,5 +203,37 @@
             </div>
         {% endif %}
     </div>
+
+    <script>
+        // Expand/Collapse Calendar
+        function toggleCalendar() {
+            const panel = document.getElementById('calendarPanel');
+            panel.classList.toggle('expanded');
+        }
+
+        // Instant Background AJAX Toggle
+        function flipToggle(btn) {
+            const dateRaw = btn.getAttribute('data-date');
+            const display = btn.getAttribute('data-display');
+            
+            // 1. Instantly flip visuals (Fast feel)
+            if (btn.classList.contains('toggle-open')) {
+                btn.classList.remove('toggle-open');
+                btn.classList.add('toggle-blocked');
+                btn.innerText = display + " 🔒";
+            } else {
+                btn.classList.remove('toggle-blocked');
+                btn.classList.add('toggle-open');
+                btn.innerText = display + " 🟢";
+            }
+
+            // 2. Tell the server to update Google Sheets quietly in the background
+            fetch('/toggle-date', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ 'date': dateRaw })
+            });
+        }
+    </script>
 </body>
 </html>
