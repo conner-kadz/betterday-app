@@ -6,12 +6,12 @@ import calendar
 import re
 import csv
 import io
-import collections
 
 app = Flask(__name__)
 
 # CONFIGURATION
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
+TEACHER_SHEET_URL = "https://docs.google.com/spreadsheets" 
 
 # HELPERS
 def get_nice_date(date_str):
@@ -82,10 +82,8 @@ def index():
         if date_obj.weekday() < 3: 
             ds = date_obj.strftime('%Y-%m-%d')
             valid_dates.append({
-                'raw_date': ds, 
-                'display': date_obj.strftime('%A, %b %d'), 
-                'taken': ds in taken, 
-                'past': date_obj.date() < now.date()
+                'raw_date': ds, 'display': date_obj.strftime('%A, %b %d'), 
+                'taken': ds in taken, 'past': date_obj.date() < now.date()
             })
     return render_template('index.html', dates=valid_dates, month_name=calendar.month_name[view_m], year=view_y, prev_url=prev_url, next_url=next_url)
 
@@ -93,16 +91,11 @@ def index():
 def book(date_raw):
     if request.method == 'GET':
         return render_template('form.html', date_display=date_raw, raw_date=date_raw)
-    
     data = {
-        "action": "book_principal",
-        "date": date_raw,
-        "contact_name": request.form.get("contact_name"),
-        "email": request.form.get("email"),
-        "school_name": request.form.get("school_name"),
-        "address": request.form.get("address"),
-        "staff_count": request.form.get("staff_count"),
-        "lunch_time": request.form.get("lunch_time"),
+        "action": "book_principal", "date": date_raw,
+        "contact_name": request.form.get("contact_name"), "email": request.form.get("email"),
+        "school_name": request.form.get("school_name"), "address": request.form.get("address"),
+        "staff_count": request.form.get("staff_count"), "lunch_time": request.form.get("lunch_time"),
         "delivery_notes": request.form.get("delivery_notes")
     }
     requests.post(GOOGLE_SCRIPT_URL, json=data, timeout=10)
@@ -112,28 +105,22 @@ def book(date_raw):
 
 @app.route('/BD-Admin')
 def bd_admin():
-    # 1. Fetch Bookings (School Profiles)
     try:
         r_books = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=10)
         bookings_raw = r_books.json() if r_books.status_code == 200 else []
     except: bookings_raw = []
 
-    # 2. Fetch ALL Orders (To count meals)
     try:
         r_orders = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_all_orders"}, timeout=10)
         all_orders = r_orders.json() if r_orders.status_code == 200 else []
     except: all_orders = []
 
-    # Count orders per school per date
-    # Key: "SchoolName_2026-02-23" -> Count
     order_counts = {}
     for o in all_orders:
-        key = f"{o['school']}_{o['date']}"
+        key = f"{o.get('school')}_{o.get('date')}"
         order_counts[key] = order_counts.get(key, 0) + 1
 
-    # 3. Build Timeline
     production_weeks = {} 
-
     for b in bookings_raw:
         try:
             if "Date" in str(b[0]) or str(b[2]).isdigit(): continue
@@ -144,25 +131,19 @@ def bd_admin():
             deadline_obj = get_deadline_obj(d_date)
             school_name = str(b[2])
             is_office = "Health" in school_name or "Headversity" in school_name
-
-            # Lookup Order Count
-            count_key = f"{school_name}_{d_date}"
-            meals_ordered = order_counts.get(count_key, 0)
+            meals_ordered = order_counts.get(f"{school_name}_{d_date}", 0)
 
             booking_obj = {
-                "delivery_date_raw": d_date,
-                "delivery_date_display": get_nice_date(d_date),
-                "school": school_name,
-                "status": str(b[7]) if len(b) > 7 else "New Booking",
-                "staff_count": str(b[4]) if len(b) > 4 else "0",
-                "meals_ordered": meals_ordered,
+                "delivery_date_raw": d_date, "delivery_date_display": get_nice_date(d_date),
+                "school": school_name, "status": str(b[7]) if len(b) > 7 else "New Booking",
+                "staff_count": str(b[4]) if len(b) > 4 else "0", "meals_ordered": meals_ordered,
                 "deadline": deadline_obj.strftime('%b %d') if deadline_obj else "TBD",
                 "type": "Office" if is_office else "School"
             }
 
-            formatted_anchor = format_week_header(anchor) # "Feb 23, 2026"
-            
-            if formatted_anchor not in production_weeks: production_weeks[formatted_anchor] = {"anchor_id": anchor, "bookings": []}
+            formatted_anchor = format_week_header(anchor)
+            if formatted_anchor not in production_weeks: 
+                production_weeks[formatted_anchor] = {"anchor_id": anchor, "bookings": []}
             production_weeks[formatted_anchor]["bookings"].append(booking_obj)
         except: continue
     
@@ -171,37 +152,29 @@ def bd_admin():
 
 @app.route('/culinary-summary/<sunday>')
 def culinary_summary(sunday):
-    # Fetch ALL orders (which now have dish names!)
     try:
         r = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_all_orders"}, timeout=20)
         all_orders = r.json()
     except: all_orders = []
 
-    totals = {} # { "Meat": { "Dish Name": count }, "Plant-Based": { "Dish Name": count } }
+    totals = {"Meat": {}, "Plant-Based": {}}
     total_count = 0
     
-    # We rely on the NEW columns from Sheet (Dish Name & Diet)
-    # If old order (no dish name), we fallback gracefully
-    
     for o in all_orders:
-        anchor = get_sunday_anchor(o['date'])
+        anchor = get_sunday_anchor(o.get('date'))
         if anchor == sunday:
-            # Handle Data Warehouse Columns (if they exist in JSON response)
-            # We need to make sure get_all_orders sends these. 
-            # *See Note below about updating get_all_orders logic in app.py if using JSON indices*
-            # Assuming 'o' has keys from get_all_orders logic below
+            dish_name = str(o.get('dish_name') or f"Dish #{o.get('meal_id')}")
+            diet = str(o.get('diet') or "Unknown")
             
-            dish_name = o.get('dish_name') or f"Dish #{o['meal_id']}"
-            diet = o.get('diet') or "Unknown"
-            
-            # Grouping
             cat = "Plant-Based" if "Plant" in diet or "Vegan" in diet else "Meat"
-            
-            if cat not in totals: totals[cat] = {}
             if dish_name not in totals[cat]: totals[cat][dish_name] = 0
             
             totals[cat][dish_name] += 1
             total_count += 1
+
+    # Sort dishes alphabetically within their categories
+    for cat in totals:
+        totals[cat] = dict(sorted(totals[cat].items()))
 
     return render_template('culinary_picklist.html', sunday=format_week_header(sunday), totals=totals, total_count=total_count)
 
@@ -224,13 +197,9 @@ def school_profile(school_name, date):
     else: countdown_text = f"⏰ {days_left} Days Left"
 
     return render_template('profile.html', 
-                         school=clean_school_name, 
-                         date=date, 
-                         display_date=get_nice_date(date),
-                         deadline=deadline_str,
-                         countdown=countdown_text,
-                         staff=int(data.get('staff_count', 0)), 
-                         orders=len(data.get('orders', [])),
+                         school=clean_school_name, date=date, display_date=get_nice_date(date),
+                         deadline=deadline_str, countdown=countdown_text,
+                         staff=int(data.get('staff_count', 0)), orders=len(data.get('orders', [])),
                          info=data) 
 
 @app.route('/update-booking', methods=['POST'])
@@ -239,11 +208,8 @@ def update_booking():
     date = request.form.get('date')
     try:
         requests.post(GOOGLE_SCRIPT_URL, json={
-            "action": "update_booking",
-            "school": school,
-            "date": date,
-            "status": request.form.get('status'),
-            "email": request.form.get('email')
+            "action": "update_booking", "school": school, "date": date,
+            "status": request.form.get('status'), "email": request.form.get('email')
         }, timeout=8)
     except: pass
     return redirect(url_for('school_profile', school_name=school.replace(' ', '+'), date=date))
@@ -255,26 +221,16 @@ def download_csv(school_name, date):
         payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
         r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
         orders = r.json().get('orders', [])
-        
-        # New: If orders have Dish Name embedded, use it. Else fetch map.
-        # For now, let's assume we fetch map for safety until all data is migrated
-        anchor = get_sunday_anchor(date)
-        menu_map = {}
-        r_menu = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_menu", "sunday_anchor": anchor}, timeout=10)
-        if r_menu.status_code == 200:
-            data = r_menu.json()
-            for item in data.get('meat', []) + data.get('vegan', []):
-                menu_map[str(item['id'])] = item['name']
-    except: orders = []; menu_map = {}
+    except: orders = []
 
     si = io.StringIO()
     cw = csv.writer(si)
-    cw.writerow(['Teacher Name', 'Dish ID', 'Dish Name']) 
+    cw.writerow(['Teacher Name', 'Diet', 'Dish ID', 'Dish Name']) 
     for o in orders:
-        mid = str(o['meal_id']).strip()
-        # Prefer stored name, fallback to map
-        d_name = o.get('dish_name') or menu_map.get(mid, 'Unknown Dish')
-        cw.writerow([o['teacher'], mid, d_name])
+        mid = str(o.get('meal_id', '')).strip()
+        d_name = o.get('dish_name', 'Unknown Dish')
+        d_diet = o.get('diet', 'Unknown')
+        cw.writerow([o.get('teacher', ''), d_diet, mid, d_name])
         
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = f"attachment; filename={clean_school_name}_orders.csv"
@@ -283,26 +239,17 @@ def download_csv(school_name, date):
 
 @app.route('/picklist/<school_name>/<date>')
 def picklist_print(school_name, date):
-    # Similar logic to CSV but render HTML
     clean_school_name = school_name.replace('+', ' ')
     try:
         payload = {"action": "get_profile_data", "school": clean_school_name, "date": date}
         r = requests.post(GOOGLE_SCRIPT_URL, json=payload)
         orders = r.json().get('orders', [])
-        
-        anchor = get_sunday_anchor(date)
-        menu_map = {}
-        r_menu = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_menu", "sunday_anchor": anchor}, timeout=10)
-        if r_menu.status_code == 200:
-            data = r_menu.json()
-            for item in data.get('meat', []) + data.get('vegan', []):
-                menu_map[str(item['id'])] = item['name']
-    except: orders = []; menu_map = {}
+    except: orders = []
     
     summary = {}
     for o in orders:
-        mid = str(o['meal_id']).strip()
-        name = o.get('dish_name') or menu_map.get(mid, f"Dish #{mid}")
+        mid = str(o.get('meal_id', '')).strip()
+        name = o.get('dish_name') or f"Dish #{mid}"
         if name not in summary: summary[name] = {"id": mid, "count": 0}
         summary[name]["count"] += 1
         
@@ -331,34 +278,20 @@ def teacher_order(delivery_date):
     except: pass
     
     return render_template('orderform.html', 
-                         delivery_date=delivery_date, 
-                         deadline=deadline_str, 
-                         meat_menu=meat_menu, 
-                         vegan_menu=vegan_menu, 
-                         school_name=school)
+                         delivery_date=delivery_date, deadline=deadline_str, 
+                         meat_menu=meat_menu, vegan_menu=vegan_menu, school_name=school)
 
 @app.route('/submit-order', methods=['POST'])
 def submit_order():
     school = request.form.get('school_name')
     date = request.form.get('delivery_date')
-    
-    # We receive Dish Name and Diet hidden fields from form? 
-    # Or we can look them up here? 
-    # Better to look up here to avoid form tampering, BUT for simplicity/speed let's trust the form
-    # Wait, the form cards need hidden inputs for name/diet.
-    # Actually, easier: pass just ID, and let the JS populate hidden name fields.
-    
-    # Let's pass the logic:
-    # 1. User picks ID.
-    # 2. JS fills hidden "dish_name" and "diet".
-    
     try:
         requests.post(GOOGLE_SCRIPT_URL, json={
             "action": "submit_teacher_order",
             "name": request.form.get('teacher_name'),
             "meal_id": request.form.get('meal_id'),
-            "dish_name": request.form.get('dish_name'), # New
-            "diet": request.form.get('dish_diet'),      # New
+            "dish_name": request.form.get('dish_name'), 
+            "diet": request.form.get('dish_diet'),      
             "delivery_date": date,
             "school": school,
             "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
