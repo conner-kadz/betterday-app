@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Office Invoices — Week of {{ sunday }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root { --cream:#faebda; --dark:#00465e; --primary:#4ea2fd; --green:#27ae60; --red:#e74c3c; }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a2a35;padding-bottom:60px;}
+
+        /* SCREEN TOOLBAR */
+        .toolbar{background:var(--dark);padding:0 32px;height:56px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+        .toolbar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 90% 50%,rgba(78,162,253,.2) 0%,transparent 60%);pointer-events:none;}
+        .toolbar-title{color:rgba(255,255,255,.8);font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.8px;position:relative;}
+        .toolbar-week{color:white;font-family:'DM Serif Display',serif;font-size:1rem;position:relative;}
+        .toolbar-right{margin-left:auto;display:flex;gap:8px;position:relative;}
+        .tbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;font-size:.75rem;font-weight:800;cursor:pointer;transition:.15s;font-family:'DM Sans',sans-serif;text-decoration:none;border:none;}
+        .tbtn-print{background:white;color:var(--dark);}
+        .tbtn-print:hover{background:var(--cream);}
+        .tbtn-back{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);}
+        .tbtn-back:hover{background:rgba(255,255,255,.2);}
+
+        /* INVOICE PAGES */
+        .invoice-page{background:white;max-width:820px;margin:32px auto;border-radius:4px;box-shadow:0 4px 32px rgba(0,0,0,.12);overflow:hidden;page-break-after:always;}
+        .invoice-page:last-child{page-break-after:auto;}
+
+        /* INVOICE HEADER */
+        .inv-header{background:var(--dark);padding:32px 36px;display:flex;justify-content:space-between;align-items:flex-start;position:relative;overflow:hidden;}
+        .inv-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 40%,rgba(78,162,253,.25) 0%,transparent 60%);pointer-events:none;}
+        .inv-bd-brand{position:relative;}
+        .inv-bd-logo{height:28px;filter:brightness(0) invert(1);margin-bottom:6px;display:block;}
+        .inv-bd-tagline{font-size:.7rem;color:rgba(255,255,255,.4);font-weight:600;text-transform:uppercase;letter-spacing:.8px;}
+        .inv-meta{text-align:right;position:relative;}
+        .inv-meta-title{font-family:'DM Serif Display',serif;font-size:1.6rem;color:white;line-height:1;margin-bottom:4px;}
+        .inv-meta-num{font-size:.75rem;color:rgba(255,255,255,.5);font-weight:700;margin-bottom:2px;}
+        .inv-meta-date{font-size:.8rem;color:rgba(255,255,255,.7);font-weight:600;}
+
+        /* PARTIES */
+        .inv-parties{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:2px solid #e8edf2;}
+        .inv-party{padding:22px 36px;}
+        .inv-party:first-child{border-right:1px solid #e8edf2;}
+        .inv-party-label{font-size:.6rem;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#a0aebb;margin-bottom:8px;}
+        .inv-party-name{font-weight:900;font-size:1rem;color:var(--dark);margin-bottom:3px;}
+        .inv-party-detail{font-size:.78rem;color:#50657a;line-height:1.5;}
+        .inv-party-detail strong{color:var(--dark);font-weight:800;}
+
+        /* SUMMARY STRIP */
+        .inv-summary-strip{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:2px solid #e8edf2;}
+        .inv-summary-cell{padding:16px 20px;text-align:center;border-right:1px solid #e8edf2;}
+        .inv-summary-cell:last-child{border-right:none;}
+        .inv-summary-label{font-size:.58rem;font-weight:900;text-transform:uppercase;letter-spacing:.6px;color:#a0aebb;margin-bottom:4px;}
+        .inv-summary-val{font-size:1.3rem;font-weight:900;color:var(--dark);}
+        .inv-summary-val.green{color:var(--green);}
+        .inv-summary-val.blue{color:var(--primary);}
+
+        /* ITEMS TABLE */
+        .inv-table-wrap{padding:0 0 8px;}
+        .inv-section-label{padding:14px 36px 8px;font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#a0aebb;}
+        table{width:100%;border-collapse:collapse;}
+        thead tr{background:#f8fafc;border-bottom:2px solid #e8edf2;}
+        th{padding:9px 16px;text-align:left;font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:#a0aebb;}
+        th:last-child,td:last-child{text-align:right;}
+        td{padding:9px 16px;border-bottom:1px solid #f0f2f5;font-size:.83rem;vertical-align:middle;}
+        tbody tr:last-child td{border-bottom:none;}
+        tbody tr:hover{background:#fafcff;}
+        .td-emp{font-weight:700;color:var(--dark);}
+        .td-dish{color:#50657a;}
+        .td-tier{display:inline-flex;padding:2px 7px;border-radius:12px;font-size:.6rem;font-weight:900;text-transform:uppercase;}
+        .tier-free{background:rgba(39,174,96,.1);color:var(--green);}
+        .tier-tier1,.tier-tier2,.tier-tier3{background:rgba(78,162,253,.1);color:var(--primary);}
+        .tier-full{background:rgba(0,70,94,.07);color:#7b8c9f;}
+        .td-retail{color:#a0aebb;font-size:.78rem;}
+        .td-emp-pay{font-weight:700;}
+        .td-co-pay{font-weight:800;color:var(--green);}
+
+        /* TIER SUMMARY */
+        .inv-tier-section{padding:16px 36px;background:#fafcff;border-top:1px solid #e8edf2;}
+        .inv-tier-title{font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.7px;color:#a0aebb;margin-bottom:10px;}
+        .tier-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;}
+        .tier-summary-card{background:white;border:1px solid #e8edf2;border-radius:9px;padding:10px 14px;}
+        .tsc-label{font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.4px;color:#a0aebb;margin-bottom:5px;}
+        .tsc-meals{font-size:1.1rem;font-weight:900;color:var(--dark);line-height:1;}
+        .tsc-sub{font-size:.7rem;color:#7b8c9f;margin-top:3px;}
+        .tsc-co{font-size:.72rem;font-weight:800;color:var(--green);margin-top:2px;}
+
+        /* TOTALS */
+        .inv-totals{padding:20px 36px;border-top:2px solid #e8edf2;}
+        .inv-totals-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:.85rem;}
+        .inv-totals-row.sub{color:#50657a;}
+        .inv-totals-row.sub .itv{color:#50657a;}
+        .inv-totals-row.grand{border-top:2px solid var(--dark);margin-top:8px;padding-top:10px;}
+        .itl{font-weight:700;}
+        .itv{font-weight:800;color:var(--dark);}
+        .inv-totals-row.grand .itl{font-weight:900;font-size:.95rem;}
+        .inv-totals-row.grand .itv{font-size:1.2rem;color:var(--dark);}
+        .inv-totals-row.owed .itv{color:var(--green);font-size:1.3rem;font-weight:900;}
+
+        /* DELIVERY CALLOUT */
+        .inv-delivery{padding:16px 36px;background:rgba(78,162,253,.04);border-top:1px solid rgba(78,162,253,.1);}
+        .inv-delivery-title{font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.7px;color:var(--primary);margin-bottom:6px;}
+        .inv-delivery-text{font-size:.8rem;color:#50657a;line-height:1.5;}
+
+        /* FOOTER */
+        .inv-footer{padding:16px 36px;background:#f8fafc;border-top:1px solid #e8edf2;display:flex;justify-content:space-between;align-items:center;}
+        .inv-footer-left{font-size:.72rem;color:#a0aebb;}
+        .inv-footer-left strong{color:#50657a;}
+        .inv-footer-right{font-size:.72rem;color:#a0aebb;text-align:right;}
+
+        /* EMPTY */
+        .no-invoices{text-align:center;padding:80px 40px;background:white;max-width:600px;margin:60px auto;border-radius:20px;box-shadow:0 4px 24px rgba(0,0,0,.08);}
+        .no-invoices .icon{font-size:3rem;margin-bottom:16px;}
+        .no-invoices h2{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--dark);margin-bottom:8px;}
+        .no-invoices p{font-size:.9rem;color:#7b8c9f;}
+
+        /* PRINT */
+        @media print {
+            .toolbar { display: none !important; }
+            body { background: white; padding: 0; }
+            .invoice-page { margin: 0; box-shadow: none; border-radius: 0; page-break-after: always; }
+            .invoice-page:last-child { page-break-after: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <span class="toolbar-title">Office Invoices</span>
+    <span style="color:rgba(255,255,255,.3);position:relative;">|</span>
+    <span class="toolbar-week">Week of {{ sunday }}</span>
+    <div class="toolbar-right">
+        <button class="tbtn tbtn-print" onclick="window.print()">🖨️ Print All</button>
+        <a href="/work/admin" class="tbtn tbtn-back">← Back</a>
+    </div>
+</div>
+
+{% if invoices %}
+{% for inv in invoices %}
+<div class="invoice-page">
+
+    <!-- HEADER -->
+    <div class="inv-header">
+        <div class="inv-bd-brand">
+            <img src="{{ url_for('static', filename='Logo.svg') }}" class="inv-bd-logo" alt="BetterDay">
+            <div class="inv-bd-tagline">Workplace Wellness Program</div>
+        </div>
+        <div class="inv-meta">
+            <div class="inv-meta-title">Invoice</div>
+            <div class="inv-meta-num">{{ inv.company_info.InvoicePrefix or 'BD' }}-{{ inv.company_id }}-{{ sunday_raw | replace('-','') }}</div>
+            <div class="inv-meta-date">Week of {{ sunday }}</div>
+        </div>
+    </div>
+
+    <!-- PARTIES -->
+    <div class="inv-parties">
+        <div class="inv-party">
+            <div class="inv-party-label">From</div>
+            <div class="inv-party-name">BetterDay Nutrition Co.</div>
+            <div class="inv-party-detail">
+                hello@eatbetterday.ca<br>
+                Calgary, AB, Canada
+            </div>
+        </div>
+        <div class="inv-party">
+            <div class="inv-party-label">Bill To</div>
+            <div class="inv-party-name">{{ inv.company_name }}</div>
+            <div class="inv-party-detail">
+                {% if inv.company_info.BillingContactName %}<strong>{{ inv.company_info.BillingContactName }}</strong><br>{% endif %}
+                {% if inv.company_info.BillingContactEmail %}{{ inv.company_info.BillingContactEmail }}<br>{% endif %}
+                {% if inv.company_info.AddressLine1 %}{{ inv.company_info.AddressLine1 }}{% if inv.company_info.AddressLine2 %}, {{ inv.company_info.AddressLine2 }}{% endif %}<br>{% endif %}
+                {% if inv.company_info.City %}{{ inv.company_info.City }}{% if inv.company_info.ProvinceState %}, {{ inv.company_info.ProvinceState }}{% endif %}{% if inv.company_info.PostalCode %} {{ inv.company_info.PostalCode }}{% endif %}{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- SUMMARY STRIP -->
+    <div class="inv-summary-strip">
+        <div class="inv-summary-cell">
+            <div class="inv-summary-label">Total Meals</div>
+            <div class="inv-summary-val">{{ inv.meal_count }}</div>
+        </div>
+        <div class="inv-summary-cell">
+            <div class="inv-summary-label">Retail Value</div>
+            <div class="inv-summary-val">${{ '%.2f' | format(inv.grand_retail) }}</div>
+        </div>
+        <div class="inv-summary-cell">
+            <div class="inv-summary-label">Employee Paid</div>
+            <div class="inv-summary-val blue">${{ '%.2f' | format(inv.grand_emp) }}</div>
+        </div>
+        <div class="inv-summary-cell">
+            <div class="inv-summary-label">Company Owes</div>
+            <div class="inv-summary-val green">${{ '%.2f' | format(inv.grand_co) }}</div>
+        </div>
+    </div>
+
+    <!-- ITEMS -->
+    <div class="inv-table-wrap">
+        <div class="inv-section-label">Order Detail by Employee</div>
+        {% for employee, emp_orders in inv.employees.items() %}
+        <table>
+            {% if loop.first %}
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Delivery Date</th>
+                    <th>Dish</th>
+                    <th>Tier</th>
+                    <th>Retail</th>
+                    <th>Emp. Paid</th>
+                    <th>Co. Covers</th>
+                </tr>
+            </thead>
+            {% endif %}
+            <tbody>
+                {% for o in emp_orders %}
+                <tr>
+                    <td class="td-emp">{% if loop.first %}{{ employee }}{% endif %}</td>
+                    <td style="color:#7b8c9f;font-size:.8rem;">{{ o.DeliveryDate or '—' }}</td>
+                    <td class="td-dish">{{ o.DishName or '—' }}</td>
+                    <td><span class="td-tier tier-{{ (o.Tier or 'full') | lower }}">{{ o.Tier or 'Full' }}</span></td>
+                    <td class="td-retail">${{ '%.2f' | format(inv.full_price) }}</td>
+                    <td class="td-emp-pay">${{ '%.2f' | format(o.EmployeePrice | float) }}</td>
+                    <td class="td-co-pay">${{ '%.2f' | format(o.CompanyCoverage | float) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endfor %}
+    </div>
+
+    <!-- TIER BREAKDOWN -->
+    {% if inv.tier_summary %}
+    <div class="inv-tier-section">
+        <div class="inv-tier-title">Subsidy Tier Breakdown</div>
+        <div class="tier-summary-grid">
+            {% for tier_name, ts in inv.tier_summary.items() %}
+            <div class="tier-summary-card">
+                <div class="tsc-label">{{ tier_name | title }}</div>
+                <div class="tsc-meals">{{ ts.count }} meal{{ 's' if ts.count != 1 }}</div>
+                <div class="tsc-sub">Emp. paid ${{ '%.2f' | format(ts.emp_total) }}</div>
+                <div class="tsc-co">Co. owes ${{ '%.2f' | format(ts.co_total) }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- TOTALS -->
+    <div class="inv-totals">
+        <div class="inv-totals-row sub">
+            <span class="itl">Retail value ({{ inv.meal_count }} × ${{ '%.2f' | format(inv.full_price) }})</span>
+            <span class="itv">${{ '%.2f' | format(inv.grand_retail) }}</span>
+        </div>
+        <div class="inv-totals-row sub">
+            <span class="itl">Less employee contributions</span>
+            <span class="itv" style="color:var(--primary);">− ${{ '%.2f' | format(inv.grand_emp) }}</span>
+        </div>
+        {% if inv.grand_bd > 0 %}
+        <div class="inv-totals-row sub">
+            <span class="itl">Less BetterDay subsidy</span>
+            <span class="itv" style="color:var(--primary);">− ${{ '%.2f' | format(inv.grand_bd) }}</span>
+        </div>
+        {% endif %}
+        <div class="inv-totals-row owed">
+            <span class="itl">Balance owing — {{ inv.company_name }}</span>
+            <span class="itv">${{ '%.2f' | format(inv.grand_co) }}</span>
+        </div>
+    </div>
+
+    <!-- DELIVERY INFO -->
+    {% if inv.company_info.DeliveryInstructions or inv.company_info.AccessInstructions or inv.company_info.FridgeLocationDescription %}
+    <div class="inv-delivery">
+        <div class="inv-delivery-title">📦 Delivery Information</div>
+        <div class="inv-delivery-text">
+            {% if inv.company_info.FridgeLocationDescription %}<strong>Fridge/Drop:</strong> {{ inv.company_info.FridgeLocationDescription }}<br>{% endif %}
+            {% if inv.company_info.DeliveryInstructions %}{{ inv.company_info.DeliveryInstructions }}{% elif inv.company_info.AccessInstructions %}{{ inv.company_info.AccessInstructions }}{% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- FOOTER -->
+    <div class="inv-footer">
+        <div class="inv-footer-left">
+            <strong>BetterDay Nutrition Co.</strong> · hello@eatbetterday.ca · eatbetterday.ca<br>
+            {% if inv.company_info.BillingReference %}PO Ref: {{ inv.company_info.BillingReference }} · {% endif %}
+            Payment due on receipt · {{ inv.company_info.BillingFrequency or 'Monthly' }} billing
+        </div>
+        <div class="inv-footer-right">
+            {{ inv.company_info.InvoicePrefix or 'BD' }}-{{ inv.company_id }}-{{ sunday_raw | replace('-','') }}<br>
+            Generated {{ sunday }}
+        </div>
+    </div>
+
+</div>
+{% endfor %}
+
+{% else %}
+<div class="no-invoices">
+    <div class="icon">🏢</div>
+    <h2>No Office Orders This Week</h2>
+    <p>No corporate orders were found for the week of {{ sunday }}. Check back once employees have ordered, or verify the week anchor date.</p>
+</div>
+{% endif %}
+
+</body>
+</html>
