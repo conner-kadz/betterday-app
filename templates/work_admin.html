@@ -1,57 +1,115 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>BD Work — Corporate Orders</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #4ea2fd; --dark: #00465e; --accent: #faebda; }
-        body { font-family: -apple-system, sans-serif; background: var(--accent); margin: 0; padding: 30px; color: var(--dark); }
-        .header { background: var(--dark); color: white; padding: 14px 24px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
-        .header h1 { margin: 0; font-size: 1.1rem; font-weight: 900; }
-        .filter-bar { background: white; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; gap: 12px; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .filter-bar input { padding: 8px 12px; border: 1.5px solid #e0e8f0; border-radius: 8px; font-size: .85rem; font-family: inherit; }
-        .filter-bar button { background: var(--dark); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 700; font-size: .85rem; cursor: pointer; }
-        .company-block { background: white; border-radius: 14px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .company-header { background: var(--dark); color: white; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
-        .company-name { font-weight: 900; font-size: 1rem; }
-        .week-section { padding: 14px 18px; border-bottom: 1px solid #f0f4f8; }
-        .week-section:last-child { border-bottom: none; }
-        .week-label { font-size: .72rem; font-weight: 800; text-transform: uppercase; color: var(--primary); margin-bottom: 10px; letter-spacing: .5px; }
-        table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-        th { text-align: left; padding: 6px 8px; color: #8898aa; font-size: .7rem; text-transform: uppercase; font-weight: 800; border-bottom: 1px solid #f0f4f8; }
-        td { padding: 8px 8px; border-bottom: 1px solid #f8fafc; }
-        tr:last-child td { border-bottom: none; }
-        .tier-badge { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: .65rem; font-weight: 800; text-transform: uppercase; }
-        .tier-free { background: #e8faf0; color: #27ae60; }
-        .tier-tier1, .tier-tier2, .tier-tier3 { background: #e8f3ff; color: var(--primary); }
-        .tier-full { background: #f0f4f8; color: #7b8c9f; }
-        .empty { text-align: center; padding: 40px; color: #9aacb8; font-weight: 600; }
-        .back-link { color: var(--primary); text-decoration: none; font-size: .85rem; font-weight: 700; }
+        :root { --cream:#faebda; --dark:#00465e; --primary:#4ea2fd; --green:#27ae60; --red:#e74c3c; --amber:#f39c12; }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;padding-bottom:60px;}
+
+        .header{background:var(--dark);padding:0 32px;height:64px;display:flex;align-items:center;box-shadow:0 4px 24px rgba(0,70,94,.3);position:sticky;top:0;z-index:100;}
+        .header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 90% 50%,rgba(78,162,253,.2) 0%,transparent 60%);pointer-events:none;}
+        .header-logo{height:30px;filter:brightness(0) invert(1);margin-right:14px;}
+        .header-divider{width:1px;height:22px;background:rgba(255,255,255,.2);margin-right:14px;}
+        .header-title{font-weight:800;font-size:.9rem;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.8px;}
+        .header-right{margin-left:auto;display:flex;gap:10px;align-items:center;position:relative;}
+        .header-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:.78rem;font-weight:800;text-decoration:none;transition:.15s;font-family:'DM Sans',sans-serif;}
+        .btn-back{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15);}
+        .btn-back:hover{background:rgba(255,255,255,.2);}
+
+        .container{max-width:1400px;margin:0 auto;padding:28px 32px;}
+
+        .filter-panel{background:white;border-radius:16px;padding:16px 20px;margin-bottom:24px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 12px rgba(0,70,94,.06);border:1px solid rgba(0,70,94,.06);}
+        .filter-label{font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#a0aebb;white-space:nowrap;}
+        .filter-input{padding:9px 14px;border:2px solid #e8edf2;border-radius:10px;font-size:.85rem;font-family:'DM Sans',sans-serif;color:var(--dark);background:#f8fafc;transition:.15s;outline:none;flex:1;min-width:160px;}
+        .filter-input:focus{border-color:var(--primary);background:white;box-shadow:0 0 0 3px rgba(78,162,253,.1);}
+        .btn-filter{padding:9px 18px;background:var(--dark);color:white;border:none;border-radius:10px;font-weight:800;font-size:.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.15s;white-space:nowrap;}
+        .btn-filter:hover{background:var(--primary);}
+        .btn-clear{font-size:.78rem;color:#a0aebb;font-weight:700;text-decoration:none;white-space:nowrap;transition:.15s;}
+        .btn-clear:hover{color:var(--red);}
+
+        .company-block{background:white;border-radius:20px;margin-bottom:20px;overflow:hidden;box-shadow:0 2px 16px rgba(0,70,94,.06);border:1px solid rgba(0,70,94,.06);}
+        .company-header{background:var(--dark);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:relative;overflow:hidden;}
+        .company-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,rgba(78,162,253,.2) 0%,transparent 60%);pointer-events:none;}
+        .company-header-left{display:flex;align-items:center;gap:12px;position:relative;}
+        .company-avatar{width:36px;height:36px;border-radius:10px;background:rgba(78,162,253,.25);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:900;color:white;flex-shrink:0;}
+        .company-name{font-weight:900;font-size:1rem;color:white;}
+        .company-meta{font-size:.72rem;color:rgba(255,255,255,.5);margin-top:1px;}
+        .total-badge{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:800;position:relative;}
+
+        .delivery-section{padding:16px 22px;border-bottom:1px solid rgba(0,70,94,.05);}
+        .delivery-section:last-child{border-bottom:none;}
+        .delivery-label{display:flex;align-items:center;gap:8px;font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:.6px;color:var(--primary);margin-bottom:14px;}
+        .delivery-count{background:rgba(78,162,253,.1);color:var(--primary);padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:900;}
+
+        table{width:100%;border-collapse:collapse;font-size:.83rem;}
+        thead tr{border-bottom:2px solid rgba(0,70,94,.06);}
+        th{text-align:left;padding:7px 10px;color:#a0aebb;font-size:.65rem;text-transform:uppercase;font-weight:900;letter-spacing:.5px;}
+        td{padding:10px 10px;border-bottom:1px solid rgba(0,70,94,.04);vertical-align:middle;}
+        tbody tr:last-child td{border-bottom:none;}
+        tbody tr:hover{background:rgba(78,162,253,.03);}
+        .td-name{font-weight:800;color:var(--dark);}
+        .td-dish{color:#50657a;}
+        .td-pay{font-weight:700;color:var(--dark);}
+        .td-cover{font-weight:800;color:var(--green);}
+
+        .tier-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.4px;}
+        .tier-free{background:rgba(39,174,96,.12);color:var(--green);}
+        .tier-tier1,.tier-tier2,.tier-tier3{background:rgba(78,162,253,.12);color:var(--primary);}
+        .tier-full{background:rgba(0,70,94,.07);color:#7b8c9f;}
+
+        .status-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:.65rem;font-weight:800;background:rgba(0,70,94,.06);color:#7b8c9f;}
+
+        .empty-state{text-align:center;padding:80px 40px;opacity:.5;}
+        .empty-icon{font-size:3rem;margin-bottom:14px;}
+        .empty-title{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--dark);margin-bottom:8px;}
+        .empty-sub{font-size:.88rem;color:#7b8c9f;}
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🏢 Corporate Orders</h1>
-        <a href="/BD-Admin" class="back-link" style="color:rgba(255,255,255,.7)">← Back to Admin</a>
-    </div>
 
-    <form class="filter-bar" method="GET">
-        <input name="company_id" placeholder="Filter by Company ID…" value="{{ company_id }}">
-        <input name="sunday" placeholder="Filter by Sunday anchor (YYYY-MM-DD)…" value="{{ sunday_anchor }}">
-        <button type="submit">Filter</button>
-        <a href="/work/admin" style="font-size:.82rem;color:#9aacb8;margin-left:4px;">Clear</a>
+<div class="header">
+    <img src="{{ url_for('static', filename='Logo.svg') }}" class="header-logo" alt="BetterDay">
+    <div class="header-divider"></div>
+    <div class="header-title">Corporate Orders</div>
+    <div class="header-right">
+        <a href="/BD-Admin" class="header-btn btn-back">← Back to Admin</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <form class="filter-panel" method="GET">
+        <span class="filter-label">Filter</span>
+        <input class="filter-input" name="company_id" placeholder="Company ID…" value="{{ company_id }}">
+        <input class="filter-input" name="sunday" placeholder="Sunday anchor (YYYY-MM-DD)…" value="{{ sunday_anchor }}">
+        <button type="submit" class="btn-filter">Apply</button>
+        <a href="/work/admin" class="btn-clear">Clear ✕</a>
     </form>
 
     {% if grouped %}
         {% for company, weeks in grouped.items() %}
         <div class="company-block">
             <div class="company-header">
-                <div class="company-name">{{ company }}</div>
-                <div style="font-size:.8rem;opacity:.7;">{{ weeks.values()|sum(attribute='__len__') }} total orders</div>
+                <div class="company-header-left">
+                    <div class="company-avatar">{{ company[:2].upper() }}</div>
+                    <div>
+                        <div class="company-name">{{ company }}</div>
+                        <div class="company-meta">Corporate account</div>
+                    </div>
+                </div>
+                <div class="total-badge">{{ weeks.values()|sum(attribute='__len__') }} orders total</div>
             </div>
+
             {% for delivery_date, orders in weeks.items() %}
-            <div class="week-section">
-                <div class="week-label">📦 Delivery: {{ delivery_date }} — {{ orders|length }} meals</div>
+            <div class="delivery-section">
+                <div class="delivery-label">
+                    📦 Delivery: {{ delivery_date }}
+                    <span class="delivery-count">{{ orders|length }} meals</span>
+                </div>
                 <table>
                     <thead>
                         <tr>
@@ -66,12 +124,12 @@
                     <tbody>
                         {% for o in orders %}
                         <tr>
-                            <td style="font-weight:700;">{{ o.EmployeeName }}</td>
-                            <td>{{ o.DishName or '—' }}</td>
-                            <td><span class="tier-badge tier-{{ o.Tier }}">{{ o.Tier }}</span></td>
-                            <td>${{ '%.2f'|format(o.EmployeePrice|float) }}</td>
-                            <td style="color:#27ae60;font-weight:700;">${{ '%.2f'|format(o.CompanyCoverage|float) }}</td>
-                            <td>{{ o.Status }}</td>
+                            <td class="td-name">{{ o.EmployeeName }}</td>
+                            <td class="td-dish">{{ o.DishName or '—' }}</td>
+                            <td><span class="tier-badge tier-{{ o.Tier|lower }}">{{ o.Tier }}</span></td>
+                            <td class="td-pay">${{ '%.2f'|format(o.EmployeePrice|float) }}</td>
+                            <td class="td-cover">${{ '%.2f'|format(o.CompanyCoverage|float) }}</td>
+                            <td><span class="status-chip">{{ o.Status or 'Confirmed' }}</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -80,8 +138,15 @@
             {% endfor %}
         </div>
         {% endfor %}
+
     {% else %}
-        <div class="empty">No corporate orders yet. Orders will appear here as employees submit them.</div>
+        <div class="empty-state">
+            <div class="empty-icon">🏢</div>
+            <div class="empty-title">No Corporate Orders Yet</div>
+            <div class="empty-sub">Orders will appear here as employees submit them through the work portal.</div>
+        </div>
     {% endif %}
+
+</div>
 </body>
 </html>
