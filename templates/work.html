@@ -130,17 +130,40 @@
     .macro-chip.carb { background: #e8f3ff; color: #1a5ca0; }
     .macro-chip.fat  { background: #f6f0ff; color: #6b3fa0; }
 
-    /* Tags */
-    .tags-row { display: flex; gap: 4px; flex-wrap: wrap; }
-    .tag-chip { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; padding: 2px 6px; border-radius: 5px; background: rgba(0,70,94,.07); color: #50657a; }
+    /* Info button on card */
+    .meal-info-btn { position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,.88); border: none; cursor: pointer; font-size: .75rem; font-weight: 900; color: var(--dark); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.15); transition: .15s; z-index: 2; line-height: 1; }
+    .meal-info-btn:hover { background: #fff; transform: scale(1.1); }
 
-    /* Footer */
-    .meal-footer { margin-top: auto; padding-top: 8px; display: flex; justify-content: flex-end; }
-    .qty-pill { display: inline-flex; align-items: center; gap: 10px; background: var(--dark); color: var(--cream); border-radius: 999px; padding: 7px 14px; border: none; min-width: 110px; justify-content: space-between; }
-    .qty-btn { background: transparent; border: none; color: var(--cream); font-size: 1.1rem; cursor: pointer; padding: 0 2px; line-height: 1; }
-    .qty-val { font-size: .88rem; font-weight: 700; min-width: 14px; text-align: center; }
-    .btn-add { background: var(--dark); color: #fff; border: none; border-radius: 999px; padding: 8px 20px; font-size: .82rem; font-weight: 800; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: .15s; box-shadow: 0 3px 10px rgba(0,70,94,.2); }
-    .btn-add:hover { background: #005a7a; transform: translateY(-1px); }
+    /* Footer — full width add */
+    .meal-footer { margin-top: auto; padding-top: 10px; }
+    .qty-pill { display: flex; align-items: center; gap: 0; background: var(--dark); color: var(--cream); border-radius: 14px; border: none; width: 100%; justify-content: space-between; overflow: hidden; }
+    .qty-btn { background: transparent; border: none; color: var(--cream); font-size: 1.2rem; cursor: pointer; padding: 12px 18px; line-height: 1; font-weight: 700; transition: background .15s; }
+    .qty-btn:hover { background: rgba(255,255,255,.1); }
+    .qty-val { font-size: .9rem; font-weight: 800; min-width: 20px; text-align: center; }
+    .btn-add { background: var(--dark); color: #fff; border: none; border-radius: 14px; padding: 13px 0; font-size: .9rem; font-weight: 800; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: .15s; box-shadow: 0 4px 14px rgba(0,70,94,.22); width: 100%; letter-spacing: .2px; }
+    .btn-add:hover { background: #005a7a; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,70,94,.28); }
+
+    /* Info modal */
+    .info-modal-overlay { position: fixed; inset: 0; z-index: 1100; display: flex; align-items: flex-end; justify-content: center; padding: 0; }
+    .info-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(3px); }
+    .info-modal-card { position: relative; z-index: 1; background: #fff; border-radius: 28px 28px 0 0; width: 100%; max-width: 520px; box-shadow: 0 -16px 48px rgba(0,0,0,.2); animation: slideUpSheet .25s cubic-bezier(.34,1.2,.64,1); max-height: 88vh; overflow-y: auto; padding-bottom: env(safe-area-inset-bottom); }
+    @keyframes slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .info-modal-img { width: 100%; aspect-ratio: 16/8; object-fit: cover; display: block; }
+    .info-modal-img-placeholder { width: 100%; aspect-ratio: 16/8; background: linear-gradient(135deg, #e8d5c4, #d4c4b0); display: flex; align-items: center; justify-content: center; font-size: 4rem; }
+    .info-modal-body { padding: 20px 22px 28px; }
+    .info-modal-diet { font-size: .68rem; font-weight: 900; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
+    .info-modal-diet-meat { color: var(--dark); }
+    .info-modal-diet-veg  { color: var(--green); }
+    .info-modal-name { font-family: 'DM Serif Display', serif; font-size: 1.6rem; color: var(--dark); line-height: 1.15; margin-bottom: 8px; }
+    .info-modal-desc { font-size: .9rem; color: #50657a; line-height: 1.6; margin-bottom: 16px; }
+    .info-modal-macros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .info-modal-macros .macro-chip { font-size: .75rem; padding: 5px 10px; border-radius: 8px; }
+    .info-modal-tags-label { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: #aab4be; margin-bottom: 8px; }
+    .info-modal-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 22px; }
+    .info-modal-tag { font-size: .72rem; font-weight: 700; padding: 4px 10px; border-radius: 8px; background: rgba(0,70,94,.07); color: #50657a; }
+    .info-modal-close { position: absolute; top: 14px; right: 16px; border: none; background: rgba(0,0,0,.25); color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; backdrop-filter: blur(4px); z-index: 10; }
+    .info-modal-close:hover { background: rgba(0,0,0,.45); }
+    .info-modal-add-wrap { padding: 0 22px 4px; }
 
     /* ── TOPBAR CHIP ── */
     .next-price-chip { font-size: .78rem; color: rgba(255,255,255,.7); background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); border-radius: 999px; padding: 4px 12px; margin-right: 8px; }
@@ -527,44 +550,75 @@ function mealCardHTML(item, weekIndex) {
   const id = String(item.id);
   const isVeg = item.diet==='veg'||item.diet==='vegan';
 
-  // Macros
+  // Macros (compact — just cal + protein on card)
   let macros='';
-  if (item.cal||item.protein||item.carbs||item.fat) {
-    macros='<div class="macros-row">';
+  if (item.cal||item.protein) {
+    macros='<div class="macros-row" style="margin-bottom:2px;">';
     if (item.cal)     macros+=`<span class="macro-chip cal">${Math.round(item.cal)} cal</span>`;
     if (item.protein) macros+=`<span class="macro-chip pro">${Math.round(item.protein)}g protein</span>`;
-    if (item.carbs)   macros+=`<span class="macro-chip carb">${Math.round(item.carbs)}g carb</span>`;
-    if (item.fat)     macros+=`<span class="macro-chip fat">${Math.round(item.fat)}g fat</span>`;
     macros+='</div>';
-  }
-
-  // Tags
-  let tags='';
-  if (item.tags) {
-    const tl=item.tags.toString().split(',').map(t=>t.trim()).filter(Boolean);
-    if (tl.length) tags='<div class="tags-row">'+tl.map(t=>`<span class="tag-chip">${t}</span>`).join('')+'</div>';
   }
 
   const desc = item.description ? `<div class="meal-desc">${item.description}</div>` : '';
   const j = JSON.stringify(item).replace(/"/g,'&quot;');
+  const hasInfo = item.description||item.cal||item.protein||item.carbs||item.fat||item.tags;
 
   return `<div class="meal-card" id="mcard-${weekIndex}-${id}">
     <div class="meal-img-wrap">
       <img class="meal-img" src="${item.image||''}" referrerpolicy="no-referrer"
         onerror="this.parentElement.innerHTML='<div class=meal-img-placeholder>🍽️</div>'">
       <span class="diet-badge ${isVeg?'diet-badge-veg':'diet-badge-meat'}">${isVeg?'Plant-Based':'Meat'}</span>
+      ${hasInfo?`<button class="meal-info-btn" onclick="openInfoModal(${j})" title="More info">ⓘ</button>`:''}
     </div>
     <div class="meal-body">
       <div class="meal-name">${item.name}</div>
-      ${desc}${macros}${tags}
+      ${desc}${macros}
       <div class="meal-footer">
         <div id="ctrl-${weekIndex}-${id}">
-          <button class="btn-add" onclick="addMeal('${id}',${weekIndex},${j})">+ Add</button>
+          <button class="btn-add" onclick="addMeal('${id}',${weekIndex},${j})">+ Add to order</button>
         </div>
       </div>
     </div>
   </div>`;
 }
+
+/* ── INFO MODAL ── */
+function openInfoModal(item) {
+  const isVeg = item.diet==='veg'||item.diet==='vegan';
+  let macros='';
+  if (item.cal||item.protein||item.carbs||item.fat) {
+    if (item.cal)     macros+=`<span class="macro-chip cal">${Math.round(item.cal)} cal</span>`;
+    if (item.protein) macros+=`<span class="macro-chip pro">${Math.round(item.protein)}g protein</span>`;
+    if (item.carbs)   macros+=`<span class="macro-chip carb">${Math.round(item.carbs)}g carb</span>`;
+    if (item.fat)     macros+=`<span class="macro-chip fat">${Math.round(item.fat)}g fat</span>`;
+  }
+  let tags='';
+  if (item.tags) {
+    const tl=item.tags.toString().split(',').map(t=>t.trim()).filter(Boolean);
+    if (tl.length) tags=`<div class="info-modal-tags-label">Tags</div><div class="info-modal-tags">`+tl.map(t=>`<span class="info-modal-tag">${t}</span>`).join('')+`</div>`;
+  }
+  const existing = document.getElementById('infoModalOverlay');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id='infoModalOverlay'; el.className='info-modal-overlay';
+  el.innerHTML=`
+    <div class="info-modal-backdrop" onclick="closeInfoModal()"></div>
+    <div class="info-modal-card">
+      <button class="info-modal-close" onclick="closeInfoModal()">×</button>
+      ${item.image
+        ? `<img class="info-modal-img" src="${item.image}" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=info-modal-img-placeholder>🍽️</div>'">`
+        : `<div class="info-modal-img-placeholder">🍽️</div>`}
+      <div class="info-modal-body">
+        <div class="info-modal-diet ${isVeg?'info-modal-diet-veg':'info-modal-diet-meat'}">${isVeg?'🌱 Plant-Based':'🥩 Meat'}</div>
+        <div class="info-modal-name">${item.name}</div>
+        ${item.description?`<div class="info-modal-desc">${item.description}</div>`:''}
+        ${macros?`<div class="info-modal-macros">${macros}</div>`:''}
+        ${tags}
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+}
+function closeInfoModal() { const el=document.getElementById('infoModalOverlay'); if(el) el.remove(); }
 
 /* ── TIER PRICING ENGINE ── */
 function getTierForPosition(weekIndex, position) {
@@ -605,7 +659,7 @@ function renderMealControl(id, qty, wi) {
   const wrap=document.getElementById(`ctrl-${wi}-${id}`); if(!wrap)return;
   const m=findMealInCache(id,wi), j=JSON.stringify(m).replace(/"/g,'&quot;');
   wrap.innerHTML = qty===0
-    ? `<button class="btn-add" onclick="addMeal('${id}',${wi},${j})">+ Add</button>`
+    ? `<button class="btn-add" onclick="addMeal('${id}',${wi},${j})">+ Add to order</button>`
     : `<div class="qty-pill"><button class="qty-btn" onclick="removeMeal('${id}',${wi})">−</button><span class="qty-val">${qty}</span><button class="qty-btn" onclick="addMeal('${id}',${wi},${j})">+</button></div>`;
 }
 
