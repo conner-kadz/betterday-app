@@ -518,15 +518,126 @@ def work_submit():
         return {"status": "error", "message": str(ex)}, 500
 
 
+@app.route('/work/companies')
+def work_companies():
+    """List all companies — rendered inside work_admin."""
+    return redirect(url_for('work_admin'))
+
+
+@app.route('/work/company/<company_id>', methods=['GET', 'POST'])
+def company_editor(company_id):
+    """View / edit a single company."""
+    error = None
+    success = None
+
+    if request.method == 'POST':
+        fields = {k: v for k, v in request.form.items()}
+        fields['action'] = 'save_company'
+        try:
+            r = requests.post(GOOGLE_SCRIPT_URL, json=fields, timeout=12)
+            result = r.json() if r.status_code == 200 else {}
+            if result.get('success'):
+                success = 'Company saved successfully.'
+            else:
+                error = result.get('error', 'Save failed — check Apps Script logs.')
+        except Exception as ex:
+            error = str(ex)
+
+    company = {}
+    try:
+        r = requests.post(GOOGLE_SCRIPT_URL, json={'action': 'get_company', 'company_id': company_id}, timeout=10)
+        data = r.json() if r.status_code == 200 else {}
+        company = data.get('company', {})
+    except:
+        pass
+
+    return render_template('company_editor.html',
+                           company=company,
+                           company_id=company_id,
+                           error=error,
+                           success=success)
+
+
+@app.route('/work/invoices/<sunday>')
+def corporate_invoices(sunday):
+    """Batch-printable corporate invoices for a given week."""
+    try:
+        r = requests.post(GOOGLE_SCRIPT_URL, json={'action': 'get_corporate_orders'}, timeout=15)
+        all_corp = r.json() if r.status_code == 200 else []
+    except:
+        all_corp = []
+
+    try:
+        r2 = requests.post(GOOGLE_SCRIPT_URL, json={'action': 'get_all_companies'}, timeout=10)
+        companies_list = r2.json() if r2.status_code == 200 else []
+    except:
+        companies_list = []
+
+    company_map = {}
+    if isinstance(companies_list, list):
+        for c in companies_list:
+            if isinstance(c, dict):
+                company_map[c.get('CompanyID', '')] = c
+
+    # Filter to this week's sunday anchor
+    week_orders = [o for o in all_corp if isinstance(o, dict) and o.get('SundayAnchor') == sunday]
+
+    # Group by company
+    by_company = defaultdict(list)
+    for o in week_orders:
+        by_company[o.get('CompanyID', '—')].append(o)
+
+    invoices = []
+    for cid, orders in by_company.items():
+        c_info = company_map.get(cid, {})
+        fp = float(c_info.get('BasePrice') or c_info.get('FullPrice') or 16.99)
+
+        tier_summary = defaultdict(lambda: {'count': 0, 'emp_total': 0.0, 'co_total': 0.0, 'bd_total': 0.0})
+        employees = defaultdict(list)
+        for o in orders:
+            tier = (o.get('Tier') or 'full').lower()
+            ep = float(o.get('EmployeePrice') or 0)
+            cc = float(o.get('CompanyCoverage') or 0)
+            bd = float(o.get('BDCoverage') or 0)
+            tier_summary[tier]['count'] += 1
+            tier_summary[tier]['emp_total'] += ep
+            tier_summary[tier]['co_total'] += cc
+            tier_summary[tier]['bd_total'] += bd
+            employees[o.get('EmployeeName', '—')].append(o)
+
+        grand_emp = sum(float(o.get('EmployeePrice') or 0) for o in orders)
+        grand_co  = sum(float(o.get('CompanyCoverage') or 0) for o in orders)
+        grand_bd  = sum(float(o.get('BDCoverage') or 0) for o in orders)
+        grand_retail = len(orders) * fp
+
+        invoices.append({
+            'company_id':   cid,
+            'company_name': orders[0].get('CompanyName', cid),
+            'company_info': c_info,
+            'orders':       orders,
+            'employees':    dict(employees),
+            'tier_summary': dict(tier_summary),
+            'grand_emp':    grand_emp,
+            'grand_co':     grand_co,
+            'grand_bd':     grand_bd,
+            'grand_retail': grand_retail,
+            'meal_count':   len(orders),
+            'full_price':   fp,
+        })
+
+    return render_template('corporate_invoices.html',
+                           invoices=invoices,
+                           sunday=format_week_header(sunday),
+                           sunday_raw=sunday)
+
+
 @app.route('/work/admin')
 def work_admin():
-    """
-    Corporate orders summary dashboard.
-    Filter by: ?company_id=BROCK  or  ?sunday=2026-03-08
-    """
+    """Corporate orders dashboard + company manager."""
     company_id    = request.args.get('company_id', '')
     sunday_anchor = request.args.get('sunday', '')
 
+    # ── Fetch corporate orders ──
     payload = {"action": "get_corporate_orders"}
     if company_id:    payload["company_id"]    = company_id
     if sunday_anchor: payload["sunday_anchor"] = sunday_anchor
@@ -538,13 +649,104 @@ def work_admin():
     except:
         pass
 
-    # Group by company → delivery date for the template
+    # ── Fetch companies list ──
+    companies_list = []
+    try:
+        r2 = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_all_companies"}, timeout=10)
+        companies_list = r2.json() if r2.status_code == 200 else []
+    except:
+        pass
+
+    # ── Fetch teacher orders for cross-summary ──
+    all_teacher_orders = []
+    try:
+        r3 = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_all_orders"}, timeout=10)
+        all_teacher_orders = r3.json() if r3.status_code == 200 else []
+    except:
+        pass
+
+    # ── Fetch school bookings ──
+    bookings_raw = []
+    try:
+        r4 = requests.get(GOOGLE_SCRIPT_URL + "?action=get_bookings", timeout=10)
+        bookings_raw = r4.json() if r4.status_code == 200 else []
+    except:
+        pass
+
+    # ── Build week summaries (next 6 weeks) ──
+    today = datetime.now()
+    today_date = today.replace(hour=0, minute=0, second=0, microsecond=0)
+    start_date = datetime(2026, 3, 9)
+    if today_date > start_date:
+        start_date = today_date - timedelta(days=today_date.weekday())
+
+    # Build corporate order index by sunday_anchor
+    corp_by_anchor = defaultdict(list)
+    for o in (orders if not company_id and not sunday_anchor else []):
+        anchor = o.get('SundayAnchor', '')
+        if anchor:
+            corp_by_anchor[anchor].append(o)
+    # If filtered, still build full index for summary
+    if company_id or sunday_anchor:
+        try:
+            r_all = requests.post(GOOGLE_SCRIPT_URL, json={"action": "get_corporate_orders"}, timeout=10)
+            all_corp = r_all.json() if r_all.status_code == 200 else []
+            for o in all_corp:
+                corp_by_anchor[o.get('SundayAnchor', '')].append(o)
+        except:
+            pass
+
+    # Build teacher order index by sunday_anchor
+    teacher_by_anchor = defaultdict(list)
+    for o in (all_teacher_orders if isinstance(all_teacher_orders, list) else []):
+        anchor = get_sunday_anchor(o.get('date', ''))
+        if anchor:
+            teacher_by_anchor[anchor].append(o)
+
+    # Build school booking index by sunday_anchor
+    school_by_anchor = defaultdict(set)
+    for b in (bookings_raw if isinstance(bookings_raw, list) else []):
+        try:
+            if not isinstance(b, list) or len(b) < 3: continue
+            if "Date" in str(b[0]) or str(b[2]).isdigit(): continue
+            d_date = str(b[0]).split('T')[0]
+            anchor = get_sunday_anchor(d_date)
+            if anchor:
+                school_by_anchor[anchor].add(str(b[2]))
+        except:
+            continue
+
+    week_summaries = []
+    for i in range(6):
+        monday = start_date + timedelta(weeks=i)
+        sunday = monday - timedelta(days=1)
+        anchor = sunday.strftime('%Y-%m-%d')
+
+        corp_orders   = corp_by_anchor.get(anchor, [])
+        teach_orders  = teacher_by_anchor.get(anchor, [])
+        school_names  = school_by_anchor.get(anchor, set())
+
+        office_companies = set(o.get('CompanyName', '') for o in corp_orders if o.get('CompanyName'))
+        office_employees = set(o.get('EmployeeName', '') for o in corp_orders if o.get('EmployeeName'))
+
+        week_summaries.append({
+            'anchor':          anchor,
+            'nice_date':       format_week_header(anchor),
+            'delivery_monday': monday.strftime('%b %d'),
+            'offices':         len(office_companies),
+            'office_meals':    len(corp_orders),
+            'employees':       len(office_employees),
+            'schools':         len(school_names),
+            'school_meals':    len(teach_orders),
+            'total_meals':     len(corp_orders) + len(teach_orders),
+        })
+
+    # ── Group orders for table display ──
     grouped = defaultdict(lambda: defaultdict(list))
     for o in orders:
         if isinstance(o, dict):
             grouped[o.get('CompanyName', '—')][o.get('DeliveryDate', '—')].append(o)
 
-    # Convert to plain dicts so Jinja can iterate safely
     grouped_plain = {}
     company_totals = {}
     for company, weeks in grouped.items():
@@ -555,6 +757,8 @@ def work_admin():
     return render_template('work_admin.html',
                            grouped=grouped_plain,
                            company_totals=company_totals,
+                           companies_list=companies_list if isinstance(companies_list, list) else [],
+                           week_summaries=week_summaries,
                            company_id=company_id,
                            sunday_anchor=sunday_anchor)
 
