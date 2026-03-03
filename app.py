@@ -545,13 +545,16 @@ def work_admin():
             grouped[o.get('CompanyName', '—')][o.get('DeliveryDate', '—')].append(o)
 
     # Convert to plain dicts so Jinja can iterate safely
-    grouped_plain = {
-        company: dict(weeks)
-        for company, weeks in grouped.items()
-    }
+    grouped_plain = {}
+    company_totals = {}
+    for company, weeks in grouped.items():
+        weeks_plain = dict(weeks)
+        grouped_plain[company] = weeks_plain
+        company_totals[company] = sum(len(v) for v in weeks_plain.values())
 
     return render_template('work_admin.html',
                            grouped=grouped_plain,
+                           company_totals=company_totals,
                            company_id=company_id,
                            sunday_anchor=sunday_anchor)
 
