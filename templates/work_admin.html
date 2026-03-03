@@ -101,7 +101,7 @@
                         <div class="company-meta">Corporate account</div>
                     </div>
                 </div>
-                <div class="total-badge">{{ weeks.values()|sum(attribute='__len__') }} orders total</div>
+                <div class="total-badge">{{ company_totals[company] }} orders total</div>
             </div>
 
             {% for delivery_date, orders in weeks.items() %}
