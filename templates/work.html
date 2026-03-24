@@ -1184,9 +1184,9 @@ function buildPricingBanner() {
 function buildWeekTabs() {
   const bar=document.getElementById('weekTabsBar'); bar.innerHTML='';
   weeks.forEach((w,i)=>{
-    const badge = w.isOpen
-      ? `<span class="tab-badge ${i===0?'tab-badge-open':'tab-badge-next'}">${i===0?'Open':'Pre-order'}</span>`
-      : `<span class="tab-badge tab-badge-closed">Closed</span>`;
+    if (!w.isOpen) return; // hide past/closed weeks entirely
+    const firstOpen = weeks.findIndex(wk=>wk.isOpen);
+    const badge = `<span class="tab-badge ${i===firstOpen?'tab-badge-open':'tab-badge-next'}">${i===firstOpen?'Open':'Pre-order'}</span>`;
     const btn=document.createElement('button');
     btn.className='week-tab'+(i===activeWeekIndex?' active':'');
     btn.innerHTML=`Delivery ${w.deliveryShort}${badge}<span class="tab-date">Menu week of ${toYMD(new Date(w.sundayAnchor)).slice(5)}</span>`;
