@@ -364,6 +364,8 @@
     .swap-change-btn:hover { background: #d4eaff; }
     .swap-change-btn.saving { opacity: .55; pointer-events: none; }
     .swap-cutoff { font-size: .73rem; color: #9aabb8; text-align: center; padding: 10px 0 4px; }
+    .swap-saving-overlay { position: absolute; inset: 0; background: rgba(250,235,218,.93); border-radius: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 20; backdrop-filter: blur(2px); }
+    .swap-saving-label { font-size: .95rem; font-weight: 800; color: var(--dark); letter-spacing: -.01em; }
     /* ── MEAL PICKER OVERLAY ── */
     .picker-overlay { position: fixed; inset: 0; z-index: 9500; background: rgba(0,70,94,.78); display: flex; flex-direction: column; justify-content: flex-end; }
     .picker-sheet  { background: var(--cream); border-radius: 24px 24px 0 0; max-height: 88vh; display: flex; flex-direction: column; }
@@ -681,6 +683,10 @@
 <div id="swapModal" class="modal-overlay hidden">
   <div class="modal-backdrop" onclick="closeSwapModal()"></div>
   <div class="modal-card">
+    <div id="swapSavingOverlay" class="swap-saving-overlay hidden">
+      <div class="spinner"></div>
+      <div class="swap-saving-label">Swapping your meal…</div>
+    </div>
     <button class="modal-close" onclick="closeSwapModal()">×</button>
     <div class="modal-header">
       <div class="modal-title" id="swapTitle">Swap Meals</div>
@@ -1723,10 +1729,13 @@ async function pickMeal(newMeal) {
   if (_pickerSlotIdx === null || !_swapKey) return;
   const data = _orderCache[_swapKey]; if (!data) return;
   const { meals, anchor } = data;
-  const oldMeal = meals[_pickerSlotIdx];
-  const btn = document.getElementById(`swap-btn-${_pickerSlotIdx}`);
-  if (btn) { btn.classList.add('saving'); btn.textContent = '…'; }
+  const slotIdx = _pickerSlotIdx;
+  const oldMeal = { ...meals[slotIdx] };
   closeMealPicker();
+  // Optimistic update — show new meal instantly
+  meals[slotIdx] = { ...oldMeal, MealID: String(newMeal.id), DishName: newMeal.name||'', DietType: newMeal.diet||'' };
+  renderSwapBody(meals, anchor);
+  document.getElementById('swapSavingOverlay').classList.remove('hidden');
   try {
     const res = await apiFetch({
       action: 'swap_order_meal',
@@ -1737,18 +1746,19 @@ async function pickMeal(newMeal) {
       new_diet_type: newMeal.diet || '',
       email: currentEmployee.email
     });
+    document.getElementById('swapSavingOverlay').classList.add('hidden');
     if (res.success) {
-      // Update in-memory cache
-      meals[_pickerSlotIdx] = { ...oldMeal, MealID: String(newMeal.id), DishName: newMeal.name||'', DietType: newMeal.diet||'' };
-      renderSwapBody(meals, anchor);
-      showToast(`Swapped to ${newMeal.name||'new meal'} ✓`);
+      showToast(`Swapped to ${newMeal.name||'new meal'} ✓`, 'warn');
     } else {
+      meals[slotIdx] = oldMeal; // revert
+      renderSwapBody(meals, anchor);
       showToast('Swap failed — please try again');
-      if (btn) { btn.classList.remove('saving'); btn.textContent = 'Change'; }
     }
   } catch(e) {
+    document.getElementById('swapSavingOverlay').classList.add('hidden');
+    meals[slotIdx] = oldMeal; // revert
+    renderSwapBody(meals, anchor);
     showToast('Swap failed — please try again');
-    if (btn) { btn.classList.remove('saving'); btn.textContent = 'Change'; }
   }
 }
 </script>
