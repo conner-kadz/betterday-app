@@ -324,19 +324,64 @@
     .session-info-icon { font-size: 1rem; flex-shrink: 0; }
     .session-info-title { font-size: .8rem; font-weight: 700; color: var(--dark); display: inline; }
     .session-info-desc { font-size: .75rem; color: #50657a; line-height: 1.5; }
-    .order-hist-group-label { font-size: .78rem; font-weight: 800; color: var(--dark); margin: 18px 0 8px; opacity: .6; }
-    .order-hist-group-label:first-child { margin-top: 0; }
-    .order-hist-card { background: #fff; border-radius: 14px; padding: 13px 15px; margin-bottom: 9px; box-shadow: 0 2px 8px rgba(0,70,94,.07); display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; }
-    .order-hist-thumb { width: 40px; height: 40px; border-radius: 9px; overflow: hidden; background: #e8d5c4; flex-shrink: 0; }
-    .order-hist-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .order-hist-meal { font-size: .88rem; font-weight: 800; color: var(--dark); line-height: 1.3; }
-    .order-hist-date { font-size: .72rem; color: #8898aa; margin-top: 2px; }
-    .order-hist-right { text-align: right; }
-    .order-hist-price { font-size: .9rem; font-weight: 800; color: var(--dark); }
-    .order-tier-pill { display: inline-block; font-size: .6rem; font-weight: 800; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; margin-top: 3px; }
-    .tier-free { background: #eaf7ef; color: var(--green); }
-    .tier-tier1,.tier-tier2,.tier-tier3 { background: #e8f3ff; color: var(--primary); }
-    .tier-full { background: #f0f4f8; color: #7b8c9f; }
+    /* ── E-COMMERCE ORDER CARDS ── */
+    .order-card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,70,94,.08); }
+    .order-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+    .order-num { font-size: .7rem; font-weight: 900; color: #9aabb8; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 3px; }
+    .order-delivery-date { font-size: .95rem; font-weight: 800; color: var(--dark); }
+    .order-meta { font-size: .78rem; color: #8898aa; margin-top: 3px; }
+    .order-card-right { text-align: right; flex-shrink: 0; }
+    .order-status-badge { display: inline-block; font-size: .6rem; font-weight: 900; text-transform: uppercase; letter-spacing: .6px; padding: 3px 9px; border-radius: 999px; margin-bottom: 5px; }
+    .order-status-open   { background: rgba(39,174,96,.15); color: var(--green); }
+    .order-status-closed { background: #f0f4f8; color: #9aabb8; }
+    .order-paid-amt { font-size: .88rem; font-weight: 800; color: var(--dark); }
+    .order-card-divider { height: 1px; background: rgba(0,70,94,.07); margin: 0 0 12px; }
+    .order-card-actions { display: flex; gap: 8px; }
+    .order-btn { flex: 1; padding: 10px 12px; border: none; border-radius: 10px; font-family: 'DM Sans',sans-serif; font-size: .82rem; font-weight: 800; cursor: pointer; transition: .12s; }
+    .order-btn-view { background: #f0f4f8; color: var(--dark); }
+    .order-btn-view:hover { background: #e4e9f0; }
+    .order-btn-swap { background: var(--green); color: #fff; }
+    .order-btn-swap:hover { filter: brightness(1.07); }
+    /* ── ORDER INVOICE MODAL ── */
+    .invoice-row { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 0; border-bottom: 1px solid #f0f4f8; gap: 12px; }
+    .invoice-row:last-child { border-bottom: none; }
+    .invoice-meal-name { font-size: .88rem; color: var(--dark); flex: 1; line-height: 1.3; }
+    .invoice-meal-price { font-size: .88rem; font-weight: 800; color: var(--dark); flex-shrink: 0; }
+    .invoice-totals { margin-top: 6px; border-top: 2px solid rgba(0,70,94,.1); padding-top: 8px; }
+    .invoice-total-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: .88rem; color: #7b8c9f; }
+    .invoice-total-row.bold { font-weight: 800; color: var(--dark); font-size: .95rem; margin-top: 2px; }
+    .invoice-location { font-size: .75rem; color: #9aabb8; margin-top: 12px; padding-top: 10px; border-top: 1px solid #f0f4f8; line-height: 1.6; }
+    /* ── SWAP MODAL ── */
+    .swap-meal-row { display: grid; grid-template-columns: 46px 1fr auto; gap: 10px; align-items: center; padding: 11px 0; border-bottom: 1px solid #f0f4f8; }
+    .swap-meal-row:last-child { border-bottom: none; }
+    .swap-thumb { width: 46px; height: 46px; border-radius: 10px; overflow: hidden; background: #e8d5c4; flex-shrink: 0; }
+    .swap-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .swap-meal-name { font-size: .88rem; font-weight: 700; color: var(--dark); line-height: 1.3; }
+    .swap-meal-sub  { font-size: .7rem; color: #9aabb8; margin-top: 2px; }
+    .swap-change-btn { padding: 7px 13px; background: #e8f3ff; color: var(--primary); border: none; border-radius: 8px; font-family: 'DM Sans',sans-serif; font-size: .78rem; font-weight: 800; cursor: pointer; white-space: nowrap; transition: .12s; }
+    .swap-change-btn:hover { background: #d4eaff; }
+    .swap-change-btn.saving { opacity: .55; pointer-events: none; }
+    .swap-cutoff { font-size: .73rem; color: #9aabb8; text-align: center; padding: 10px 0 4px; }
+    /* ── MEAL PICKER OVERLAY ── */
+    .picker-overlay { position: fixed; inset: 0; z-index: 9500; background: rgba(0,70,94,.78); display: flex; flex-direction: column; justify-content: flex-end; }
+    .picker-sheet  { background: var(--cream); border-radius: 24px 24px 0 0; max-height: 88vh; display: flex; flex-direction: column; }
+    .picker-header { background: var(--dark); padding: 16px 20px 14px; border-radius: 24px 24px 0 0; display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; }
+    .picker-title  { font-size: .95rem; font-weight: 800; color: #fff; }
+    .picker-sub    { font-size: .72rem; color: rgba(255,255,255,.45); margin-top: 2px; }
+    .picker-close  { background: rgba(255,255,255,.15); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; flex-shrink: 0; margin-top: -2px; }
+    .picker-body   { padding: 14px 16px 24px; overflow-y: auto; flex: 1; }
+    .picker-section-label { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .7px; color: #8898aa; margin: 10px 0 8px; }
+    .picker-section-label:first-child { margin-top: 0; }
+    .picker-meal-card { background: #fff; border-radius: 14px; padding: 11px 12px; margin-bottom: 8px; display: grid; grid-template-columns: 50px 1fr auto; gap: 10px; align-items: center; box-shadow: 0 2px 8px rgba(0,70,94,.07); }
+    .picker-thumb { width: 50px; height: 50px; border-radius: 9px; overflow: hidden; background: #e8d5c4; }
+    .picker-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .picker-meal-name { font-size: .88rem; font-weight: 700; color: var(--dark); line-height: 1.3; }
+    .picker-meal-diet { font-size: .7rem; color: #9aabb8; margin-top: 2px; }
+    .picker-select-btn { padding: 8px 14px; border: none; border-radius: 9px; font-family: 'DM Sans',sans-serif; font-size: .8rem; font-weight: 800; cursor: pointer; transition: .12s; white-space: nowrap; }
+    .picker-select-btn.available { background: var(--dark); color: #fff; }
+    .picker-select-btn.available:hover { filter: brightness(1.1); }
+    .picker-select-btn.current { background: #f0f4f8; color: #b0bec5; cursor: default; }
+    /* ── SHARED PROFILE ── */
     .profile-empty { text-align: center; padding: 40px 20px; color: #bcc6d0; }
     .profile-empty-icon { font-size: 2.4rem; margin-bottom: 10px; }
     .profile-logout-btn { width: 100%; padding: 13px; background: transparent; color: var(--red); border: 2px solid rgba(231,76,60,.22); border-radius: 14px; font-family: 'DM Sans', sans-serif; font-size: .92rem; font-weight: 800; cursor: pointer; margin-top: 8px; transition: .15s; }
@@ -593,7 +638,7 @@
           <div class="session-info-desc" id="profileSessionDesc">You're signed in on this device. We'll remember you for 30 days — no password or link needed when you come back.</div>
         </div>
       </div>
-      <div class="profile-section-label">Recent Orders</div>
+      <div class="profile-section-label">Order History</div>
       <div id="profileOrdersList">
         <div class="spinner-wrap"><div class="spinner"></div><div class="spinner-label">Loading your orders…</div></div>
       </div>
@@ -611,6 +656,54 @@
   <div class="checkout-overlay-ring"></div>
   <div class="checkout-overlay-label">Placing your order…</div>
   <div class="checkout-overlay-sub">Please don't close this page</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ORDER INVOICE MODAL  (profile — view order)
+════════════════════════════════════════════ -->
+<div id="orderInvoiceModal" class="modal-overlay hidden">
+  <div class="modal-backdrop" onclick="closeOrderInvoice()"></div>
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeOrderInvoice()">×</button>
+    <div class="modal-header">
+      <div class="modal-title" id="invoiceTitle">Order</div>
+      <div class="modal-delivery" id="invoiceDelivery"></div>
+    </div>
+    <div class="modal-white-box" id="invoiceBody"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SWAP MEALS MODAL  (profile — swap order)
+════════════════════════════════════════════ -->
+<div id="swapModal" class="modal-overlay hidden">
+  <div class="modal-backdrop" onclick="closeSwapModal()"></div>
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeSwapModal()">×</button>
+    <div class="modal-header">
+      <div class="modal-title" id="swapTitle">Swap Meals</div>
+      <div class="modal-delivery" id="swapDelivery"></div>
+    </div>
+    <div class="modal-white-box" id="swapBody"></div>
+    <div class="swap-cutoff" id="swapCutoffNote"></div>
+    <div style="padding:0 0 4px;"><button class="btn-back" style="margin-top:10px;" onclick="closeSwapModal()">Done ✓</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MEAL PICKER OVERLAY  (pick replacement meal)
+════════════════════════════════════════════ -->
+<div id="mealPickerOverlay" class="picker-overlay hidden">
+  <div class="picker-sheet">
+    <div class="picker-header">
+      <div>
+        <div class="picker-title">Pick a replacement</div>
+        <div class="picker-sub" id="pickerSub">Selecting a new meal</div>
+      </div>
+      <button class="picker-close" onclick="closeMealPicker()">×</button>
+    </div>
+    <div class="picker-body" id="pickerBody"></div>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════
@@ -1337,11 +1430,21 @@ async function doCheckout() {
   const total=cart.reduce((s,i)=>s+i.price,0), fp=parseFloat(c.FullPrice)||16.99, savings=cart.length*fp-total;
   const cartSnapshot = [...cart]; // snapshot before clearing
 
-  // Submit all meals in parallel — much faster than sequential awaits
+  // Reserve one OrderID per unique delivery week (sequential to avoid collisions)
+  const anchors = [...new Set(cartSnapshot.map(i => weeks[i.weekIndex].sundayAnchor))];
+  const orderIdMap = {};
+  for (const anchor of anchors) {
+    try {
+      const r = await apiFetch({ action: 'reserve_order_id', email: emp.email, sunday_anchor: anchor });
+      orderIdMap[anchor] = r.order_id;
+    } catch(e) { console.error('reserve_order_id failed', e); }
+  }
+  // Submit all meals in parallel with their assigned OrderIDs
   const submits = cartSnapshot.map(item => {
     const w = weeks[item.weekIndex];
     return apiFetch({
       action:'submit_corporate_order',
+      order_id: orderIdMap[w.sundayAnchor] || '',
       company_id:c.CompanyID, company_name:c.CompanyName,
       delivery_date:toYMD(w.deliveryDate), sunday_anchor:w.sundayAnchor,
       employee_name:`${emp.firstName} ${emp.lastName}`, employee_email:emp.email,
@@ -1383,7 +1486,6 @@ async function openProfile() {
   document.getElementById('profileNameLg').textContent   = emp.firstName + ' ' + emp.lastName;
   document.getElementById('profileEmailLg').textContent  = emp.email;
   document.getElementById('profileCompanyChip').textContent = c?.CompanyName || '';
-  // Show exact days remaining on session
   const sess = loadSession();
   if (sess && sess.savedAt) {
     const daysLeft = Math.max(0, 30 - Math.floor((Date.now() - sess.savedAt) / 86400000));
@@ -1391,50 +1493,226 @@ async function openProfile() {
       `You're signed in on this device. Session expires in ${daysLeft} day${daysLeft!==1?'s':''} — no password or link needed until then.`;
   }
   goTo('sProfile');
-  // Async load order history
   const list = document.getElementById('profileOrdersList');
   list.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div><div class="spinner-label">Loading your orders…</div></div>';
   try {
-    const orders = await apiFetch({ action: 'get_orders_by_employee', email: emp.email });
-    if (!Array.isArray(orders) || !orders.length) {
+    const rows = await apiFetch({ action: 'get_orders_by_employee', email: emp.email });
+    if (!Array.isArray(rows) || !rows.length) {
       list.innerHTML = '<div class="profile-empty"><div class="profile-empty-icon">🍽️</div><div>No orders yet — your history will appear here after your first delivery</div></div>';
-    } else {
-      const tierLabels = {free:'Complimentary',tier1:'Tier 1',tier2:'Tier 2',tier3:'Tier 3',full:'Full price'};
-      // Group by delivery date
-      const grouped = {};
-      orders.forEach(o => {
-        const key = o.DeliveryDate || 'Unknown date';
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(o);
-      });
-      const formatDate = d => {
-        const dt = new Date(d + 'T12:00:00');
-        if (isNaN(dt.getTime())) return d;
-        return dt.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' });
-      };
-      list.innerHTML = Object.keys(grouped).sort((a,b) => b.localeCompare(a)).map(date => {
-        const cards = grouped[date].map(o => {
-          const price = (v => (isNaN(v) || v < 0) ? 0 : v)(parseFloat(String(o.EmployeePrice ?? '').replace(/[^0-9.-]/g, '')));
-          const tierClass = 'tier-' + (o.Tier || 'full');
-          const tierLabel = tierLabels[o.Tier] || 'Full price';
-          const dishName = o.DishName && !o.DishName.startsWith('#') ? o.DishName : (o.MealID ? 'Meal #' + o.MealID : 'Meal');
-          return `<div class="order-hist-card">
-            <div class="order-hist-thumb"><img src="${o.Image||''}" onerror="this.style.display='none'" referrerpolicy="no-referrer"></div>
-            <div>
-              <div class="order-hist-meal">${dishName}</div>
-              <div class="order-hist-date">${[o.DeliveryDate ? formatDate(o.DeliveryDate) : '', o.CompanyName || ''].filter(Boolean).join(' · ')}</div>
-            </div>
-            <div class="order-hist-right">
-              <div class="order-hist-price">${price===0?'<span style="color:var(--green);font-weight:800">FREE</span>':'$'+price.toFixed(2)}</div>
-              <div><span class="order-tier-pill ${tierClass}">${tierLabel}</span></div>
-            </div>
-          </div>`;
-        }).join('');
-        return `<div class="order-hist-group-label">${formatDate(date)}</div>${cards}`;
-      }).join('');
+      return;
     }
+    list.innerHTML = renderOrderHistory(rows, c);
   } catch(e) {
     list.innerHTML = '<div class="profile-empty"><div class="profile-empty-icon">😕</div><div>Couldn\'t load orders — try again later</div></div>';
+  }
+}
+
+function parsePrice(v) { return (p => (isNaN(p)||p<0)?0:p)(parseFloat(String(v??'').replace(/[^0-9.-]/g,''))); }
+function fmtDate(d) { const dt=new Date(d+'T12:00:00'); return isNaN(dt)?d:dt.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); }
+function isSwappable(sundayAnchor) { return sundayAnchor && new Date() < getCutoff(new Date(sundayAnchor+'T12:00:00')); }
+function getMealImage(mealId, sundayAnchor) {
+  const cache = menuCache[sundayAnchor];
+  if (!cache) return '';
+  const all = [...(cache.meat||[]), ...(cache.vegan||[])];
+  const m = all.find(x => String(x.id) === String(mealId));
+  return m?.image || '';
+}
+
+function renderOrderHistory(rows, company) {
+  // Group by OrderID (new orders). Fall back to SundayAnchor for legacy rows without OrderID.
+  const groups = {};
+  rows.forEach(o => {
+    const key = o.OrderID ? String(o.OrderID) : ('legacy-' + (o.SundayAnchor || o.DeliveryDate || 'unknown'));
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(o);
+  });
+  // Sort groups: most recent delivery first
+  const sortedKeys = Object.keys(groups).sort((a, b) => {
+    const da = groups[a][0].DeliveryDate || '';
+    const db = groups[b][0].DeliveryDate || '';
+    return db.localeCompare(da);
+  });
+  return sortedKeys.map(key => {
+    const meals = groups[key];
+    const first = meals[0];
+    const hasOrderId = !!first.OrderID;
+    const totalPaid = meals.reduce((s, o) => s + parsePrice(o.EmployeePrice), 0);
+    const fp = parseFloat(company?.FullPrice) || 16.99;
+    const totalSaved = meals.length * fp - totalPaid;
+    const anchor = first.SundayAnchor || '';
+    const swappable = hasOrderId && isSwappable(anchor);
+    const cutoff = anchor ? getCutoff(new Date(anchor+'T12:00:00')) : null;
+    const paidStr = totalPaid === 0
+      ? `<span style="color:var(--green);font-weight:900">FREE</span>`
+      : `$${totalPaid.toFixed(2)}`;
+    const savedStr = totalSaved > 0 ? ` · saved $${totalSaved.toFixed(2)}` : '';
+    const statusBadge = hasOrderId
+      ? `<span class="order-status-badge ${swappable?'order-status-open':'order-status-closed'}">${swappable?'Open':'Closed'}</span>`
+      : `<span class="order-status-badge order-status-closed">Legacy</span>`;
+    const swapBtn = hasOrderId && swappable
+      ? `<button class="order-btn order-btn-swap" onclick="openSwapModal('${key}')">Swap Meals</button>`
+      : '';
+    // Store order data in global map for modals
+    _orderCache[key] = { meals, anchor, cutoff };
+    return `<div class="order-card">
+      <div class="order-card-top">
+        <div>
+          <div class="order-num">${hasOrderId ? 'Order #'+key : 'Previous order'}</div>
+          <div class="order-delivery-date">${fmtDate(first.DeliveryDate)}</div>
+          <div class="order-meta">${meals.length} meal${meals.length!==1?'s':''} · ${first.CompanyName||''}</div>
+        </div>
+        <div class="order-card-right">
+          ${statusBadge}
+          <div class="order-paid-amt">${paidStr}${savedStr?`<div style="font-size:.7rem;color:var(--green);font-weight:700;">${savedStr}</div>`:''}</div>
+        </div>
+      </div>
+      <div class="order-card-divider"></div>
+      <div class="order-card-actions">
+        <button class="order-btn order-btn-view" onclick="openOrderInvoice('${key}')">View Order ↓</button>
+        ${swapBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── ORDER INVOICE MODAL ──
+let _orderCache = {}; // populated by renderOrderHistory
+function openOrderInvoice(key) {
+  const data = _orderCache[key]; if (!data) return;
+  const { meals } = data;
+  const first = meals[0];
+  const tierLabel = {free:'Complimentary',tier1:'Tier 1',tier2:'Tier 2',tier3:'Tier 3',full:'Full price'};
+  const fp = parseFloat(currentCompany?.FullPrice) || 16.99;
+  const totalPaid = meals.reduce((s,o) => s + parsePrice(o.EmployeePrice), 0);
+  const totalSaved = meals.length * fp - totalPaid;
+  let rows = meals.map(o => {
+    const price = parsePrice(o.EmployeePrice);
+    const dishName = (o.DishName && !o.DishName.startsWith('#')) ? o.DishName : ('Meal #' + o.MealID);
+    const priceStr = price === 0
+      ? `<span style="color:var(--green);font-weight:800">FREE</span>`
+      : `$${price.toFixed(2)}`;
+    return `<div class="invoice-row">
+      <span class="invoice-meal-name">${dishName}<br><span style="font-size:.7rem;color:#9aabb8;">${tierLabel[o.Tier]||'Full price'}</span></span>
+      <span class="invoice-meal-price">${priceStr}</span>
+    </div>`;
+  }).join('');
+  let totals = `<div class="invoice-totals">`;
+  if (totalSaved > 0) totals += `<div class="invoice-total-row"><span>${first.CompanyName||'Company'} covered</span><span style="color:var(--green);">–$${totalSaved.toFixed(2)}</span></div>`;
+  totals += `<div class="invoice-total-row bold"><span>You paid</span><span>${totalPaid===0?'Nothing 🎉':'$'+totalPaid.toFixed(2)}</span></div></div>`;
+  const location = currentCompany?.FridgeLocationDescription || currentCompany?.AddressLine1 || '';
+  const locationHtml = location ? `<div class="invoice-location">📦 Delivery: ${fmtDate(first.DeliveryDate)}<br>${location?`📍 ${location}`:''}</div>` : `<div class="invoice-location">📦 Delivery: ${fmtDate(first.DeliveryDate)}</div>`;
+  document.getElementById('invoiceTitle').textContent = first.OrderID ? `Order #${first.OrderID}` : 'Order Details';
+  document.getElementById('invoiceDelivery').textContent = `${meals.length} meal${meals.length!==1?'s':''} · ${first.CompanyName||''}`;
+  document.getElementById('invoiceBody').innerHTML = rows + totals + locationHtml;
+  document.getElementById('orderInvoiceModal').classList.remove('hidden');
+}
+function closeOrderInvoice() { document.getElementById('orderInvoiceModal').classList.add('hidden'); }
+
+// ── SWAP MEALS MODAL ──
+let _swapKey = null;
+function openSwapModal(key) {
+  const data = _orderCache[key]; if (!data) return;
+  _swapKey = key;
+  const { meals, anchor, cutoff } = data;
+  const first = meals[0];
+  document.getElementById('swapTitle').textContent = `Swap Meals — Order #${key}`;
+  document.getElementById('swapDelivery').textContent = fmtDate(first.DeliveryDate);
+  if (cutoff) {
+    document.getElementById('swapCutoffNote').textContent =
+      `Deadline: ${cutoff.toLocaleDateString('en-CA',{weekday:'long',month:'short',day:'numeric'})} at 12:01 AM`;
+  }
+  renderSwapBody(meals, anchor);
+  document.getElementById('swapModal').classList.remove('hidden');
+}
+function renderSwapBody(meals, anchor) {
+  const tierLabel = {free:'Complimentary',tier1:'Tier 1',tier2:'Tier 2',tier3:'Tier 3',full:'Full price'};
+  document.getElementById('swapBody').innerHTML = meals.map((o, idx) => {
+    const dishName = (o.DishName && !o.DishName.startsWith('#')) ? o.DishName : ('Meal #' + o.MealID);
+    const price = parsePrice(o.EmployeePrice);
+    const priceStr = price === 0 ? 'FREE' : `$${price.toFixed(2)}`;
+    const img = getMealImage(o.MealID, anchor);
+    return `<div class="swap-meal-row" id="swap-row-${idx}">
+      <div class="swap-thumb"><img src="${img}" referrerpolicy="no-referrer" onerror="this.style.display='none'"></div>
+      <div>
+        <div class="swap-meal-name">${dishName}</div>
+        <div class="swap-meal-sub">${priceStr} · ${tierLabel[o.Tier]||'Full price'}</div>
+      </div>
+      <button class="swap-change-btn" id="swap-btn-${idx}" onclick="openMealPicker(${idx})">Change</button>
+    </div>`;
+  }).join('');
+}
+function closeSwapModal() { document.getElementById('swapModal').classList.add('hidden'); _swapKey = null; }
+
+// ── MEAL PICKER ──
+let _pickerSlotIdx = null;
+function openMealPicker(slotIdx) {
+  if (!_swapKey) return;
+  const data = _orderCache[_swapKey]; if (!data) return;
+  const { meals, anchor } = data;
+  _pickerSlotIdx = slotIdx;
+  const currentMealId = String(meals[slotIdx].MealID);
+  const menu = menuCache[anchor];
+  document.getElementById('pickerSub').textContent = `Replacing: ${meals[slotIdx].DishName || 'Meal #'+meals[slotIdx].MealID}`;
+  let html = '';
+  if (!menu) {
+    html = '<div class="profile-empty"><div class="profile-empty-icon">📋</div><div>Menu not cached — go back to the menu tab to load it first, then return here.</div></div>';
+  } else {
+    const buildSection = (items, label) => {
+      if (!items.length) return '';
+      let s = `<div class="picker-section-label">${label}</div>`;
+      s += items.map(item => {
+        const isCurrent = String(item.id) === currentMealId;
+        return `<div class="picker-meal-card">
+          <div class="picker-thumb"><img src="${item.image||''}" referrerpolicy="no-referrer" onerror="this.style.display='none'"></div>
+          <div>
+            <div class="picker-meal-name">${item.name}</div>
+            <div class="picker-meal-diet">${item.diet==='veg'||item.diet==='vegan'?'🌱 Plant-Based':'🥩 Meat'}</div>
+          </div>
+          <button class="picker-select-btn ${isCurrent?'current':'available'}"
+            ${isCurrent?'disabled':'onclick="pickMeal('+JSON.stringify(item).replace(/"/g,"'")+')'"}>
+            ${isCurrent?'Current':'Select'}
+          </button>
+        </div>`;
+      }).join('');
+      return s;
+    };
+    html = buildSection(menu.meat||[], '🥩 Meat & Omnivore') + buildSection(menu.vegan||[], '🌱 Plant-Based');
+  }
+  document.getElementById('pickerBody').innerHTML = html;
+  document.getElementById('mealPickerOverlay').classList.remove('hidden');
+}
+function closeMealPicker() { document.getElementById('mealPickerOverlay').classList.add('hidden'); _pickerSlotIdx = null; }
+
+async function pickMeal(newMeal) {
+  if (_pickerSlotIdx === null || !_swapKey) return;
+  const data = _orderCache[_swapKey]; if (!data) return;
+  const { meals, anchor } = data;
+  const oldMeal = meals[_pickerSlotIdx];
+  const btn = document.getElementById(`swap-btn-${_pickerSlotIdx}`);
+  if (btn) { btn.classList.add('saving'); btn.textContent = '…'; }
+  closeMealPicker();
+  try {
+    const res = await apiFetch({
+      action: 'swap_order_meal',
+      order_id: String(_swapKey),
+      old_meal_id: String(oldMeal.MealID),
+      new_meal_id: String(newMeal.id),
+      new_dish_name: newMeal.name || '',
+      new_diet_type: newMeal.diet || '',
+      email: currentEmployee.email
+    });
+    if (res.success) {
+      // Update in-memory cache
+      meals[_pickerSlotIdx] = { ...oldMeal, MealID: String(newMeal.id), DishName: newMeal.name||'', DietType: newMeal.diet||'' };
+      renderSwapBody(meals, anchor);
+      showToast(`Swapped to ${newMeal.name||'new meal'} ✓`);
+    } else {
+      showToast('Swap failed — please try again');
+      if (btn) { btn.classList.remove('saving'); btn.textContent = 'Change'; }
+    }
+  } catch(e) {
+    showToast('Swap failed — please try again');
+    if (btn) { btn.classList.remove('saving'); btn.textContent = 'Change'; }
   }
 }
 </script>

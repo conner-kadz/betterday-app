@@ -301,13 +301,39 @@ function doPost(e) {
       return jsonOut(orders);
     }
     // ─────────────────────────────────────────
+    // RESERVE ORDER ID  (call once per week before submitting meals)
+    // Returns an existing OrderID for this employee+week, or creates a new one
+    // ─────────────────────────────────────────
+    if (data.action === "reserve_order_id") {
+      var corpSheet = ssHub.getSheetByName("CorporateOrders");
+      var email  = String(data.email  || "").trim().toLowerCase();
+      var anchor = String(data.sunday_anchor || "").trim();
+      if (corpSheet) {
+        var rows = corpSheet.getDataRange().getValues();
+        var headers = rows[0];
+        var orderIdIdx = headers.indexOf("OrderID");
+        var emailIdx   = headers.indexOf("EmployeeEmail");
+        var anchorIdx  = headers.indexOf("SundayAnchor");
+        if (orderIdIdx >= 0 && emailIdx >= 0 && anchorIdx >= 0) {
+          for (var i = 1; i < rows.length; i++) {
+            if (rows[i][orderIdIdx] &&
+                String(rows[i][emailIdx]).trim().toLowerCase() === email &&
+                String(rows[i][anchorIdx]).trim() === anchor) {
+              return jsonOut({ order_id: rows[i][orderIdIdx] });
+            }
+          }
+        }
+      }
+      return jsonOut({ order_id: getNextOrderId(ssHub) });
+    }
+    // ─────────────────────────────────────────
     // SUBMIT CORPORATE ORDER
     // ─────────────────────────────────────────
     if (data.action === "submit_corporate_order") {
       var corpSheet = ssHub.getSheetByName("CorporateOrders");
       if (!corpSheet) {
         corpSheet = ssHub.insertSheet("CorporateOrders");
-        corpSheet.appendRow(["Timestamp","CompanyID","CompanyName","DeliveryDate","SundayAnchor","EmployeeName","EmployeeEmail","MealID","DishName","DietType","Tier","EmployeePrice","CompanyCoverage","BDCoverage","StripePaymentIntentID","Status"]);
+        corpSheet.appendRow(["Timestamp","CompanyID","CompanyName","DeliveryDate","SundayAnchor","EmployeeName","EmployeeEmail","MealID","DishName","DietType","Tier","EmployeePrice","CompanyCoverage","BDCoverage","StripePaymentIntentID","Status","OrderID"]);
       }
       corpSheet.appendRow([
         new Date(),
@@ -323,11 +349,41 @@ function doPost(e) {
         data.tier,
         data.employee_price,
         data.company_coverage,
-        data.bd_coverage,
+        data.bd_coverage || "0.00",
         "",
-        "pending"
+        "pending",
+        data.order_id || ""
       ]);
       return jsonOut({success: true});
+    }
+    // ─────────────────────────────────────────
+    // SWAP ORDER MEAL  (SKU swap — replace one meal in an existing order)
+    // ─────────────────────────────────────────
+    if (data.action === "swap_order_meal") {
+      var corpSheet = ssHub.getSheetByName("CorporateOrders");
+      if (!corpSheet) return jsonOut({success: false, error: "No orders sheet"});
+      var rows = corpSheet.getDataRange().getValues();
+      var headers = rows[0];
+      var orderIdIdx  = headers.indexOf("OrderID");
+      var emailIdx    = headers.indexOf("EmployeeEmail");
+      var mealIdIdx   = headers.indexOf("MealID");
+      var dishNameIdx = headers.indexOf("DishName");
+      var dietIdx     = headers.indexOf("DietType");
+      if (orderIdIdx < 0) return jsonOut({success: false, error: "OrderID column not found"});
+      var orderId   = String(data.order_id).trim();
+      var oldMealId = String(data.old_meal_id).trim();
+      var email     = String(data.email || "").trim().toLowerCase();
+      for (var i = 1; i < rows.length; i++) {
+        if (String(rows[i][orderIdIdx]).trim() === orderId &&
+            String(rows[i][emailIdx]).trim().toLowerCase() === email &&
+            String(rows[i][mealIdIdx]).trim() === oldMealId) {
+          corpSheet.getRange(i + 1, mealIdIdx + 1).setValue(String(data.new_meal_id).trim());
+          if (dishNameIdx >= 0) corpSheet.getRange(i + 1, dishNameIdx + 1).setValue(data.new_dish_name || "");
+          if (dietIdx     >= 0) corpSheet.getRange(i + 1, dietIdx     + 1).setValue(data.new_diet_type || "");
+          return jsonOut({success: true});
+        }
+      }
+      return jsonOut({success: false, error: "Meal not found in order"});
     }
     // ─────────────────────────────────────────
     // GET CORPORATE ORDERS
@@ -507,6 +563,30 @@ function doPost(e) {
 // ══════════════════════════════════════════
 // HELPER FUNCTIONS
 // ══════════════════════════════════════════
+function getOrCreateSettingsSheet(ssHub) {
+  var sheet = ssHub.getSheetByName("Settings");
+  if (!sheet) {
+    sheet = ssHub.insertSheet("Settings");
+    sheet.appendRow(["Key", "Value"]);
+    sheet.appendRow(["LastOrderID", 10000]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#00465e").setFontColor("#ffffff");
+  }
+  return sheet;
+}
+function getNextOrderId(ssHub) {
+  var settings = getOrCreateSettingsSheet(ssHub);
+  var rows = settings.getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === "LastOrderID") {
+      var next = parseInt(rows[i][1]) + 1;
+      settings.getRange(i + 1, 2).setValue(next);
+      return next;
+    }
+  }
+  settings.appendRow(["LastOrderID", 10001]);
+  return 10001;
+}
 function jsonOut(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
