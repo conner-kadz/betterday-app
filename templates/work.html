@@ -1224,11 +1224,10 @@ async function renderWeek(index) {
   const meat=menu.meat||[], veg=menu.vegan||[];
   if (!meat.length&&!veg.length) { inner.innerHTML=`<div class="closed-overlay"><div class="closed-icon">🗓️</div><div class="closed-title">Menu not set yet</div><div class="closed-sub">Check back soon!</div></div>`; return; }
   const hasBoth = meat.length>0 && veg.length>0;
-  let html = hasBoth ? `<div class="cat-float"><div class="cat-float-inner"><button class="cat-btn active" id="catBtnMeat" onclick="jumpToSection('sec-meat','catBtnMeat')">🥩 Meat</button><button class="cat-btn" id="catBtnVeg" onclick="jumpToSection('sec-veg','catBtnVeg')">🌱 Plant-Based</button></div></div>` : '';
-  if (meat.length) { html+=`<div id="sec-meat" class="menu-section-title">Meat &amp; Omnivore Options</div><div class="meal-grid">`; meat.forEach(i=>{html+=mealCardHTML(i,index);}); html+='</div>'; }
-  if (veg.length)  { html+=`<div id="sec-veg" class="menu-section-title">Plant-Based Options</div><div class="meal-grid">`;  veg.forEach(i=>{html+=mealCardHTML(i,index);}); html+='</div>'; }
+  let html = hasBoth ? `<div class="cat-float"><div class="cat-float-inner"><button class="cat-btn active" id="catBtnMeat" onclick="filterCategory('meat')">🥩 Meat</button><button class="cat-btn" id="catBtnVeg" onclick="filterCategory('veg')">🌱 Plant-Based</button></div></div>` : '';
+  if (meat.length) { html+=`<div id="sec-meat-wrap"><div class="menu-section-title">Meat &amp; Omnivore Options</div><div class="meal-grid">`; meat.forEach(i=>{html+=mealCardHTML(i,index);}); html+='</div></div>'; }
+  if (veg.length)  { html+=`<div id="sec-veg-wrap"><div class="menu-section-title">Plant-Based Options</div><div class="meal-grid">`;  veg.forEach(i=>{html+=mealCardHTML(i,index);}); html+='</div></div>'; }
   inner.innerHTML=html;
-  if (hasBoth) setupScrollSpy();
   const seen=new Set();
   cart.filter(i=>i.weekIndex===index).forEach(i=>{
     if(!seen.has(i.mealId)){seen.add(i.mealId); renderMealControl(i.mealId,cart.filter(x=>x.mealId===i.mealId&&x.weekIndex===index).length,index);}
@@ -1293,27 +1292,14 @@ function openInfoModal(item) {
   document.getElementById('infoModalOverlay')?.remove();
   document.body.appendChild(el);
 }
-function jumpToSection(sectionId, activeBtnId) {
-  const el = document.getElementById(sectionId);
-  const ms = document.querySelector('.menu-scroll');
-  if (!el || !ms) return;
-  const top = ms.scrollTop + el.getBoundingClientRect().top - ms.getBoundingClientRect().top - 56;
-  ms.scrollTo({ top, behavior: 'smooth' });
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(activeBtnId)?.classList.add('active');
-}
-function setupScrollSpy() {
-  const ms = document.querySelector('.menu-scroll');
-  if (!ms) return;
-  if (ms._spy) ms.removeEventListener('scroll', ms._spy);
-  ms._spy = () => {
-    const veg = document.getElementById('sec-veg');
-    if (!veg) return;
-    const isVeg = veg.getBoundingClientRect().top - ms.getBoundingClientRect().top < 120;
-    document.getElementById('catBtnMeat')?.classList.toggle('active', !isVeg);
-    document.getElementById('catBtnVeg')?.classList.toggle('active', isVeg);
-  };
-  ms.addEventListener('scroll', ms._spy, { passive: true });
+function filterCategory(cat) {
+  const meatWrap = document.getElementById('sec-meat-wrap');
+  const vegWrap  = document.getElementById('sec-veg-wrap');
+  if (meatWrap) meatWrap.style.display = cat === 'meat' ? '' : 'none';
+  if (vegWrap)  vegWrap.style.display  = cat === 'veg'  ? '' : 'none';
+  document.getElementById('catBtnMeat')?.classList.toggle('active', cat === 'meat');
+  document.getElementById('catBtnVeg')?.classList.toggle('active',  cat === 'veg');
+  document.querySelector('.menu-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeInfoModal() { document.getElementById('infoModalOverlay')?.remove(); }
 
