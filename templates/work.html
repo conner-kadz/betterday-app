@@ -151,20 +151,20 @@
     .tab-badge-closed { background: rgba(231,76,60,.2);  color: #ff8a80; }
     .tab-badge-next   { background: rgba(78,162,253,.2); color: #7cc4ff; }
     .pricing-banner { background: #fff3e8; border-bottom: 2px solid rgba(0,70,94,.07); padding: 10px 24px; }
-    .pricing-banner-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: nowrap; }
-    .pricing-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 0; }
-    .pricing-company  { font-size: 1rem; font-weight: 900; color: var(--dark); white-space: nowrap; }
-    .pricing-plan-label { font-size: .68rem; font-weight: 700; color: #7b8c9f; background: rgba(0,70,94,.07); padding: 2px 8px; border-radius: 999px; white-space: nowrap; letter-spacing: .2px; }
-    .pricing-sep      { color: #bcc6d0; }
+    .pricing-banner-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: nowrap; }
+    .pricing-left { display: flex; align-items: center; gap: 0; flex-wrap: wrap; flex: 1; min-width: 0; }
+    .pricing-company-block { display: flex; flex-direction: column; align-items: flex-end; text-align: right; flex-shrink: 0; gap: 1px; }
+    .pricing-company  { font-size: .88rem; font-weight: 900; color: var(--dark); white-space: nowrap; line-height: 1.2; }
+    .pricing-plan-label { font-size: .62rem; font-weight: 600; color: #9aabbb; white-space: nowrap; letter-spacing: .3px; line-height: 1.2; }
+    .pricing-vsep { display: inline-block; width: 1px; height: 13px; background: #c5d0d9; vertical-align: middle; margin: 0 10px; flex-shrink: 0; }
     .pricing-tier     { font-size: .88rem; color: #50657a; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
     .pricing-tier strong { color: var(--dark); }
     .pricing-delivery { margin-left: auto; font-size: .82rem; font-weight: 700; color: var(--primary); }
     @media (max-width: 900px) {
       .pricing-left { flex-wrap: nowrap; overflow: hidden; }
-      .pricing-company { font-size: .88rem; }
-      .pricing-plan-label { display: none; }
       .pricing-tier { font-size: .8rem; }
       .pricing-banner { padding: 8px 14px; }
+      .pricing-company-block { display: none; }
     }
     .menu-inner { max-width: 1100px; margin: 0 auto; }
     .menu-section-title { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #7b8c9f; margin: 20px 0 14px; display: flex; align-items: center; gap: 10px; }
@@ -1196,6 +1196,7 @@ function preloadOrderCounts(email) {
         [...new Set(cart.map(i=>i.weekIndex))].forEach(wi=>recomputeTiers(wi));
         document.getElementById('nextMealPrice').textContent = getNextPriceLabel(activeWeekIndex);
         buildPricingBanner();
+        buildWeekTabs();
       }
     })
     .catch(() => {});
@@ -1316,17 +1317,17 @@ function buildPricingBanner() {
   if(c.AllowExtraAtFullPrice==='TRUE'||c.AllowExtraAtFullPrice===true) tiers.push(`Additional: <strong>$${fp.toFixed(2)}</strong>`);
   const anchor = weeks[activeWeekIndex]?.sundayAnchor || '';
   const alreadyOrdered = existingOrderCounts[anchor] || 0;
-  const orderedChip = alreadyOrdered > 0
-    ? `<span class="pricing-sep">·</span><span class="pricing-tier" style="color:#e67e22;"><strong>${alreadyOrdered} meal${alreadyOrdered!==1?'s':''} ordered this week</strong></span>`
+  const orderedHtml = alreadyOrdered > 0
+    ? `<span class="pricing-vsep"></span><span class="pricing-tier" style="color:#e67e22;"><strong>${alreadyOrdered} meal${alreadyOrdered!==1?'s':''} ordered this week</strong></span>`
     : '';
+  const tiersHtml = tiers.map((t,i)=>(i>0?'<span class="pricing-vsep"></span>':'')+`<span class="pricing-tier">${t}</span>`).join('');
   document.getElementById('pricingBannerInner').innerHTML=
-    `<div class="pricing-left">`+
-    `<span class="pricing-company">${c.CompanyName}</span>`+
-    `<span class="pricing-plan-label">Employer Subsidy Plan</span>`+
-    tiers.map(t=>`<span class="pricing-sep">·</span><span class="pricing-tier">${t}</span>`).join('')+
-    orderedChip+
-    `</div>`+
-    `<span id="pricingToggleSlot" style="flex-shrink:0"></span>`;
+    `<div class="pricing-left">${tiersHtml}${orderedHtml}</div>`+
+    `<span id="pricingToggleSlot" style="flex-shrink:0"></span>`+
+    `<div class="pricing-company-block">`+
+      `<span class="pricing-plan-label">Employer Subsidy Plan</span>`+
+      `<span class="pricing-company">${c.CompanyName}</span>`+
+    `</div>`;
 }
 
 function buildWeekTabs() {
@@ -1335,9 +1336,13 @@ function buildWeekTabs() {
     if (!w.isOpen) return; // hide past/closed weeks entirely
     const firstOpen = weeks.findIndex(wk=>wk.isOpen);
     const badge = `<span class="tab-badge ${i===firstOpen?'tab-badge-open':'tab-badge-next'}">${i===firstOpen?'Open':'Pre-order'}</span>`;
+    const orderedCount = existingOrderCounts[w.sundayAnchor] || 0;
+    const subLabel = orderedCount > 0
+      ? `${orderedCount} meal${orderedCount!==1?'s':''} ordered`
+      : 'No orders yet';
     const btn=document.createElement('button');
     btn.className='week-tab'+(i===activeWeekIndex?' active':'');
-    btn.innerHTML=`Delivery ${w.deliveryShort}${badge}<span class="tab-date">Menu week of ${toYMD(new Date(w.sundayAnchor)).slice(5)}</span>`;
+    btn.innerHTML=`Delivery ${w.deliveryShort}${badge}<span class="tab-date">${subLabel}</span>`;
     btn.onclick=()=>switchWeek(i); bar.appendChild(btn);
   });
 }
@@ -1519,8 +1524,8 @@ function renderMealControl(id, qty, wi) {
   const wrap=document.getElementById(`ctrl-${wi}-${id}`); if(!wrap)return;
   const m=findMealInCache(id,wi), j=JSON.stringify(m).replace(/"/g,'&quot;');
   wrap.innerHTML=qty===0
-    ?`<button class="btn-add" onclick="addMeal('${id}',${wi},${j})">+ Add to order</button>`
-    :`<div class="qty-pill"><button class="qty-btn" onclick="removeMeal('${id}',${wi})">−</button><span class="qty-val">${qty}</span><button class="qty-btn" onclick="addMeal('${id}',${wi},${j})">+</button></div>`;
+    ?`<button class="btn-add" onclick="event.stopPropagation();addMeal('${id}',${wi},${j})">+ Add to order</button>`
+    :`<div class="qty-pill" onclick="event.stopPropagation()"><button class="qty-btn" onclick="removeMeal('${id}',${wi})">−</button><span class="qty-val">${qty}</span><button class="qty-btn" onclick="addMeal('${id}',${wi},${j})">+</button></div>`;
 }
 function clearCart() { cart=[]; renderWeek(activeWeekIndex); renderCart(); }
 function buildCartItemRows(ic, tc, nc, mc, pc) {
