@@ -1142,7 +1142,7 @@ function computeWeeks() {
     const delivery = getDeliveryMonday(sun);
     weeks.push({ sundayAnchor: toYMD(sun), deliveryDate: delivery, deliveryStr: formatDateFull(delivery),
       deliveryShort: formatDateShort(delivery), cutoff, cutoffStr: cutoff.toLocaleDateString('en-CA',{weekday:'long',month:'short',day:'numeric'})+' at 11:59 PM',
-      isOpen: now < cutoff, isPast: delivery < now });
+      isOpen: now < cutoff && delivery > now, isPast: delivery < now });
   }
   activeWeekIndex = weeks.findIndex(w => w.isOpen);
   if (activeWeekIndex < 0) activeWeekIndex = 0;
