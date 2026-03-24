@@ -825,7 +825,7 @@ async function doCompanyNext() {
   for (let _i = 0; _i < 3; _i++) {
     const _sun = new Date(_s0); _sun.setDate(_sun.getDate() + 7*_i);
     const _anchor = _sun.toISOString().split('T')[0];
-    const _cutoff = new Date(_sun); _cutoff.setDate(_cutoff.getDate()+4); _cutoff.setHours(0,1,0,0);
+    const _cutoff = new Date(_sun); _cutoff.setDate(_cutoff.getDate()+3); _cutoff.setHours(23,59,0,0);
     if (_now < _cutoff && !menuCache[_anchor]) {
       apiFetch({ action: 'get_menu', sunday_anchor: _anchor })
         .then(m => { menuCache[_anchor] = m; })
@@ -1135,7 +1135,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ══════════════════════════════════════════
 function getSundayAnchor(d) { const r=new Date(d); r.setDate(r.getDate()-r.getDay()); r.setHours(0,0,0,0); return r; }
 function getDeliveryMonday(s) { const d=new Date(s); d.setDate(d.getDate()+1); return d; }
-function getCutoff(s) { const d=new Date(s); d.setDate(d.getDate()+4); d.setHours(0,1,0,0); return d; }
+function getCutoff(s) { const d=new Date(s); d.setDate(d.getDate()+3); d.setHours(23,59,0,0); return d; }
 function formatDateShort(d) { return d.toLocaleDateString('en-CA',{month:'short',day:'numeric'}); }
 function formatDateFull(d)  { return d.toLocaleDateString('en-CA',{weekday:'long',month:'short',day:'numeric'}); }
 function toYMD(d) { return d.toISOString().split('T')[0]; }
@@ -1148,7 +1148,7 @@ function computeWeeks() {
     const cutoff   = getCutoff(sun);
     const delivery = getDeliveryMonday(sun);
     weeks.push({ sundayAnchor: toYMD(sun), deliveryDate: delivery, deliveryStr: formatDateFull(delivery),
-      deliveryShort: formatDateShort(delivery), cutoff, cutoffStr: cutoff.toLocaleDateString('en-CA',{weekday:'long',month:'short',day:'numeric'})+' at 12:01 AM',
+      deliveryShort: formatDateShort(delivery), cutoff, cutoffStr: cutoff.toLocaleDateString('en-CA',{weekday:'long',month:'short',day:'numeric'})+' at 11:59 PM',
       isOpen: now < cutoff, isPast: delivery < now });
   }
   activeWeekIndex = weeks.findIndex(w => w.isOpen);
@@ -1630,7 +1630,7 @@ function openSwapModal(key) {
   document.getElementById('swapDelivery').textContent = fmtDate(first.DeliveryDate);
   if (cutoff) {
     document.getElementById('swapCutoffNote').textContent =
-      `Deadline: ${cutoff.toLocaleDateString('en-CA',{weekday:'long',month:'short',day:'numeric'})} at 12:01 AM`;
+      `Deadline: ${cutoff.toLocaleDateString('en-CA',{weekday:'long',month:'short',day:'numeric'})} at 11:59 PM`;
   }
   renderSwapBody(meals, anchor);
   document.getElementById('swapModal').classList.remove('hidden');
