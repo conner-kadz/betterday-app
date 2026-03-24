@@ -456,6 +456,24 @@
     .picker-select-btn.available { background: var(--dark); color: #fff; }
     .picker-select-btn.available:hover { filter: brightness(1.1); }
     .picker-select-btn.current { background: #f0f4f8; color: #b0bec5; cursor: default; }
+    /* ── Desktop picker: centered dialog ── */
+    @media (min-width: 768px) {
+      .picker-overlay { justify-content: center; align-items: center; }
+      .picker-sheet  { border-radius: 20px; width: 720px; max-width: 92vw; max-height: 82vh; box-shadow: 0 24px 60px rgba(0,70,94,.28); }
+      .picker-header { border-radius: 20px 20px 0 0; padding: 20px 24px 18px; }
+      .picker-title  { font-size: 1.05rem; }
+      .picker-close  { width: 34px; height: 34px; font-size: 1.2rem; }
+      .picker-body   { padding: 20px 24px 28px; }
+      .picker-section-label { font-size: .72rem; margin: 16px 0 10px; }
+      .picker-section-label:first-child { margin-top: 0; }
+      .picker-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .picker-meal-card { grid-template-columns: 64px 1fr auto; gap: 12px; padding: 13px 14px; margin-bottom: 0; border-radius: 14px; transition: box-shadow .15s; }
+      .picker-meal-card:hover { box-shadow: 0 4px 16px rgba(0,70,94,.13); }
+      .picker-thumb  { width: 64px; height: 64px; border-radius: 10px; }
+      .picker-meal-name { font-size: .92rem; }
+      .picker-meal-diet { font-size: .72rem; }
+      .picker-select-btn { padding: 9px 18px; font-size: .82rem; }
+    }
     /* ── SHARED PROFILE ── */
     .profile-empty { text-align: center; padding: 40px 20px; color: #bcc6d0; }
     .profile-empty-icon { font-size: 2.4rem; margin-bottom: 10px; }
@@ -1901,7 +1919,7 @@ async function openMealPicker(slotIdx) {
   {
     const buildSection = (items, label) => {
       if (!items.length) return '';
-      let s = `<div class="picker-section-label">${label}</div>`;
+      let s = `<div class="picker-section-label">${label}</div><div class="picker-grid">`;
       s += items.map(item => {
         const isCurrent = String(item.id) === currentMealId;
         return `<div class="picker-meal-card">
@@ -1916,6 +1934,7 @@ async function openMealPicker(slotIdx) {
           </button>
         </div>`;
       }).join('');
+      s += '</div>';
       return s;
     };
     html = buildSection(menu.meat||[], '🥩 Meat & Omnivore') + buildSection(menu.vegan||[], '🌱 Plant-Based');
