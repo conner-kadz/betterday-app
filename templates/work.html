@@ -1439,15 +1439,13 @@ async function doCheckout() {
   const total=cart.reduce((s,i)=>s+i.price,0), fp=parseFloat(c.FullPrice)||16.99, savings=cart.length*fp-total;
   const cartSnapshot = [...cart]; // snapshot before clearing
 
-  // Reserve one OrderID per unique delivery week (sequential to avoid collisions)
+  // Generate one OrderID per unique delivery week client-side (unique, no extra round trip)
   const anchors = [...new Set(cartSnapshot.map(i => weeks[i.weekIndex].sundayAnchor))];
   const orderIdMap = {};
-  for (const anchor of anchors) {
-    try {
-      const r = await apiFetch({ action: 'reserve_order_id', email: emp.email, sunday_anchor: anchor });
-      orderIdMap[anchor] = r.order_id;
-    } catch(e) { console.error('reserve_order_id failed', e); }
-  }
+  const _ts = Date.now().toString(36).toUpperCase();
+  anchors.forEach((anchor, i) => {
+    orderIdMap[anchor] = `ORD-${_ts}-${i}`;
+  });
   // Submit all meals in parallel with their assigned OrderIDs
   const submits = cartSnapshot.map(item => {
     const w = weeks[item.weekIndex];
