@@ -1436,6 +1436,7 @@ async function doCheckout() {
 
   const c=currentCompany, emp=currentEmployee;
   const total=cart.reduce((s,i)=>s+i.price,0), fp=parseFloat(c.FullPrice)||16.99, savings=cart.length*fp-total;
+  const bdPerMeal = parseFloat(c.BDCoveragePerMeal) || 0;
   const cartSnapshot = [...cart]; // snapshot before clearing
 
   // Generate one OrderID per unique delivery week client-side (unique, no extra round trip)
@@ -1448,6 +1449,9 @@ async function doCheckout() {
   // Submit all meals in parallel with their assigned OrderIDs
   const submits = cartSnapshot.map(item => {
     const w = weeks[item.weekIndex];
+    const subsidized = item.price < fp;
+    const bdCov  = subsidized ? bdPerMeal : 0;
+    const coCov  = subsidized ? Math.max(0, fp - item.price - bdCov) : 0;
     return apiFetch({
       action:'submit_corporate_order',
       order_id: orderIdMap[w.sundayAnchor] || '',
@@ -1456,11 +1460,12 @@ async function doCheckout() {
       employee_name:`${emp.firstName} ${emp.lastName}`, employee_email:emp.email,
       meal_id:item.mealId, dish_name:item.meal?.name||'',
       diet_type:item.meal?.diet||'', tier:item.tier, employee_price:item.price,
-      company_coverage:(fp-item.price).toFixed(2), bd_coverage:'0.00'
+      company_coverage: coCov.toFixed(2), bd_coverage: bdCov.toFixed(2)
     }).catch(e => { console.error('Order submit error:', e); return {success:false}; });
   });
 
-  try { await Promise.all(submits); } catch(e) { console.error('Checkout error:', e); }
+  // Fire and forget — show thank-you immediately, writes complete in background
+  Promise.all(submits).catch(e => console.error('Checkout background error:', e));
 
   document.getElementById('checkoutOverlay').classList.add('hidden');
   _checkoutInProgress = false;
