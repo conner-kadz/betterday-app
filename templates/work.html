@@ -23,7 +23,7 @@
     .screen.active { display: block; }
 
     /* ── SHARED AUTH SHELL ── */
-    .auth-bg { min-height: 100vh; display: grid; grid-template-rows: 200px 1fr; position: relative; }
+    .auth-bg { min-height: 100vh; display: grid; grid-template-rows: 130px 1fr; position: relative; }
     .auth-bg-top { background: var(--dark); position: relative; overflow: hidden; }
     .auth-bg-top::before {
       content: ''; position: absolute; inset: 0;
@@ -791,10 +791,18 @@ function previewCompanyCode(input) {
       if (d.found) {
         check.textContent = '✅'; check.classList.add('show'); input.classList.add('valid');
         currentCompany = d.company; btn.disabled = false;
+      } else if (d.error) {
+        check.textContent = '⚠️'; check.classList.add('show');
+        err.textContent = 'Connection error — please try again in a moment.';
+        err.classList.add('show');
       } else {
         check.textContent = '❌'; check.classList.add('show'); input.classList.add('error');
       }
-    } catch(e) {}
+    } catch(e) {
+      check.textContent = '⚠️'; check.classList.add('show');
+      err.textContent = 'Connection error — please try again in a moment.';
+      err.classList.add('show');
+    }
     document.getElementById('companyLoadingWrap').classList.add('hidden');
   }, 550);
 }
