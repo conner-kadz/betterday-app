@@ -307,6 +307,8 @@
     .mcs-total-row span:first-child { font-size: .88rem; font-weight: 700; color: var(--dark); }
     .mcs-total-row span:last-child { font-size: 1.3rem; font-weight: 900; color: var(--dark); }
     .mcs-checkout-btn { width: calc(100% - 32px); display: block; margin: 10px 16px 16px; padding: 14px; background: var(--dark); color: #fff; border: none; border-radius: 14px; font-size: .95rem; font-weight: 800; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .cart-week-header { font-size: .65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); padding: 8px 0 4px; margin-top: 4px; border-top: 1px solid rgba(0,70,94,.07); }
+    .cart-week-header:first-child { border-top: none; margin-top: 0; }
 
     /* Closed week overlay */
     .closed-overlay { background: #fff; border-radius: 20px; padding: 36px 28px; text-align: center; max-width: 440px; margin: 40px auto; box-shadow: 0 8px 32px rgba(0,70,94,.1); }
@@ -657,7 +659,7 @@
         <div class="sc-footer" id="scFooter" style="display:none">
           <div class="sc-subtotals" id="scSubtotals"></div>
           <div class="sc-total-row"><span>Your Total</span><span class="sc-total-amt" id="scTotal">$0.00</span></div>
-          <button class="sc-checkout-btn" onclick="openSummary()">Place Order</button>
+          <button class="sc-checkout-btn" onclick="openSummary()">Review Order →</button>
           <button class="sc-clear-btn" onclick="clearCart()">Clear cart</button>
         </div>
       </aside>
@@ -673,7 +675,7 @@
         <div class="mcs-items" id="mcsItems"></div>
         <div class="mcs-subtotals" id="mcsSubtotals" style="display:none"></div>
         <div class="mcs-total-row"><span>Your Total</span><span id="mcsTotal">$0.00</span></div>
-        <button class="mcs-checkout-btn" onclick="closeMobCart();openSummary()">Place Order</button>
+        <button class="mcs-checkout-btn" onclick="closeMobCart();openSummary()">Review Order →</button>
       </div>
       <div class="mob-cart-toggle" onclick="toggleMobCart()">
         <div class="mob-toggle-left">
@@ -1159,6 +1161,28 @@ function enterMenu() {
         if (!r?.counts) return;
         existingOrderCounts = r.counts;
         try { localStorage.setItem(LS_COUNTS(currentEmployee.email), JSON.stringify(r.counts)); } catch(e) {}
+        // Re-validate cart: trim any items that now exceed the real weekly limit
+        const c=currentCompany;
+        if(c){
+          const free=parseInt(c.FreeMealsPerWeek)||0,t1=parseInt(c.Tier1_Meals)||0,t2=parseInt(c.Tier2_Meals)||0,t3=parseInt(c.Tier3_Meals)||0;
+          const hardCap=(c.AllowExtraAtFullPrice==='TRUE'||c.AllowExtraAtFullPrice===true)?Infinity:free+t1+t2+t3;
+          if(hardCap!==Infinity){
+            let trimmed=false;
+            weeks.forEach((w,wi)=>{
+              const already=existingOrderCounts[w.sundayAnchor]||0;
+              const canAdd=Math.max(0,hardCap-already);
+              let cartForWeek=cart.filter(i=>i.weekIndex===wi);
+              if(cartForWeek.length>canAdd){
+                let excess=cartForWeek.length-canAdd;
+                for(let j=cart.length-1;j>=0&&excess>0;j--){if(cart[j].weekIndex===wi){cart.splice(j,1);excess--;}}
+                trimmed=true;
+              }
+            });
+            if(trimmed){renderCart();renderWeek(activeWeekIndex);showToast('Some meals removed — you\u2019ve already reached your weekly limit','warn');}
+          }
+          // Recompute tiers for any remaining cart items now that counts are accurate
+          [...new Set(cart.map(i=>i.weekIndex))].forEach(wi=>recomputeTiers(wi));
+        }
         document.getElementById('nextMealPrice').textContent = getNextPriceLabel(activeWeekIndex);
         buildPricingBanner();
         renderWeek(activeWeekIndex);
@@ -1441,7 +1465,11 @@ function getTierForNextItem(wi) {
   const already = existingOrderCounts[anchor] || 0;
   return getTierForPosition(wi, already + cart.filter(i=>i.weekIndex===wi).length);
 }
-function recomputeTiers(wi) { cart.filter(i=>i.weekIndex===wi).forEach((item,idx)=>{const t=getTierForPosition(wi,idx);if(t){item.tier=t.tier;item.price=t.price;}}); }
+function recomputeTiers(wi) {
+  const anchor=weeks[wi]?.sundayAnchor||'';
+  const offset=existingOrderCounts[anchor]||0;
+  cart.filter(i=>i.weekIndex===wi).forEach((item,idx)=>{const t=getTierForPosition(wi,offset+idx);if(t){item.tier=t.tier;item.price=t.price;}});
+}
 function getNextPriceLabel(wi) { const t=getTierForNextItem(wi); if(!t) return 'Max'; return t.tier==='free'?'FREE 🎉':'$'+t.price.toFixed(2); }
 // Returns {co, bd} subsidy split for a cart item using per-tier company columns.
 // Falls back to full remainder → company if columns not yet populated.
@@ -1498,17 +1526,25 @@ function renderMealControl(id, qty, wi) {
 function clearCart() { cart=[]; renderWeek(activeWeekIndex); renderCart(); }
 function buildCartItemRows(ic, tc, nc, mc, pc) {
   // ic=itemClass tc=thumbClass nc=nameClass mc=metaClass pc=priceClass
-  const g={};
+  // Group by week first, then by meal within each week
+  const byWeek={};
   cart.forEach(item=>{
-    const k=item.mealId+'_'+item.weekIndex;
-    if(!g[k]) g[k]={meal:item.meal,entries:[]};
-    g[k].entries.push(item);
+    if(!byWeek[item.weekIndex]) byWeek[item.weekIndex]={};
+    const k=item.mealId;
+    if(!byWeek[item.weekIndex][k]) byWeek[item.weekIndex][k]={meal:item.meal,entries:[]};
+    byWeek[item.weekIndex][k].entries.push(item);
   });
-  return Object.values(g).map(({meal,entries})=>{
-    const lt=entries.reduce((s,e)=>s+e.price,0);
-    const priceHtml=lt===0?`<span style="color:var(--green);font-weight:800">FREE</span>`:'$'+lt.toFixed(2);
-    const meta=entries.length+'× '+entries.map(e=>e.tier==='free'?'FREE':'$'+e.price.toFixed(2)).join('+');
-    return `<div class="${ic}"><div class="${tc}"><img src="${meal?.image||''}" referrerpolicy="no-referrer" onerror="this.style.display='none'"></div><div style="flex:1;min-width:0"><div class="${nc}">${meal?.name||'Meal'}</div><div class="${mc}">${meta}</div></div><div class="${pc}">${priceHtml}</div></div>`;
+  const weekIndices=Object.keys(byWeek).map(Number).sort((a,b)=>a-b);
+  const multiWeek=weekIndices.length>1;
+  return weekIndices.map(wi=>{
+    const header=multiWeek?`<div class="cart-week-header">${weeks[wi]?.deliveryShort||'Week'} Delivery</div>`:'';
+    const rows=Object.values(byWeek[wi]).map(({meal,entries})=>{
+      const lt=entries.reduce((s,e)=>s+e.price,0);
+      const priceHtml=lt===0?`<span style="color:var(--green);font-weight:800">FREE</span>`:'$'+lt.toFixed(2);
+      const meta=entries.length+'× '+entries.map(e=>e.tier==='free'?'FREE':'$'+e.price.toFixed(2)).join('+');
+      return `<div class="${ic}"><div class="${tc}"><img src="${meal?.image||''}" referrerpolicy="no-referrer" onerror="this.style.display='none'"></div><div style="flex:1;min-width:0"><div class="${nc}">${meal?.name||'Meal'}</div><div class="${mc}">${meta}</div></div><div class="${pc}">${priceHtml}</div></div>`;
+    }).join('');
+    return header+rows;
   }).join('');
 }
 function renderMobSheet() {
