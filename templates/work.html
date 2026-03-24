@@ -1698,8 +1698,9 @@ async function pickMeal(newMeal) {
   if (_pickerSlotIdx === null || !_swapKey) return;
   const data = _orderCache[_swapKey]; if (!data) return;
   const { meals, anchor } = data;
-  const oldMeal = meals[_pickerSlotIdx];
-  const btn = document.getElementById(`swap-btn-${_pickerSlotIdx}`);
+  const slotIdx = _pickerSlotIdx; // capture before closeMealPicker() nulls it
+  const oldMeal = meals[slotIdx];
+  const btn = document.getElementById(`swap-btn-${slotIdx}`);
   if (btn) { btn.classList.add('saving'); btn.textContent = '…'; }
   closeMealPicker();
   try {
@@ -1714,16 +1715,18 @@ async function pickMeal(newMeal) {
     });
     if (res.success) {
       // Update in-memory cache
-      meals[_pickerSlotIdx] = { ...oldMeal, MealID: String(newMeal.id), DishName: newMeal.name||'', DietType: newMeal.diet||'' };
+      meals[slotIdx] = { ...oldMeal, MealID: String(newMeal.id), DishName: newMeal.name||'', DietType: newMeal.diet||'' };
       renderSwapBody(meals, anchor);
       showToast(`Swapped to ${newMeal.name||'new meal'} ✓`);
     } else {
       showToast('Swap failed — please try again');
-      if (btn) { btn.classList.remove('saving'); btn.textContent = 'Change'; }
+      const b = document.getElementById(`swap-btn-${slotIdx}`);
+      if (b) { b.classList.remove('saving'); b.textContent = 'Change'; }
     }
   } catch(e) {
     showToast('Swap failed — please try again');
-    if (btn) { btn.classList.remove('saving'); btn.textContent = 'Change'; }
+    const b = document.getElementById(`swap-btn-${slotIdx}`);
+    if (b) { b.classList.remove('saving'); b.textContent = 'Change'; }
   }
 }
 </script>
