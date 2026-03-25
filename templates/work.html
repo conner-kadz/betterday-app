@@ -616,7 +616,7 @@
             <div class="magic-title">Check your inbox</div>
             <div class="magic-sub">We sent a sign-in link to<br><span class="magic-email-highlight" id="magicSentEmail"></span></div>
             <div class="magic-sub" style="font-size:.75rem;margin-top:6px;">Tap the link in your email to land straight on the menu. No password needed.</div>
-            <button class="magic-resend" onclick="doSendMagicLink(true)">Resend email</button>
+            <button class="magic-resend" id="resendBtn" onclick="doSendMagicLink(true)">Resend email</button>
           </div>
 
           <div id="magicSendBtn">
@@ -1092,36 +1092,54 @@ async function doSendMagicLink(isResend = false) {
   const email = document.getElementById('signinEmail').value.trim().toLowerCase();
   const err   = document.getElementById('signinError');
   const btn   = document.getElementById('signinBtn');
+  const resendBtn = document.getElementById('resendBtn');
   err.classList.remove('show');
   if (!email || !email.includes('@')) { err.textContent = 'Please enter a valid email address.'; err.classList.add('show'); return; }
 
-  // Loading state — block double-tap
-  btn.classList.add('btn-loading');
-  btn.disabled = true;
-  btn.textContent = 'Sending…';
+  if (isResend) {
+    // Resend feedback — swap button text
+    resendBtn.disabled = true;
+    resendBtn.textContent = 'Sending…';
+  } else {
+    btn.classList.add('btn-loading');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+  }
 
   try {
-    // First: verify employee exists
-    const chk = await apiFetch({ action: 'get_employee_by_email', email, company_id: currentCompany.CompanyID });
-    if (!chk.found) {
-      err.textContent = 'No account found for that email. Try joining instead.';
-      err.classList.add('show');
-      btn.classList.remove('btn-loading'); btn.disabled = false; btn.textContent = 'Send sign-in link →';
-      return;
+    if (!isResend) {
+      // First: verify employee exists (skip check on resend)
+      const chk = await apiFetch({ action: 'get_employee_by_email', email, company_id: currentCompany.CompanyID });
+      if (!chk.found) {
+        err.textContent = 'No account found for that email. Try joining instead.';
+        err.classList.add('show');
+        btn.classList.remove('btn-loading'); btn.disabled = false; btn.textContent = 'Send sign-in link →';
+        return;
+      }
     }
     // Send real magic link email via Apps Script
     await apiFetch({ action: 'create_magic_token', email, company_id: currentCompany.CompanyID });
     // Fire menu + counts preload NOW — user will be in inbox for 30+ seconds, use that time
     preloadActiveWeekMenu();
     preloadOrderCounts(email);
-    // Show "check inbox" state — user must click the link
-    document.getElementById('magicSentEmail').textContent = email;
-    document.getElementById('magicSentWrap').classList.remove('hidden');
-    document.getElementById('magicSendBtn').classList.add('hidden');
+    if (isResend) {
+      resendBtn.textContent = '✓ Sent! Check your inbox';
+      setTimeout(() => { resendBtn.disabled = false; resendBtn.textContent = 'Resend email'; }, 4000);
+    } else {
+      // Show "check inbox" state — user must click the link
+      document.getElementById('magicSentEmail').textContent = email;
+      document.getElementById('magicSentWrap').classList.remove('hidden');
+      document.getElementById('magicSendBtn').classList.add('hidden');
+    }
   } catch(e) {
-    err.textContent = 'Something went wrong. Please try again.';
-    err.classList.add('show');
-    btn.classList.remove('btn-loading'); btn.disabled = false; btn.textContent = 'Send sign-in link →';
+    if (isResend) {
+      resendBtn.textContent = 'Failed — try again';
+      setTimeout(() => { resendBtn.disabled = false; resendBtn.textContent = 'Resend email'; }, 3000);
+    } else {
+      err.textContent = 'Something went wrong. Please try again.';
+      err.classList.add('show');
+      btn.classList.remove('btn-loading'); btn.disabled = false; btn.textContent = 'Send sign-in link →';
+    }
   }
 }
 
