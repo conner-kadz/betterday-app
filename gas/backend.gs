@@ -186,7 +186,7 @@ function doPost(e) {
       tokenSheet.appendRow([token, email, companyId, new Date(), ""]);
       // Send branded sign-in email via MailApp
       try {
-        var APP_URL = PropertiesService.getScriptProperties().getProperty("APP_URL") || "https://betterday.ca";
+        var APP_URL = PropertiesService.getScriptProperties().getProperty("APP_URL") || "https://betterday-app.onrender.com";
         var signInUrl = data.sign_in_url || (APP_URL + "/work?token=" + token + "&co=" + companyId);
         MailApp.sendEmail({
           to: email,
@@ -299,7 +299,7 @@ function doPost(e) {
       var tokenSheet = getOrCreateManagerTokenSheet(ssHub);
       tokenSheet.appendRow([token, email, foundCompany.id, new Date(), ""]);
       try {
-        var APP_URL = PropertiesService.getScriptProperties().getProperty("APP_URL") || "https://betterday.ca";
+        var APP_URL = PropertiesService.getScriptProperties().getProperty("APP_URL") || "https://betterday-app.onrender.com";
         var signInUrl = APP_URL + "/manager?token=" + token;
         MailApp.sendEmail({
           to: email,

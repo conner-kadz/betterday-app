@@ -21,6 +21,7 @@ GOOGLE_SCRIPT_URL = os.environ.get(
     'GOOGLE_SCRIPT_URL',
     "https://script.google.com/macros/s/AKfycbxKVyW7sguwUq3TYsk-xtIF2fLicefaxTwl_PHjQVjt5-OiBarPQ_nXb_0H927NXAMG0w/exec"
 )
+APP_BASE_URL    = os.environ.get('APP_BASE_URL', 'https://betterday-app.onrender.com')
 ADMIN_PASSWORD  = os.environ.get('ADMIN_PASSWORD',   'betterday2024')
 app.secret_key  = os.environ.get('FLASK_SECRET_KEY', 'bd-dev-secret-change-in-prod')
 
@@ -125,7 +126,7 @@ def gas_proxy():
     if payload.get('action') == 'create_magic_token':
         token = secrets.token_hex(32)  # 64-char hex, same length as GAS UUID pair
         company_id = str(payload.get('company_id', '')).strip().upper()
-        base = 'https://betterday.ca'
+        base = APP_BASE_URL
         payload['token_override'] = token
         payload['sign_in_url'] = f"{base}/work?token={token}&co={company_id}"
     try:
