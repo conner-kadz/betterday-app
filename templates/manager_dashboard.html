@@ -107,17 +107,8 @@
         .status-confirmed { background: var(--green-bg); color: var(--green); }
 
         /* ── MONTHLY ── */
-        .month-card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 14px; }
-        .month-header { padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
-        .month-name { font-size: 1rem; font-weight: 700; }
-        .month-pill { font-size: .78rem; font-weight: 600; color: var(--muted); background: #F3F4F6; padding: 4px 12px; border-radius: 20px; }
-        .month-stats { display: grid; grid-template-columns: repeat(4, 1fr); }
-        .ms-cell { padding: 18px 22px; border-right: 1px solid var(--border); }
-        .ms-cell:last-child { border-right: none; }
-        .ms-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: var(--muted); margin-bottom: 8px; }
-        .ms-val { font-size: 1.2rem; font-weight: 700; color: var(--text); }
-        .ms-val.green { color: var(--green); }
-        .ms-val.bd { color: var(--bd-color); }
+        .month-block { display: none; }
+        .month-block.active { display: block; }
 
         /* ── ACCOUNT INFO ── */
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -202,9 +193,9 @@
             <div class="stat-sub">total meals ordered</div>
         </div>
         <div class="stat-card bd">
-            <div class="stat-label">All time — total program value</div>
-            <div class="stat-value">${{ '%.2f'|format((total_co_spend + total_bd_spend)|float) }}</div>
-            <div class="stat-sub">${{ '%.2f'|format(total_co_spend|float) }} co. · ${{ '%.2f'|format(total_bd_spend|float) }} BD</div>
+            <div class="stat-label">All time — BetterDay contributed</div>
+            <div class="stat-value">${{ '%.2f'|format(total_bd_spend|float) }}</div>
+            <div class="stat-sub">invested in your team's meals</div>
         </div>
     </div>
 
@@ -310,30 +301,80 @@
     <!-- ── MONTHLY TAB ── -->
     <div class="tab-panel" id="tab-monthly">
         {% if sorted_monthly %}
+        <div class="section-header">
+            <div class="section-title">Monthly Report</div>
+            <select class="week-select" onchange="filterMonth(this.value)">
+                {% for m in sorted_monthly %}
+                <option value="{{ m.key }}">{{ m.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
         {% for m in sorted_monthly %}
-        <div class="month-card">
-            <div class="month-header">
-                <div class="month-name">{{ m.label }}</div>
-                <div class="month-pill">{{ m.meals }} meal{{ 's' if m.meals != 1 else '' }} · {{ m.orders }} order{{ 's' if m.orders != 1 else '' }}</div>
+        <div class="month-block {% if loop.first %}active{% endif %}" id="month-{{ m.key }}">
+
+            <div class="summary-bar">
+                <div class="sb-cell">
+                    <div class="sb-label">Orders</div>
+                    <div class="sb-val">{{ m.orders }}</div>
+                </div>
+                <div class="sb-cell">
+                    <div class="sb-label">Meals</div>
+                    <div class="sb-val">{{ m.meals }}</div>
+                </div>
+                <div class="sb-cell">
+                    <div class="sb-label">Employees Paid</div>
+                    <div class="sb-val">${{ '%.2f'|format(m.emp_spend|float) }}</div>
+                </div>
+                <div class="sb-cell">
+                    <div class="sb-label">Company Covered</div>
+                    <div class="sb-val green">${{ '%.2f'|format(m.co_spend|float) }}</div>
+                </div>
+                <div class="sb-cell">
+                    <div class="sb-label">BD Contributed</div>
+                    <div class="sb-val bd">${{ '%.2f'|format(m.bd_spend|float) }}</div>
+                </div>
+                <div class="sb-cell">
+                    <div class="sb-label">Total Value</div>
+                    <div class="sb-val">${{ '%.2f'|format((m.emp_spend + m.co_spend + m.bd_spend)|float) }}</div>
+                </div>
             </div>
-            <div class="month-stats">
-                <div class="ms-cell">
-                    <div class="ms-label">Meals</div>
-                    <div class="ms-val">{{ m.meals }}</div>
-                </div>
-                <div class="ms-cell">
-                    <div class="ms-label">Employees Paid</div>
-                    <div class="ms-val">${{ '%.2f'|format(m.emp_spend|float) }}</div>
-                </div>
-                <div class="ms-cell">
-                    <div class="ms-label">Company Covered</div>
-                    <div class="ms-val green">${{ '%.2f'|format(m.co_spend|float) }}</div>
-                </div>
-                <div class="ms-cell">
-                    <div class="ms-label">BD Contributed</div>
-                    <div class="ms-val bd">${{ '%.2f'|format(m.bd_spend|float) }}</div>
-                </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tier</th>
+                            <th>Meals</th>
+                            <th>Staff Paid</th>
+                            <th>Company Covered</th>
+                            <th>BD Contributed</th>
+                            <th>Total Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in m.tiers %}
+                        <tr>
+                            <td><span class="tier-badge tier-{{ t.name|lower|replace(' ','') }}">{{ t.name }}</span></td>
+                            <td>{{ t.meals }}</td>
+                            <td>${{ '%.2f'|format(t.emp|float) }}</td>
+                            <td class="td-co">${{ '%.2f'|format(t.co|float) }}</td>
+                            <td class="td-bd">${{ '%.2f'|format(t.bd|float) }}</td>
+                            <td style="font-weight:600">${{ '%.2f'|format(t.total|float) }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr style="background:#FAFAFA;border-top:2px solid var(--border);">
+                            <td style="font-weight:700">Total</td>
+                            <td style="font-weight:700">{{ m.meals }}</td>
+                            <td style="font-weight:700">${{ '%.2f'|format(m.emp_spend|float) }}</td>
+                            <td style="font-weight:700;color:var(--green)">${{ '%.2f'|format(m.co_spend|float) }}</td>
+                            <td style="font-weight:700;color:var(--bd-color)">${{ '%.2f'|format(m.bd_spend|float) }}</td>
+                            <td style="font-weight:700">${{ '%.2f'|format((m.emp_spend + m.co_spend + m.bd_spend)|float) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+
         </div>
         {% endfor %}
         {% else %}
@@ -439,6 +480,13 @@ function showTab(name, el) {
 function filterWeek(anchor) {
     document.querySelectorAll('.week-block').forEach(el => {
         el.classList.toggle('active', el.id === 'week-' + anchor);
+    });
+}
+
+// ── Month filter ──
+function filterMonth(key) {
+    document.querySelectorAll('.month-block').forEach(el => {
+        el.classList.toggle('active', el.id === 'month-' + key);
     });
 }
 

@@ -597,27 +597,60 @@ def manager_dashboard():
             'bd_spend':    sum(o['bd_total'] for o in wo),
         })
 
-    # ── Monthly summaries ──────────────────────────────────────
-    month_map = defaultdict(lambda: {'orders': 0, 'meals': 0,
-                                     'emp_spend': 0.0, 'co_spend': 0.0, 'bd_spend': 0.0})
+    # ── Monthly summaries with per-tier breakdown ─────────────
+    def tier_sort_key(name):
+        order = {'free': 0, 'tier1': 1, 'tier2': 2, 'tier3': 3, 'full': 4}
+        return order.get(str(name).lower().replace(' ', ''), 5)
+
+    month_map = {}
     for o in all_orders:
         date_str = o['delivery_date']
-        if len(date_str) >= 7:
-            mk = date_str[:7]
-            month_map[mk]['orders']    += 1
-            month_map[mk]['meals']     += len(o['meals'])
-            month_map[mk]['emp_spend'] += o['emp_total']
-            month_map[mk]['co_spend']  += o['co_total']
-            month_map[mk]['bd_spend']  += o['bd_total']
+        if len(date_str) < 7:
+            continue
+        mk = date_str[:7]
+        if mk not in month_map:
+            month_map[mk] = {'orders': 0, 'meals': 0,
+                             'emp_spend': 0.0, 'co_spend': 0.0, 'bd_spend': 0.0,
+                             'tiers': {}}
+        md = month_map[mk]
+        md['orders'] += 1
+        for m in o['meals']:
+            tier = str(m.get('tier') or 'Full').strip() or 'Full'
+            emp  = m['emp_price']
+            co   = m['co_coverage']
+            bd   = m['bd_coverage']
+            md['meals']     += 1
+            md['emp_spend'] += emp
+            md['co_spend']  += co
+            md['bd_spend']  += bd
+            if tier not in md['tiers']:
+                md['tiers'][tier] = {'meals': 0, 'emp': 0.0, 'co': 0.0, 'bd': 0.0}
+            md['tiers'][tier]['meals'] += 1
+            md['tiers'][tier]['emp']   += emp
+            md['tiers'][tier]['co']    += co
+            md['tiers'][tier]['bd']    += bd
 
     def fmt_month(mk):
         try:    return datetime.strptime(mk, '%Y-%m').strftime('%B %Y')
         except: return mk
 
-    sorted_monthly = [
-        {'key': k, 'label': fmt_month(k), **v}
-        for k, v in sorted(month_map.items(), reverse=True)
-    ]
+    sorted_monthly = []
+    for k in sorted(month_map.keys(), reverse=True):
+        v = month_map[k]
+        tiers_list = sorted([
+            {'name': tn, 'meals': ts['meals'],
+             'emp': round(ts['emp'], 2), 'co': round(ts['co'], 2), 'bd': round(ts['bd'], 2),
+             'total': round(ts['emp'] + ts['co'] + ts['bd'], 2)}
+            for tn, ts in v['tiers'].items()
+        ], key=lambda t: tier_sort_key(t['name']))
+        sorted_monthly.append({
+            'key': k, 'label': fmt_month(k),
+            'orders':    v['orders'],    'meals':    v['meals'],
+            'emp_spend': round(v['emp_spend'], 2),
+            'co_spend':  round(v['co_spend'],  2),
+            'bd_spend':  round(v['bd_spend'],  2),
+            'tiers':     tiers_list,
+        })
 
     # ── This week ──────────────────────────────────────────────
     today       = datetime.now()
