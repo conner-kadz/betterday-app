@@ -664,19 +664,28 @@ def manager_dashboard():
     import json
     company_id = session.get('manager_company_id')
 
-    data    = _gas_post({'action': 'get_company', 'company_id': company_id}, timeout=10) or {}
-    company = data.get('company', {}) if data else {}
+    # Company data comes from cache (populated at startup) — instant
+    company = (_cached_get_company(company_id) or {}).get('company', {})
 
-    pin_data    = _gas_post({'action': 'get_company_pin', 'company_id': company_id}, timeout=8) or {}
-    current_pin = pin_data.get('pin', '')
+    # Fire remaining GAS calls in parallel — cuts load from ~15s sequential to ~5s
+    results = {}
+    def _fetch(key, payload, timeout):
+        results[key] = _gas_post(payload, timeout=timeout) or {}
 
-    emp_data  = _gas_post({'action': 'get_employees', 'company_id': company_id}, timeout=10) or {}
-    employees = emp_data.get('employees', [])
+    threads = [
+        threading.Thread(target=_fetch, args=('pin',      {'action': 'get_company_pin',      'company_id': company_id}, 8)),
+        threading.Thread(target=_fetch, args=('employees',{'action': 'get_employees',        'company_id': company_id}, 10)),
+        threading.Thread(target=_fetch, args=('invoices', {'action': 'get_invoices',         'company_id': company_id}, 10)),
+        threading.Thread(target=_fetch, args=('orders',   {'action': 'get_corporate_orders', 'company_id': company_id}, 15)),
+    ]
+    for t in threads: t.start()
+    for t in threads: t.join()
 
-    inv_data  = _gas_post({'action': 'get_invoices', 'company_id': company_id}, timeout=10) or {}
-    invoices  = inv_data.get('invoices', [])
-
-    raw = _gas_post({'action': 'get_corporate_orders', 'company_id': company_id}, timeout=15) or []
+    current_pin = results.get('pin', {}).get('pin', '')
+    employees   = results.get('employees', {}).get('employees', [])
+    invoices    = results.get('invoices', {}).get('invoices', [])
+    raw = results.get('orders', {})
+    if not isinstance(raw, list): raw = []
     if not isinstance(raw, list):
         raw = []
 
