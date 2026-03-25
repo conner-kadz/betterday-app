@@ -629,7 +629,7 @@ def manager_login():
     if request.method == 'POST':
         company_id = request.form.get('company_id', '').strip().upper()
         password   = request.form.get('password', '').strip()
-        data = _gas_post({'action': 'get_company', 'company_id': company_id}, timeout=10)
+        data = _cached_get_company(company_id)
         if data and data.get('found'):
             company   = data.get('company', {})
             stored_pw = str(company.get('ManagerPassword', '') or '1234')

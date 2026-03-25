@@ -40,7 +40,14 @@
             padding: 40px 36px;
         }
         .logo-wrap { text-align: center; margin-bottom: 32px; }
-        .logo { height: 26px; opacity: .9; }
+        .logo { height: 26px; filter: brightness(0) saturate(100%) invert(27%) sepia(80%) saturate(500%) hue-rotate(190deg) brightness(90%); }
+        .btn-login:disabled { opacity: .65; cursor: not-allowed; transform: none; }
+        .btn-spin { display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-login.loading { display: flex; align-items: center; justify-content: center; }
+        .btn-login.loading .btn-spin { display: inline-block; }
+        .btn-login.loading .btn-label::after { content: 'Signing in…'; }
+        .btn-login:not(.loading) .btn-label::after { content: 'Sign In →'; }
         .card-title { font-size: 1.35rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
         .card-sub { font-size: .875rem; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.5; }
         .divider { height: 1px; background: var(--border); margin-bottom: 28px; }
@@ -133,8 +140,18 @@
             <input type="password" id="password" name="password"
                    placeholder="Enter your password" required>
         </div>
-        <button type="submit" class="btn-login">Sign In →</button>
+        <button type="submit" class="btn-login" id="loginBtn">
+            <span class="btn-spin"></span>
+            <span class="btn-label"></span>
+        </button>
     </form>
+    <script>
+        document.querySelector('form').addEventListener('submit', function() {
+            var btn = document.getElementById('loginBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+        });
+    </script>
 
     <div class="footer-note">
         Need access or forgot your password?<br>
