@@ -29,6 +29,35 @@ logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────
+# MAGIC LINK TOKEN STORE  (Flask-side, bypasses GAS verify_magic_token)
+# ─────────────────────────────────────────────────────────────
+_token_store      = {}   # token → {email, company_id, created_at, used}
+_token_store_lock = threading.Lock()
+_TOKEN_TTL        = 900  # 15 minutes
+
+def _store_magic_token(token, email, company_id):
+    with _token_store_lock:
+        _token_store[token] = {
+            'email': email.strip().lower(),
+            'company_id': company_id.strip().upper(),
+            'created_at': time.time(),
+            'used': False
+        }
+
+def _verify_magic_token_flask(token):
+    """Verify a magic link token stored by Flask. Returns (email, company_id) or None."""
+    with _token_store_lock:
+        entry = _token_store.get(token)
+        if not entry:
+            return None
+        if entry['used']:
+            return None
+        if time.time() - entry['created_at'] > _TOKEN_TTL:
+            return None
+        entry['used'] = True
+        return entry['email'], entry['company_id']
+
+# ─────────────────────────────────────────────────────────────
 # COMPANY LOOKUP CACHE  (avoids GAS cold-start on every keystroke)
 # ─────────────────────────────────────────────────────────────
 _company_cache      = {}   # CompanyID.upper() → {data, ts}
@@ -129,14 +158,33 @@ def admin_logout():
 @app.route('/api/gas', methods=['POST'])
 def gas_proxy():
     payload = request.get_json(force=True) or {}
-    # Build the magic link URL here in Flask so GAS never has a chance to get it wrong.
-    # Flask passes the pre-built token + URL; GAS just stores and sends.
+
+    # ── create_magic_token: Flask generates + stores token; GAS just sends the email ──
     if payload.get('action') == 'create_magic_token':
-        token = secrets.token_hex(32)  # 64-char hex, same length as GAS UUID pair
+        token      = secrets.token_hex(32)
         company_id = str(payload.get('company_id', '')).strip().upper()
-        base = APP_BASE_URL
+        email      = str(payload.get('email', '')).strip().lower()
+        _store_magic_token(token, email, company_id)
         payload['token_override'] = token
-        payload['sign_in_url'] = f"{base}/work?token={token}&co={company_id}"
+        payload['sign_in_url'] = f"{APP_BASE_URL}/work?token={token}&co={company_id}"
+
+    # ── verify_magic_token: Flask checks its own store (fast, no GAS round-trip) ──
+    elif payload.get('action') == 'verify_magic_token':
+        token  = str(payload.get('token', '')).strip()
+        result = _verify_magic_token_flask(token)
+        if result:
+            email, company_id = result
+            # Get employee + company data from GAS
+            emp_data = _gas_post({'action': 'get_employee_by_email',
+                                  'email': email, 'company_id': company_id}, timeout=12)
+            comp_data = _cached_get_company(company_id)
+            employee = emp_data.get('employee') if emp_data and emp_data.get('found') else None
+            company  = comp_data.get('company') if comp_data and comp_data.get('found') else None
+            if employee:
+                return jsonify({'valid': True, 'employee': employee, 'company': company})
+        # Token not in Flask store — fall through to GAS (handles tokens from old emails)
+        # (fall through to the requests.post below)
+
     try:
         r = requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=15)
         return jsonify(r.json()), r.status_code
