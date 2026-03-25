@@ -729,6 +729,13 @@ def manager_logout():
 # ─────────────────────────────────────────────────────────────
 # BETTERDAY FOR WORK — CORPORATE EMPLOYEE ORDERING
 # ─────────────────────────────────────────────────────────────
+@app.route('/lander')
+def lander_redirect():
+    """Legacy magic-link URL — redirect to /work preserving all query params."""
+    qs = request.query_string.decode('utf-8')
+    return redirect('/work' + ('?' + qs if qs else ''), code=302)
+
+
 @app.route('/work')
 def work_order():
     """Employee-facing corporate ordering portal.

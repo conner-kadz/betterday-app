@@ -185,8 +185,8 @@ function doPost(e) {
             "<table width='480' cellpadding='0' cellspacing='0' style='max-width:480px;width:100%;'>" +
             // Header
             "<tr><td style='background:#00465e;border-radius:16px 16px 0 0;padding:28px 32px;text-align:center;'>" +
-            "<div style='font-family:Georgia,\"Times New Roman\",serif;font-size:1.5rem;color:#fff;font-weight:700;letter-spacing:-0.5px;'>BetterDay</div>" +
-            "<div style='font-size:.65rem;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;margin-top:3px;'>FOR WORK</div>" +
+            "<div style='font-family:Georgia,\"Times New Roman\",serif;font-size:1.5rem;color:#faebda;font-weight:700;letter-spacing:-0.5px;'>BetterDay</div>" +
+            "<div style='font-size:.65rem;color:rgba(250,235,218,.6);letter-spacing:2px;text-transform:uppercase;margin-top:3px;'>FOR WORK</div>" +
             "</td></tr>" +
             // Body
             "<tr><td style='background:#ffffff;padding:36px 32px 28px;'>" +
@@ -291,8 +291,8 @@ function doPost(e) {
             "<table width='100%' cellpadding='0' cellspacing='0' style='background:#f4ede3;padding:40px 16px;'><tr><td align='center'>" +
             "<table width='480' cellpadding='0' cellspacing='0' style='max-width:480px;width:100%;'>" +
             "<tr><td style='background:#00465e;border-radius:16px 16px 0 0;padding:28px 32px;text-align:center;'>" +
-            "<div style='font-family:Georgia,serif;font-size:1.5rem;color:#fff;font-weight:700;'>BetterDay</div>" +
-            "<div style='font-size:.65rem;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;margin-top:3px;'>MANAGER PORTAL</div>" +
+            "<div style='font-family:Georgia,serif;font-size:1.5rem;color:#faebda;font-weight:700;'>BetterDay</div>" +
+            "<div style='font-size:.65rem;color:rgba(250,235,218,.6);letter-spacing:2px;text-transform:uppercase;margin-top:3px;'>MANAGER PORTAL</div>" +
             "</td></tr>" +
             "<tr><td style='background:#fff;padding:36px 32px 28px;'>" +
             "<p style='font-size:1.1rem;font-weight:800;color:#0d2030;margin:0 0 10px;'>Your manager sign-in link</p>" +
