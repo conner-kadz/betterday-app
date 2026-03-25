@@ -56,7 +56,25 @@ def _cached_get_company(company_id):
 
 
 def _warmup_gas():
-    """Fire a cheap GAS call so the V8 runtime is warm before users start typing."""
+    """Pre-load all companies into the Flask cache so lookups are instant."""
+    try:
+        r = requests.post(GOOGLE_SCRIPT_URL,
+                          json={'action': 'get_all_companies'},
+                          timeout=25)
+        data = r.json()
+        companies = data.get('companies') or []
+        if companies:
+            now = time.time()
+            with _company_cache_lock:
+                for c in companies:
+                    cid = str(c.get('CompanyID', '')).strip().upper()
+                    if cid:
+                        _company_cache[cid] = {'data': {'found': True, 'company': c}, 'ts': now}
+            log.info('Warmed company cache: %d companies', len(companies))
+            return
+    except Exception:
+        pass
+    # Fallback: fire a cheap single-company call just to wake GAS
     try:
         requests.post(GOOGLE_SCRIPT_URL,
                       json={'action': 'get_company', 'company_id': '__warmup__'},
@@ -847,6 +865,18 @@ def work_order():
     # Pre-warm GAS in background — by the time user types a company code, GAS is ready
     threading.Thread(target=_warmup_gas, daemon=True).start()
     return render_template('work.html')
+
+
+@app.route('/api/companies')
+def companies_list():
+    """Return all companies currently in the Flask cache — instant, no GAS call."""
+    with _company_cache_lock:
+        companies = [
+            entry['data']['company']
+            for entry in _company_cache.values()
+            if entry['data'].get('found') and entry['data'].get('company')
+        ]
+    return jsonify({'companies': companies})
 
 
 @app.route('/api/company/<company_id>')

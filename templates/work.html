@@ -1508,10 +1508,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   const token = params.get('token');
   const companyCode = params.get('co'); // e.g. /work?co=BROCK&token=xxx
 
-  // 0. Prefetch all companies in background — makes code lookup instant once GAS redeployed
-  //    Also warms GAS cache so the per-code fallback is fast
-  apiFetch({ action: 'get_all_companies' })
-    .then(r => { if (r?.companies) _companiesCache = r.companies; })
+  // 0. Prefetch all companies from Flask cache — instant lookup while user types
+  fetch('/api/companies')
+    .then(r => r.json())
+    .then(r => { if (r?.companies?.length) _companiesCache = r.companies; })
     .catch(() => {});
 
   // 0.5. Server-side magic session (set by /lander route) — highest priority
