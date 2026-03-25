@@ -218,6 +218,9 @@
     .cat-btn { padding: 7px 20px; border-radius: 999px; border: none; font-family: 'DM Sans', sans-serif; font-size: .78rem; font-weight: 800; cursor: pointer; transition: .15s; color: rgba(255,255,255,.55); background: transparent; }
     .cat-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(78,162,253,.45); }
     .cat-btn:hover:not(.active) { color: #fff; background: rgba(255,255,255,.1); }
+    @media (max-width: 600px) {
+      .cat-btn { padding: 5px 14px; font-size: .72rem; }
+    }
 
     /* Info sheet modal */
     .info-modal-overlay { position: fixed; inset: 0; z-index: 1100; display: flex; align-items: flex-end; justify-content: center; }
@@ -279,13 +282,14 @@
     /* ── MOBILE BOTTOM CART BAR ── */
     .mob-cart-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 300; }
     @media (min-width: 900px) { .mob-cart-bar { display: none; } }
-    .mob-cart-toggle { background: var(--dark); padding: 18px 20px 13px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 -4px 20px rgba(0,0,0,.25); border-radius: 20px 20px 0 0; position: relative; }
-    .mob-cart-toggle::before { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 32px; height: 4px; background: rgba(255,255,255,.22); border-radius: 2px; }
+    .mob-cart-toggle { background: var(--dark); padding: 14px 20px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 -4px 20px rgba(0,0,0,.25); border-radius: 20px 20px 0 0; position: relative; }
+    .mob-cart-toggle::before { content: ''; position: absolute; top: 7px; left: 50%; transform: translateX(-50%); width: 38px; height: 4px; background: rgba(255,255,255,.38); border-radius: 2px; }
     .mob-toggle-left { display: flex; align-items: center; gap: 10px; }
     .mob-cart-badge { background: var(--primary); color: #fff; font-size: .7rem; font-weight: 900; border-radius: 999px; padding: 2px 8px; min-width: 22px; text-align: center; }
-    .mob-toggle-label { font-size: .9rem; font-weight: 800; color: #fff; }
+    .mob-toggle-label { font-size: .9rem; font-weight: 800; color: #fff; line-height: 1.2; }
+    .mob-cart-hint { font-size: .65rem; color: rgba(255,255,255,.45); font-weight: 500; margin-top: 1px; }
     .mob-cart-total-label { font-size: 1rem; font-weight: 900; color: #fff; }
-    .mob-cart-chevron { font-size: 1rem; color: rgba(255,255,255,.55); margin-left: 8px; display: inline-block; transition: transform .25s; }
+    .mob-cart-chevron { font-size: 1.25rem; color: rgba(255,255,255,.8); margin-left: 8px; display: inline-block; transition: transform .25s; }
     .mob-cart-chevron.open { transform: rotate(180deg); }
     .mob-cart-sheet { background: var(--cream); border-radius: 20px 20px 0 0; box-shadow: 0 -8px 40px rgba(0,0,0,.22); max-height: 72vh; overflow-y: auto; }
     .mcs-drag-handle { width: 36px; height: 4px; background: rgba(0,70,94,.18); border-radius: 2px; margin: 10px auto 2px; }
@@ -709,7 +713,10 @@
       <div class="mob-cart-toggle" onclick="toggleMobCart()">
         <div class="mob-toggle-left">
           <span class="mob-cart-badge" id="mobCartBadge">0</span>
-          <span class="mob-toggle-label">View Cart</span>
+          <div>
+            <div class="mob-toggle-label">View Cart</div>
+            <div class="mob-cart-hint" id="mobCartHint">Tap to expand</div>
+          </div>
         </div>
         <div style="display:flex;align-items:center;">
           <span class="mob-cart-total-label" id="mobCartTotalLabel">$0.00</span>
@@ -1445,7 +1452,7 @@ async function renderWeek(index) {
   const hasBoth = meat.length>0 && veg.length>0;
   const slot = document.getElementById('pricingToggleSlot');
   if (slot) slot.innerHTML = hasBoth
-    ? `<div class="cat-float-inner"><button class="cat-btn active" id="catBtnMeat" onclick="filterCategory('meat')">🥩 Meat</button><button class="cat-btn" id="catBtnVeg" onclick="filterCategory('veg')">🌱 Plant-Based</button></div>`
+    ? `<div class="cat-float-inner"><button class="cat-btn active" id="catBtnMeat" onclick="filterCategory('meat')">🥩 Meat</button><button class="cat-btn" id="catBtnVeg" onclick="filterCategory('veg')">🌱 Plant</button></div>`
     : '';
   let html = '';
   if (meat.length) { html+=`<div id="sec-meat-wrap"><div class="menu-section-title">Meat &amp; Omnivore Options</div><div class="meal-grid">`; meat.forEach(i=>{html+=mealCardHTML(i,index);}); html+='</div></div>'; }
@@ -1642,12 +1649,16 @@ function toggleMobCart(){
   _mobCartOpen=!_mobCartOpen;
   document.getElementById('mobCartSheet').style.display=_mobCartOpen?'':'none';
   document.getElementById('mobCartChevron').classList.toggle('open',_mobCartOpen);
+  const hint=document.getElementById('mobCartHint');
+  if(hint){ const n=cart.length; hint.textContent=_mobCartOpen?'Tap to close':(n>0?'Tap to review order':'Tap to expand'); }
   if(_mobCartOpen) renderMobSheet();
 }
 function closeMobCart(){
   _mobCartOpen=false;
   document.getElementById('mobCartSheet').style.display='none';
   document.getElementById('mobCartChevron').classList.remove('open');
+  const hint=document.getElementById('mobCartHint');
+  if(hint){ const n=cart.length; hint.textContent=n>0?'Tap to review order':'Tap to expand'; }
 }
 function renderCart() {
   const total=cart.reduce((s,i)=>s+i.price,0), n=cart.length;
@@ -1667,6 +1678,8 @@ function renderCart() {
   // ── Mobile bar ──
   document.getElementById('mobCartBadge').textContent=n;
   document.getElementById('mobCartTotalLabel').textContent='$'+total.toFixed(2);
+  const hint=document.getElementById('mobCartHint');
+  if(hint) hint.textContent=_mobCartOpen?'Tap to close':(n>0?'Tap to review order':'Tap to expand');
   if(_mobCartOpen) renderMobSheet();
   // ── Next-meal chip ──
   document.getElementById('nextMealPrice').textContent=getNextPriceLabel(activeWeekIndex);
