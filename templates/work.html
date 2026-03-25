@@ -1009,9 +1009,8 @@ function previewCompanyCode(input) {
     if (match) {
       check.textContent = '✅'; check.classList.add('show'); input.classList.add('valid');
       currentCompany = match; btn.disabled = false;
-    } else {
-      check.textContent = '❌'; check.classList.add('show'); input.classList.add('error');
     }
+    // No match while typing — stay silent (button stays disabled); ❌ shown only on submit attempt
     return;
   }
 
@@ -1028,9 +1027,8 @@ function previewCompanyCode(input) {
         check.textContent = '⚠️'; check.classList.add('show');
         err.textContent = 'Connection error — please try again in a moment.';
         err.classList.add('show');
-      } else {
-        check.textContent = '❌'; check.classList.add('show'); input.classList.add('error');
       }
+      // No match — stay silent while typing; ❌ shown only on submit attempt
     } catch(e) {
       check.textContent = '⚠️'; check.classList.add('show');
       err.textContent = 'Connection error — please try again in a moment.';
@@ -1041,7 +1039,14 @@ function previewCompanyCode(input) {
 }
 
 async function doCompanyNext() {
-  if (!currentCompany) return;
+  if (!currentCompany) {
+    const check = document.getElementById('companyCodeCheck');
+    const err   = document.getElementById('companyError');
+    check.textContent = '❌'; check.classList.add('show');
+    err.textContent = "That code doesn't exist. Double-check with your office manager.";
+    err.classList.add('show');
+    return;
+  }
   // Check for saved session matching this company
   const sess = loadSession();
   if (sess && sess.companyId === currentCompany.CompanyID) {
