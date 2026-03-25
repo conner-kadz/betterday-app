@@ -489,6 +489,15 @@ def submit_order():
 
 
 # ─────────────────────────────────────────────────────────────
+# OFFICE MANAGER PORTAL
+# ─────────────────────────────────────────────────────────────
+@app.route('/manager')
+def manager_portal():
+    """Office manager portal — company-scoped order visibility & reporting."""
+    return render_template('manager.html')
+
+
+# ─────────────────────────────────────────────────────────────
 # BETTERDAY FOR WORK — CORPORATE EMPLOYEE ORDERING
 # ─────────────────────────────────────────────────────────────
 @app.route('/work')

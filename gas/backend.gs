@@ -255,6 +255,87 @@ function doPost(e) {
       return jsonOut({valid: false, error: "Token not found"});
     }
     // ─────────────────────────────────────────
+    // CREATE MANAGER TOKEN  (magic link for office managers)
+    // ─────────────────────────────────────────
+    if (data.action === "create_manager_token") {
+      var email = String(data.email || "").trim().toLowerCase();
+      var compSheet = ssHub.getSheetByName("Companies");
+      if (!compSheet) return jsonOut({success: false, error: "Companies sheet not found"});
+      var compRows = compSheet.getDataRange().getValues();
+      var compHeaders = compRows[0];
+      var primaryEmailIdx = compHeaders.indexOf("PrimaryContactEmail");
+      var billingEmailIdx = compHeaders.indexOf("BillingContactEmail");
+      var companyIdIdx    = compHeaders.indexOf("CompanyID");
+      var companyNameIdx  = compHeaders.indexOf("CompanyName");
+      var foundCompany = null;
+      for (var i = 1; i < compRows.length; i++) {
+        var primary = primaryEmailIdx >= 0 ? String(compRows[i][primaryEmailIdx] || "").trim().toLowerCase() : "";
+        var billing = billingEmailIdx >= 0 ? String(compRows[i][billingEmailIdx] || "").trim().toLowerCase() : "";
+        if (primary === email || billing === email) {
+          foundCompany = { id: String(compRows[i][companyIdIdx]), name: String(compRows[i][companyNameIdx] || "") };
+          break;
+        }
+      }
+      if (!foundCompany) return jsonOut({success: false, error: "not_found"});
+      var token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+      var tokenSheet = getOrCreateManagerTokenSheet(ssHub);
+      tokenSheet.appendRow([token, email, foundCompany.id, new Date(), ""]);
+      try {
+        var APP_URL = PropertiesService.getScriptProperties().getProperty("APP_URL") || "https://betterday.ca";
+        var signInUrl = APP_URL + "/manager?token=" + token;
+        MailApp.sendEmail({
+          to: email,
+          subject: "Your BetterDay Manager sign-in link",
+          htmlBody:
+            "<!DOCTYPE html><html><body style='margin:0;padding:0;background:#f4ede3;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;'>" +
+            "<table width='100%' cellpadding='0' cellspacing='0' style='background:#f4ede3;padding:40px 16px;'><tr><td align='center'>" +
+            "<table width='480' cellpadding='0' cellspacing='0' style='max-width:480px;width:100%;'>" +
+            "<tr><td style='background:#00465e;border-radius:16px 16px 0 0;padding:28px 32px;text-align:center;'>" +
+            "<div style='font-family:Georgia,serif;font-size:1.5rem;color:#fff;font-weight:700;'>BetterDay</div>" +
+            "<div style='font-size:.65rem;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;margin-top:3px;'>MANAGER PORTAL</div>" +
+            "</td></tr>" +
+            "<tr><td style='background:#fff;padding:36px 32px 28px;'>" +
+            "<p style='font-size:1.1rem;font-weight:800;color:#0d2030;margin:0 0 10px;'>Your manager sign-in link</p>" +
+            "<p style='font-size:.9rem;color:#50657a;line-height:1.65;margin:0 0 28px;'>Click below to access the <strong>" + foundCompany.name + "</strong> manager portal. This link expires in <strong>15 minutes</strong>.</p>" +
+            "<a href='" + signInUrl + "' style='display:block;background:#00465e;color:#fff;text-decoration:none;padding:16px 24px;border-radius:12px;text-align:center;font-weight:700;font-size:1rem;'>Sign in to Manager Portal &rarr;</a>" +
+            "</td></tr>" +
+            "<tr><td style='background:#f9f5f0;border-radius:0 0 16px 16px;padding:20px 32px;border-top:1px solid #e8e0d5;'>" +
+            "<p style='font-size:.75rem;color:#9aabb8;margin:0;'>Didn&rsquo;t request this? You can safely ignore it.</p>" +
+            "</td></tr></table></td></tr></table></body></html>"
+        });
+      } catch(mailErr) { Logger.log("Manager magic link email failed: " + mailErr.toString()); }
+      return jsonOut({success: true});
+    }
+    // ─────────────────────────────────────────
+    // VERIFY MANAGER TOKEN
+    // ─────────────────────────────────────────
+    if (data.action === "verify_manager_token") {
+      var tokenSheet = getOrCreateManagerTokenSheet(ssHub);
+      var rows = tokenSheet.getDataRange().getValues();
+      var token = String(data.token || "").trim();
+      for (var i = 1; i < rows.length; i++) {
+        if (String(rows[i][0]).trim() !== token) continue;
+        if (rows[i][4]) return jsonOut({valid: false, error: "Token already used"});
+        var created = new Date(rows[i][3]);
+        if ((new Date() - created) > 15 * 60 * 1000) return jsonOut({valid: false, error: "Token expired"});
+        tokenSheet.getRange(i + 1, 5).setValue(new Date());
+        var email = String(rows[i][1]);
+        var companyId = String(rows[i][2]).trim().toUpperCase();
+        var compSheet = ssHub.getSheetByName("Companies");
+        var compRows = compSheet.getDataRange().getValues();
+        var compHeaders = compRows[0];
+        for (var k = 1; k < compRows.length; k++) {
+          if (String(compRows[k][0]).trim().toUpperCase() === companyId) {
+            var company = {};
+            compHeaders.forEach(function(h, idx) { company[h] = compRows[k][idx]; });
+            return jsonOut({valid: true, email: email, company: company});
+          }
+        }
+        return jsonOut({valid: false, error: "Company not found"});
+      }
+      return jsonOut({valid: false, error: "Token not found"});
+    }
+    // ─────────────────────────────────────────
     // GET WEEK ORDER COUNTS (how many meals employee already placed per week)
     // ─────────────────────────────────────────
     if (data.action === "get_week_order_counts") {
@@ -677,6 +758,16 @@ function getOrCreatePINSheet(ssHub) {
     sheet.getRange(1, 1, 1, 3).setFontWeight("bold").setBackground("#00465e").setFontColor("#ffffff");
     // Add a note explaining how to set PINs
     sheet.getRange("A1").setNote("Use the set_company_pin API action with your admin secret to add/update PINs. Never store the raw PIN here — only the hash.");
+  }
+  return sheet;
+}
+function getOrCreateManagerTokenSheet(ssHub) {
+  var sheet = ssHub.getSheetByName("ManagerTokens");
+  if (!sheet) {
+    sheet = ssHub.insertSheet("ManagerTokens");
+    sheet.appendRow(["Token", "Email", "CompanyID", "CreatedAt", "UsedAt"]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, 5).setFontWeight("bold").setBackground("#00465e").setFontColor("#ffffff");
   }
   return sheet;
 }
