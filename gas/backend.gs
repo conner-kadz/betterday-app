@@ -189,13 +189,14 @@ function doPost(e) {
       var tokenSheet = getOrCreateTokenSheet(ssHub);
       var email = String(data.email).trim().toLowerCase();
       var companyId = String(data.company_id).trim().toUpperCase();
-      // Generate a secure-ish token
-      var token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+      // Token and URL are pre-built by Flask so the URL is always correct.
+      // Fall back to GAS generation only if not provided (shouldn't happen in production).
+      var token = data.token_override || (Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, ''));
       tokenSheet.appendRow([token, email, companyId, new Date(), ""]);
       // Send branded sign-in email via MailApp
       try {
         var APP_URL = PropertiesService.getScriptProperties().getProperty("APP_URL") || "https://betterday.ca";
-        var signInUrl = APP_URL + "/work?token=" + token + "&co=" + companyId;
+        var signInUrl = data.sign_in_url || (APP_URL + "/work?token=" + token + "&co=" + companyId);
         MailApp.sendEmail({
           to: email,
           subject: "Your BetterDay sign-in link",

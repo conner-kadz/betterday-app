@@ -9,6 +9,7 @@ import io
 import logging
 import threading
 import time
+import secrets
 from functools import wraps
 
 app = Flask(__name__)
@@ -101,8 +102,14 @@ def admin_logout():
 @app.route('/api/gas', methods=['POST'])
 def gas_proxy():
     payload = request.get_json(force=True) or {}
+    # Build the magic link URL here in Flask so GAS never has a chance to get it wrong.
+    # Flask passes the pre-built token + URL; GAS just stores and sends.
     if payload.get('action') == 'create_magic_token':
-        print(f"[DEBUG] GAS URL in use: {GOOGLE_SCRIPT_URL}", flush=True)
+        token = secrets.token_hex(32)  # 64-char hex, same length as GAS UUID pair
+        company_id = str(payload.get('company_id', '')).strip().upper()
+        base = 'https://betterday.ca'
+        payload['token_override'] = token
+        payload['sign_in_url'] = f"{base}/work?token={token}&co={company_id}"
     try:
         r = requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=15)
         return jsonify(r.json()), r.status_code
