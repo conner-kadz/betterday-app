@@ -864,7 +864,7 @@ function getOrCreatePINSheet(ssHub) {
   var sheet = ssHub.getSheetByName("CompanyPINs");
   if (!sheet) {
     sheet = ssHub.insertSheet("CompanyPINs");
-    sheet.appendRow(["CompanyID", "PINHash", "UpdatedAt"]);
+    sheet.appendRow(["CompanyID", "PIN", "UpdatedAt"]);
     sheet.setFrozenRows(1);
     sheet.getRange(1, 1, 1, 3).setFontWeight("bold").setBackground("#00465e").setFontColor("#ffffff");
     // Add a note explaining how to set PINs
@@ -882,6 +882,42 @@ function getOrCreateManagerTokenSheet(ssHub) {
   }
   return sheet;
 }
+/**
+ * Run this once from the GAS editor (Run → setInitialPINs) to seed every company
+ * in the Companies sheet with PIN "2026". Skips companies that already have a PIN.
+ */
+function setInitialPINs() {
+  var ssHub   = SpreadsheetApp.getActiveSpreadsheet();
+  var compSheet = ssHub.getSheetByName("Companies");
+  if (!compSheet) { Logger.log("No Companies sheet found"); return; }
+  var compRows    = compSheet.getDataRange().getValues();
+  var compHeaders = compRows[0];
+  var idIdx       = compHeaders.indexOf("CompanyID");
+  if (idIdx < 0) { Logger.log("No CompanyID column found"); return; }
+
+  var pinSheet  = getOrCreatePINSheet(ssHub);
+  var pinRows   = pinSheet.getDataRange().getValues();
+  // Build set of companies that already have a PIN
+  var existing  = {};
+  for (var i = 1; i < pinRows.length; i++) {
+    existing[String(pinRows[i][0]).trim().toUpperCase()] = true;
+  }
+
+  var added = 0;
+  for (var i = 1; i < compRows.length; i++) {
+    var companyId = String(compRows[i][idIdx]).trim().toUpperCase();
+    if (!companyId) continue;
+    if (existing[companyId]) {
+      Logger.log("Skipping " + companyId + " (already has PIN)");
+      continue;
+    }
+    pinSheet.appendRow([companyId, "2026", new Date()]);
+    Logger.log("Set PIN for " + companyId);
+    added++;
+  }
+  Logger.log("Done — " + added + " PIN(s) added.");
+}
+
 function getOrCreateTokenSheet(ssHub) {
   var sheet = ssHub.getSheetByName("MagicTokens");
   if (!sheet) {
