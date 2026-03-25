@@ -493,9 +493,13 @@ function doPost(e) {
         var anchorIdx  = headers.indexOf("SundayAnchor");
         if (orderIdIdx >= 0 && emailIdx >= 0 && anchorIdx >= 0) {
           for (var i = 1; i < rows.length; i++) {
+            var rawRowAn = rows[i][anchorIdx];
+            var rowAnchorStr = (rawRowAn instanceof Date)
+              ? Utilities.formatDate(rawRowAn, Session.getScriptTimeZone(), "yyyy-MM-dd")
+              : String(rawRowAn).trim();
             if (rows[i][orderIdIdx] &&
                 String(rows[i][emailIdx]).trim().toLowerCase() === email &&
-                String(rows[i][anchorIdx]).trim() === anchor) {
+                rowAnchorStr === anchor) {
               return jsonOut({ order_id: rows[i][orderIdIdx] });
             }
           }
