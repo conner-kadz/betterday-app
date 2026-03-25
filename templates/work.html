@@ -41,6 +41,23 @@
     .auth-wordmark { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: #fff; }
     .auth-tagline { font-size: .75rem; color: rgba(255,255,255,.5); font-weight: 600; margin-top: 2px; letter-spacing: .4px; text-transform: uppercase; }
 
+    /* ── MANAGER GATE SCREEN ── */
+    .gate-cards { display: flex; flex-direction: column; gap: 14px; margin-top: 24px; }
+    .gate-card { width: 100%; background: #fff; border: 2px solid #e8f0f4; border-radius: 16px; padding: 22px 20px; text-align: left; cursor: pointer; transition: border-color .18s, box-shadow .18s, transform .15s; display: flex; align-items: center; gap: 16px; }
+    .gate-card:hover { border-color: var(--primary); box-shadow: 0 4px 18px rgba(0,70,94,.12); transform: translateY(-1px); }
+    .gate-card:active { transform: translateY(0); }
+    .gate-card-icon { width: 48px; height: 48px; border-radius: 14px; background: rgba(0,70,94,.08); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+    .gate-card.gate-manager .gate-card-icon { background: rgba(0,70,94,.1); }
+    .gate-card.gate-order .gate-card-icon { background: rgba(46,160,67,.1); }
+    .gate-card-body { flex: 1; }
+    .gate-card-title { font-size: 1rem; font-weight: 800; color: var(--dark); margin-bottom: 2px; }
+    .gate-card-sub { font-size: .78rem; color: #7b8c9f; }
+    .gate-card-arrow { font-size: 1.1rem; color: #c5d4dc; transition: color .18s; }
+    .gate-card:hover .gate-card-arrow { color: var(--primary); }
+    .gate-welcome { font-size: .8rem; color: #7b8c9f; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 4px; }
+    .gate-name { font-size: 1.4rem; font-weight: 900; color: var(--dark); margin-bottom: 2px; }
+    .gate-company { font-size: .85rem; color: var(--primary); font-weight: 700; margin-bottom: 0; }
+
     /* ── COMPANY SPLASH BANNER (shown on step 2+) ── */
     .company-splash { display: flex; align-items: center; gap: 10px; background: rgba(0,70,94,.06); border-radius: 12px; padding: 10px 14px; margin-bottom: 20px; }
     .company-splash-avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--dark); display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 900; color: #fff; flex-shrink: 0; }
@@ -553,6 +570,47 @@
           <div class="spinner"></div><div class="spinner-label">Looking up your company…</div>
         </div>
         <button class="btn-main" id="companyNextBtn" onclick="doCompanyNext()" disabled>Continue →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MANAGER GATE SCREEN
+════════════════════════════════════════════ -->
+<div id="sGate" class="screen">
+  <div class="auth-bg">
+    <div class="auth-bg-top"><div class="auth-bg-dots"></div>
+      <div class="auth-brand">
+        <div class="auth-logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>
+        <div class="auth-wordmark">BetterDay</div>
+        <div class="auth-tagline">for work</div>
+      </div>
+    </div>
+    <div class="auth-bg-bottom"></div>
+    <div class="auth-card-wrap">
+      <div class="auth-card">
+        <div class="gate-welcome">Welcome back</div>
+        <div class="gate-name" id="gateName">—</div>
+        <div class="gate-company" id="gateCompany">—</div>
+        <div class="gate-cards">
+          <button class="gate-card gate-manager" onclick="doManagerDashboard()">
+            <div class="gate-card-icon">📊</div>
+            <div class="gate-card-body">
+              <div class="gate-card-title">Manager Dashboard</div>
+              <div class="gate-card-sub">Orders, reports &amp; team settings</div>
+            </div>
+            <div class="gate-card-arrow">→</div>
+          </button>
+          <button class="gate-card gate-order" onclick="proceedToMenu()">
+            <div class="gate-card-icon">🥗</div>
+            <div class="gate-card-body">
+              <div class="gate-card-title">Order My Meals</div>
+              <div class="gate-card-sub">Browse this week's menu</div>
+            </div>
+            <div class="gate-card-arrow">→</div>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1287,8 +1345,19 @@ async function doJoin() {
   } catch(e) { err.textContent = 'Could not create account. Try again.'; err.classList.add('show'); resetBtn(); }
 }
 
-// ── ENTER MENU ──
+// ── MANAGER GATE ──
 function enterMenu() {
+  // Managers always see the gate screen first — every sign-in, even auto-restore
+  if (currentEmployee?.isManager) {
+    document.getElementById('gateName').textContent    = currentEmployee.firstName + ' ' + currentEmployee.lastName;
+    document.getElementById('gateCompany').textContent = currentCompany?.CompanyName || '';
+    goTo('sGate');
+    return;
+  }
+  proceedToMenu();
+}
+
+function proceedToMenu() {
   cart = []; existingOrderCounts = {}; computeWeeks();
   const email = currentEmployee?.email;
   if (_prefetchedCounts?.email === email) {
@@ -1311,6 +1380,22 @@ function enterMenu() {
       .then(m => { menuCache[w.sundayAnchor] = m; })
       .catch(() => {});
   });
+}
+
+async function doManagerDashboard() {
+  const btn = document.querySelector('.gate-card.gate-manager');
+  btn.disabled = true;
+  btn.querySelector('.gate-card-arrow').textContent = '…';
+  try {
+    const d = await apiFetch({ action: 'create_manager_session', email: currentEmployee.email, company_id: currentCompany.CompanyID });
+    if (d.success && d.token) {
+      window.location.href = '/manager/auth?token=' + encodeURIComponent(d.token);
+    } else {
+      btn.disabled = false; btn.querySelector('.gate-card-arrow').textContent = '→';
+    }
+  } catch(e) {
+    btn.disabled = false; btn.querySelector('.gate-card-arrow').textContent = '→';
+  }
 }
 
 // ── PRE-LOAD ACTIVE WEEK DURING SIGN-IN ──

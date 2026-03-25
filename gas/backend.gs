@@ -92,16 +92,18 @@ function doPost(e) {
       var headers = rows[0];
       var email = String(data.email).trim().toLowerCase();
       var companyId = String(data.company_id).trim().toUpperCase();
+      var isManagerIdx = headers.indexOf("IsManager");
       for (var i = 1; i < rows.length; i++) {
-        var rowEmail   = String(rows[i][4]).trim().toLowerCase();  // Email is col index 4
-        var rowCompany = String(rows[i][1]).trim().toUpperCase();  // CompanyID col index 1
+        var rowEmail   = String(rows[i][4]).trim().toLowerCase();
+        var rowCompany = String(rows[i][1]).trim().toUpperCase();
         if (rowEmail === email && rowCompany === companyId) {
           return jsonOut({
             found: true,
             employee: {
-              firstName: rows[i][2],  // FirstName
-              lastName:  rows[i][3],  // LastName
-              email:     rows[i][4]   // Email
+              firstName: rows[i][2],
+              lastName:  rows[i][3],
+              email:     rows[i][4],
+              isManager: isManagerIdx >= 0 && rows[i][isManagerIdx] === true
             }
           });
         }
@@ -249,6 +251,8 @@ function doPost(e) {
           // Look up employee — email is col index 4
           var empSheet = getOrCreateEmployeesSheet(ssHub);
           var empRows = empSheet.getDataRange().getValues();
+          var empHeaders = empRows[0];
+          var isManagerIdx = empHeaders.indexOf("IsManager");
           for (var j = 1; j < empRows.length; j++) {
             if (String(empRows[j][4]).trim().toLowerCase() === email.toLowerCase() &&
                 String(empRows[j][1]).trim().toUpperCase() === companyId.toUpperCase()) {
@@ -266,7 +270,10 @@ function doPost(e) {
               }
               return jsonOut({
                 valid: true,
-                employee: { firstName: empRows[j][2], lastName: empRows[j][3], email: email },
+                employee: {
+                  firstName: empRows[j][2], lastName: empRows[j][3], email: email,
+                  isManager: isManagerIdx >= 0 && empRows[j][isManagerIdx] === true
+                },
                 company: company
               });
             }
@@ -356,6 +363,31 @@ function doPost(e) {
         return jsonOut({valid: false, error: "Company not found"});
       }
       return jsonOut({valid: false, error: "Token not found"});
+    }
+    // ─────────────────────────────────────────
+    // CREATE MANAGER SESSION  (gate screen → dashboard, no email needed)
+    // Employee is already authenticated; just verify IsManager and issue token
+    // ─────────────────────────────────────────
+    if (data.action === "create_manager_session") {
+      var email = String(data.email || "").trim().toLowerCase();
+      var companyId = String(data.company_id || "").trim().toUpperCase();
+      var empSheet = getOrCreateEmployeesSheet(ssHub);
+      var empRows = empSheet.getDataRange().getValues();
+      var empHeaders = empRows[0];
+      var isManagerIdx = empHeaders.indexOf("IsManager");
+      var authorized = false;
+      for (var i = 1; i < empRows.length; i++) {
+        if (String(empRows[i][4]).trim().toLowerCase() === email &&
+            String(empRows[i][1]).trim().toUpperCase() === companyId) {
+          authorized = isManagerIdx >= 0 && empRows[i][isManagerIdx] === true;
+          break;
+        }
+      }
+      if (!authorized) return jsonOut({success: false, error: "Not authorized"});
+      var token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+      var tokenSheet = getOrCreateManagerTokenSheet(ssHub);
+      tokenSheet.appendRow([token, email, companyId, new Date(), ""]);
+      return jsonOut({success: true, token: token});
     }
     // ─────────────────────────────────────────
     // GET WEEK ORDER COUNTS (how many meals employee already placed per week)

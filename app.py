@@ -568,6 +568,21 @@ def manager_login():
     return render_template('manager_login.html', error=error)
 
 
+@app.route('/manager/auth')
+def manager_auth():
+    """Gate screen → dashboard: verify employee manager session token, set Flask session."""
+    token = request.args.get('token', '').strip()
+    if not token:
+        return redirect(url_for('manager_login'))
+    result = _gas_post({'action': 'verify_manager_token', 'token': token}, timeout=12)
+    if result and result.get('valid'):
+        company = result.get('company') or {}
+        session['manager_company_id']   = company.get('CompanyID', '')
+        session['manager_company_name'] = company.get('CompanyName', '')
+        return redirect(url_for('manager_dashboard'))
+    return redirect(url_for('manager_login'))
+
+
 @app.route('/manager/dashboard')
 @manager_required
 def manager_dashboard():
