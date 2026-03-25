@@ -542,6 +542,13 @@
 <!-- ══════════════════════════════════════════
      STEP 1 — COMPANY CODE
 ════════════════════════════════════════════ -->
+<div id="sMagicVerify" class="screen" style="display:flex;align-items:center;justify-content:center;min-height:100dvh;background:#f4ede3;">
+  <div style="text-align:center;">
+    <div class="btn-spin" style="width:40px;height:40px;border:3px solid #e8ddd5;border-top-color:#00465e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px;"></div>
+    <div style="font-size:.95rem;font-weight:700;color:#00465e;">Signing you in…</div>
+  </div>
+</div>
+
 <div id="sCompany" class="screen active">
   <div class="auth-bg">
     <div class="auth-bg-top"><div class="auth-bg-dots"></div>
@@ -1528,8 +1535,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   } catch(e) {}
 
-  // 1. Magic link token in URL (fallback if /lander verification failed)
+  // 1. Magic link token in URL — show spinner while verifying
   if (token) {
+    goTo('sMagicVerify');
     try {
       const d = await apiFetch({ action: 'verify_magic_token', token });
       if (d.valid) {
@@ -1543,7 +1551,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         return;
       }
     } catch(e) {}
-    // Token invalid/expired — fall through; pre-fill company if co= present
+    // Token invalid/expired — fall back to company screen
+    goTo('sCompany');
   }
 
   // 2. Restore saved session — skip company code screen entirely

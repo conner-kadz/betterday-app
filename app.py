@@ -34,6 +34,14 @@ log = logging.getLogger(__name__)
 _company_cache      = {}   # CompanyID.upper() → {data, ts}
 _company_cache_lock = threading.Lock()
 _COMPANY_TTL        = 600  # 10 minutes
+_warmup_done        = False
+
+@app.before_request
+def _startup_warmup():
+    global _warmup_done
+    if not _warmup_done:
+        _warmup_done = True
+        threading.Thread(target=_warmup_gas, daemon=True).start()
 
 
 def _cached_get_company(company_id):
@@ -830,15 +838,7 @@ def manager_logout():
 # ─────────────────────────────────────────────────────────────
 @app.route('/lander')
 def lander_redirect():
-    """Magic-link landing: verify token server-side, store in session, redirect to clean /work URL."""
-    token = request.args.get('token', '').strip()
-    if token:
-        result = _gas_post({'action': 'verify_magic_token', 'token': token}, timeout=12)
-        if result and result.get('valid'):
-            session['magic_employee'] = result.get('employee', {})
-            session['magic_company']  = result.get('company', {})
-            return redirect('/work', code=302)
-    # No token or verification failed — pass through to /work with params for JS handling
+    """Instant pass-through — redirects to /work immediately, token verified client-side."""
     import json as _json
     qs = request.query_string.decode('utf-8')
     target = '/work' + ('?' + qs if qs else '')
@@ -863,8 +863,6 @@ def magic_session():
 @app.route('/work')
 def work_order():
     """Employee-facing corporate ordering portal."""
-    # Pre-warm GAS in background — by the time user types a company code, GAS is ready
-    threading.Thread(target=_warmup_gas, daemon=True).start()
     return render_template('work.html')
 
 
@@ -1091,4 +1089,5 @@ def work_admin():
 # ENTRYPOINT
 # ─────────────────────────────────────────────────────────────
 if __name__ == '__main__':
+    threading.Thread(target=_warmup_gas, daemon=True).start()
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5001)))
