@@ -159,10 +159,10 @@
     .week-tabs-row { background: var(--dark); border-top: 1px solid rgba(255,255,255,.08); display: flex; align-items: stretch; position: sticky; top: 0; z-index: 200; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
     .week-tabs-bar { display: flex; overflow-x: auto; padding: 0 0 0 24px; flex: 1; min-width: 0; }
     .week-tabs-bar::-webkit-scrollbar { display: none; }
-    .week-tab { padding: 14px 20px; font-size: .82rem; font-weight: 700; color: rgba(255,255,255,.5); cursor: pointer; border: none; background: transparent; font-family: 'DM Sans', sans-serif; border-bottom: 3px solid transparent; white-space: nowrap; transition: .15s; }
+    .week-tab { padding: 12px 16px; font-size: .88rem; font-weight: 800; color: rgba(255,255,255,.5); cursor: pointer; border: none; background: transparent; font-family: 'DM Sans', sans-serif; border-bottom: 3px solid transparent; white-space: nowrap; transition: .15s; }
     .week-tab:hover { color: rgba(255,255,255,.8); }
     .week-tab.active { color: #fff; border-bottom-color: var(--primary); }
-    .week-tab .tab-date { display: block; font-size: .7rem; font-weight: 500; color: rgba(255,255,255,.4); margin-top: 2px; }
+    .week-tab .tab-date { display: block; font-size: .68rem; font-weight: 500; color: rgba(255,255,255,.4); margin-top: 2px; }
     .week-tab.active .tab-date { color: rgba(255,255,255,.6); }
     .week-tab .tab-badge { display: inline-block; font-size: .6rem; font-weight: 900; padding: 2px 6px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
     .tab-badge-open   { background: rgba(39,174,96,.25); color: #5fe49a; }
@@ -174,7 +174,9 @@
     .pricing-company  { font-size: .8rem; font-weight: 900; color: #fff; white-space: nowrap; line-height: 1.2; }
     .pricing-plan-label { font-size: .58rem; font-weight: 600; color: rgba(255,255,255,.4); white-space: nowrap; letter-spacing: .3px; line-height: 1.2; }
     .pricing-vsep { display: inline-block; width: 1px; height: 13px; background: rgba(255,255,255,.2); vertical-align: middle; margin: 0 10px; flex-shrink: 0; }
-    .pricing-tier { font-size: .8rem; color: rgba(255,255,255,.65); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .pricing-tier { display: flex; flex-direction: column; align-items: center; white-space: nowrap; gap: 1px; }
+    .pricing-tier-range { font-size: .6rem; font-weight: 600; color: rgba(255,255,255,.45); letter-spacing: .2px; }
+    .pricing-tier-price { font-size: .88rem; font-weight: 900; color: #fff; }
     .pricing-tier strong { color: #fff; }
     @media (max-width: 700px) { .inline-pricing { display: none; } }
     .menu-inner { max-width: 1100px; margin: 0 auto; }
@@ -755,7 +757,7 @@
     <div class="menu-topbar">
       <div class="menu-topbar-brand" style="display:flex;align-items:center;gap:8px;">
         <img src="/static/Logo.svg" alt="BetterDay" style="height:26px;filter:brightness(0) invert(1);display:block;">
-        <span style="font-size:.75rem;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase;">for Work</span>
+        <span style="font-size:.72rem;font-weight:800;color:rgba(255,255,255,.45);letter-spacing:.5px;font-family:'DM Sans',sans-serif;">for Work</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;">
         <div class="next-price-chip">Next meal: <strong id="nextMealPrice">—</strong></div>
@@ -1622,25 +1624,26 @@ function setupMenu() {
 function buildPricingBanner() {
   const c=currentCompany; let tiers=[];
   const free=parseInt(c.FreeMealsPerWeek)||0, t1=parseInt(c.Tier1_Meals)||0, t2=parseInt(c.Tier2_Meals)||0, t3=parseInt(c.Tier3_Meals)||0, fp=parseFloat(c.FullPrice)||16.99;
-  if(free>0) tiers.push(`Meals 1–${free}: <strong style="color:var(--green)">FREE</strong>`);
+  if(free>0) tiers.push({range:`Meals 1–${free}`, price:'FREE', green:true});
   let cur=free;
-  if(t1>0){tiers.push(`Meals ${cur+1}–${cur+t1}: <strong>$${parseFloat(c.Tier1_EmployeePrice).toFixed(2)}</strong>`);cur+=t1;}
-  if(t2>0){tiers.push(`Meals ${cur+1}–${cur+t2}: <strong>$${parseFloat(c.Tier2_EmployeePrice).toFixed(2)}</strong>`);cur+=t2;}
-  if(t3>0){tiers.push(`Meals ${cur+1}–${cur+t3}: <strong>$${parseFloat(c.Tier3_EmployeePrice).toFixed(2)}</strong>`);cur+=t3;}
-  if(c.AllowExtraAtFullPrice==='TRUE'||c.AllowExtraAtFullPrice===true) tiers.push(`Additional: <strong>$${fp.toFixed(2)}</strong>`);
-  const anchor = weeks[activeWeekIndex]?.sundayAnchor || '';
-  const alreadyOrdered = existingOrderCounts[anchor] || 0;
-  const orderedHtml = alreadyOrdered > 0
-    ? `<span class="pricing-vsep"></span><span class="pricing-tier" style="color:#e67e22;"><strong>${alreadyOrdered} meal${alreadyOrdered!==1?'s':''} ordered this week</strong></span>`
-    : '';
-  const tiersHtml = tiers.map((t,i)=>(i>0?'<span class="pricing-vsep"></span>':'')+`<span class="pricing-tier">${t}</span>`).join('');
+  if(t1>0){tiers.push({range:`Meals ${cur+1}–${cur+t1}`, price:`$${parseFloat(c.Tier1_EmployeePrice).toFixed(2)}`});cur+=t1;}
+  if(t2>0){tiers.push({range:`Meals ${cur+1}–${cur+t2}`, price:`$${parseFloat(c.Tier2_EmployeePrice).toFixed(2)}`});cur+=t2;}
+  if(t3>0){tiers.push({range:`Meals ${cur+1}–${cur+t3}`, price:`$${parseFloat(c.Tier3_EmployeePrice).toFixed(2)}`});cur+=t3;}
+  if(c.AllowExtraAtFullPrice==='TRUE'||c.AllowExtraAtFullPrice===true) tiers.push({range:'Additional', price:`$${fp.toFixed(2)}`});
+  const tiersHtml = tiers.map((t,i)=>
+    (i>0?'<span class="pricing-vsep"></span>':'')+
+    `<span class="pricing-tier">`+
+      `<span class="pricing-tier-range">${t.range}</span>`+
+      `<span class="pricing-tier-price"${t.green?' style="color:#4cd97b"':''}>${t.price}</span>`+
+    `</span>`
+  ).join('');
   document.getElementById('pricingBannerInner').innerHTML=
     `<div class="pricing-company-block">`+
       `<span class="pricing-plan-label">Employer Subsidy Plan</span>`+
       `<span class="pricing-company">${c.CompanyName}</span>`+
     `</div>`+
     `<span class="pricing-vsep" style="height:30px;margin:0 14px"></span>`+
-    tiersHtml+orderedHtml;
+    tiersHtml;
 }
 
 function buildWeekTabs() {
@@ -1655,7 +1658,7 @@ function buildWeekTabs() {
       : 'No orders yet';
     const btn=document.createElement('button');
     btn.className='week-tab'+(i===activeWeekIndex?' active':'');
-    btn.innerHTML=`Delivery ${w.deliveryShort}${badge}<span class="tab-date">${subLabel}</span>`;
+    btn.innerHTML=`${w.deliveryShort}${badge}<span class="tab-date">${subLabel}</span>`;
     btn.onclick=()=>switchWeek(i); bar.appendChild(btn);
   });
 }
