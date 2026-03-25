@@ -811,7 +811,15 @@ def manager_logout():
 # ─────────────────────────────────────────────────────────────
 @app.route('/lander')
 def lander_redirect():
-    """Legacy magic-link URL — client-side redirect to /work (bypasses CDN cache)."""
+    """Magic-link landing: verify token server-side, store in session, redirect to clean /work URL."""
+    token = request.args.get('token', '').strip()
+    if token:
+        result = _gas_post({'action': 'verify_magic_token', 'token': token}, timeout=12)
+        if result and result.get('valid'):
+            session['magic_employee'] = result.get('employee', {})
+            session['magic_company']  = result.get('company', {})
+            return redirect('/work', code=302)
+    # No token or verification failed — pass through to /work with params for JS handling
     import json as _json
     qs = request.query_string.decode('utf-8')
     target = '/work' + ('?' + qs if qs else '')
@@ -821,6 +829,16 @@ def lander_redirect():
 <script>window.location.replace({_json.dumps(target)});</script>
 </head><body></body></html>'''
     return html, 200, {'Cache-Control': 'no-store, no-cache', 'Content-Type': 'text/html'}
+
+
+@app.route('/api/magic-session')
+def magic_session():
+    """Consume the one-shot server-side magic link session set by /lander."""
+    emp     = session.pop('magic_employee', None)
+    company = session.pop('magic_company', None)
+    if emp and company:
+        return jsonify({'valid': True, 'employee': emp, 'company': company})
+    return jsonify({'valid': False})
 
 
 @app.route('/work')

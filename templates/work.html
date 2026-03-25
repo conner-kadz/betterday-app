@@ -1514,7 +1514,21 @@ window.addEventListener('DOMContentLoaded', async () => {
     .then(r => { if (r?.companies) _companiesCache = r.companies; })
     .catch(() => {});
 
-  // 1. Magic link landing — highest priority
+  // 0.5. Server-side magic session (set by /lander route) — highest priority
+  try {
+    const ms = await fetch('/api/magic-session').then(r => r.json());
+    if (ms.valid) {
+      currentCompany  = ms.company;
+      currentEmployee = ms.employee;
+      saveSession(currentEmployee, currentCompany);
+      preloadActiveWeekMenu();
+      preloadOrderCounts(ms.employee.email);
+      enterMenu();
+      return;
+    }
+  } catch(e) {}
+
+  // 1. Magic link token in URL (fallback if /lander verification failed)
   if (token) {
     try {
       const d = await apiFetch({ action: 'verify_magic_token', token });
