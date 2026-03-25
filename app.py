@@ -748,12 +748,16 @@ def manager_logout():
 # ─────────────────────────────────────────────────────────────
 @app.route('/lander')
 def lander_redirect():
-    """Legacy magic-link URL — redirect to /work preserving all query params."""
+    """Legacy magic-link URL — client-side redirect to /work (bypasses CDN cache)."""
+    import json as _json
     qs = request.query_string.decode('utf-8')
-    resp = redirect('/work' + ('?' + qs if qs else ''), code=302)
-    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    resp.headers['Pragma'] = 'no-cache'
-    return resp
+    target = '/work' + ('?' + qs if qs else '')
+    html = f'''<!DOCTYPE html><html><head>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="0;url={target}">
+<script>window.location.replace({_json.dumps(target)});</script>
+</head><body></body></html>'''
+    return html, 200, {'Cache-Control': 'no-store, no-cache', 'Content-Type': 'text/html'}
 
 
 @app.route('/work')
