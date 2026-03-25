@@ -7,6 +7,8 @@ import os
 import csv
 import io
 import logging
+import threading
+import time
 from functools import wraps
 
 app = Flask(__name__)
@@ -23,6 +25,43 @@ app.secret_key  = os.environ.get('FLASK_SECRET_KEY', 'bd-dev-secret-change-in-pr
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
+
+# ─────────────────────────────────────────────────────────────
+# COMPANY LOOKUP CACHE  (avoids GAS cold-start on every keystroke)
+# ─────────────────────────────────────────────────────────────
+_company_cache      = {}   # CompanyID.upper() → {data, ts}
+_company_cache_lock = threading.Lock()
+_COMPANY_TTL        = 600  # 10 minutes
+
+
+def _cached_get_company(company_id):
+    code = company_id.strip().upper()
+    with _company_cache_lock:
+        entry = _company_cache.get(code)
+        if entry and time.time() - entry['ts'] < _COMPANY_TTL:
+            return entry['data']
+    result = None
+    try:
+        r = requests.post(GOOGLE_SCRIPT_URL,
+                          json={'action': 'get_company', 'company_id': code},
+                          timeout=15)
+        result = r.json()
+    except Exception as ex:
+        log.warning('company lookup error (%s): %s', code, ex)
+        return None
+    with _company_cache_lock:
+        _company_cache[code] = {'data': result, 'ts': time.time()}
+    return result
+
+
+def _warmup_gas():
+    """Fire a cheap GAS call so the V8 runtime is warm before users start typing."""
+    try:
+        requests.post(GOOGLE_SCRIPT_URL,
+                      json={'action': 'get_company', 'company_id': '__warmup__'},
+                      timeout=20)
+    except Exception:
+        pass
 
 
 # ─────────────────────────────────────────────────────────────
@@ -764,9 +803,19 @@ def lander_redirect():
 
 @app.route('/work')
 def work_order():
-    """Employee-facing corporate ordering portal.
-    No script_url passed — all JS calls go through /api/gas proxy."""
+    """Employee-facing corporate ordering portal."""
+    # Pre-warm GAS in background — by the time user types a company code, GAS is ready
+    threading.Thread(target=_warmup_gas, daemon=True).start()
     return render_template('work.html')
+
+
+@app.route('/api/company/<company_id>')
+def company_lookup(company_id):
+    """Fast cached company lookup — avoids GAS cold-start on every user keystroke."""
+    result = _cached_get_company(company_id)
+    if result is None:
+        return jsonify({'error': 'lookup failed'}), 502
+    return jsonify(result)
 
 
 @app.route('/work/submit', methods=['POST'])

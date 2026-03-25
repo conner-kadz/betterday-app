@@ -1015,16 +1015,16 @@ function previewCompanyCode(input) {
     return;
   }
 
-  // Cache not ready yet — fall back to individual fetch with debounce
+  // Cache not ready yet — use server-side cached endpoint (no GAS cold-start)
   clearTimeout(_compDebounce);
   _compDebounce = setTimeout(async () => {
     document.getElementById('companyLoadingWrap').classList.remove('hidden');
     try {
-      const d = await apiFetch({ action: 'get_company', company_id: code });
+      const d = await fetch(`/api/company/${encodeURIComponent(code)}`).then(r => r.json());
       if (d.found) {
         check.textContent = '✅'; check.classList.add('show'); input.classList.add('valid');
         currentCompany = d.company; btn.disabled = false;
-      } else if (d.error) {
+      } else if (d.error && d.error !== 'lookup failed') {
         check.textContent = '⚠️'; check.classList.add('show');
         err.textContent = 'Connection error — please try again in a moment.';
         err.classList.add('show');
@@ -1037,7 +1037,7 @@ function previewCompanyCode(input) {
       err.classList.add('show');
     }
     document.getElementById('companyLoadingWrap').classList.add('hidden');
-  }, 550);
+  }, 300);
 }
 
 async function doCompanyNext() {
@@ -1418,7 +1418,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   const token = params.get('token');
   const companyCode = params.get('co'); // e.g. /work?co=BROCK&token=xxx
 
-  // 0. Prefetch all companies in background — makes code lookup instant
+  // 0. Prefetch all companies in background — makes code lookup instant once GAS redeployed
+  //    Also warms GAS cache so the per-code fallback is fast
   apiFetch({ action: 'get_all_companies' })
     .then(r => { if (r?.companies) _companiesCache = r.companies; })
     .catch(() => {});
