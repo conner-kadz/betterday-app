@@ -63,6 +63,15 @@
         .tab.active { color: var(--brand); border-bottom-color: var(--brand); }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
+        .tab-count { display:inline-block;background:var(--border);color:var(--text-2);font-size:.65rem;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:5px;vertical-align:middle; }
+        .emp-badge { display:inline-block;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px; }
+        .emp-badge-company  { background:#eaf4ff;color:#1a6cb5; }
+        .emp-badge-personal { background:#f3f0ff;color:#6b3fa0; }
+        .emp-badge-manager  { background:#fff3e0;color:#b56b10; }
+        .emp-action-btn { font-size:.75rem;font-weight:600;color:var(--brand);background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.12s; }
+        .emp-action-btn:hover { background:var(--bg);border-color:var(--brand); }
+        .emp-remove-btn { color:#c0392b;margin-left:6px; }
+        .emp-remove-btn:hover { background:#fff0f0;border-color:#c0392b; }
 
         /* ── SECTION HEADER ── */
         .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
@@ -246,6 +255,7 @@
         <div class="tabs">
             <div class="tab active" onclick="showTab('orders', this)">Orders</div>
             <div class="tab" onclick="showTab('monthly', this)">Monthly Report</div>
+            <div class="tab" onclick="showTab('employees', this)">Employees <span class="tab-count">{{ employees|length }}</span></div>
             <div class="tab" onclick="showTab('account', this)">Account Details</div>
         </div>
     </div>
@@ -513,6 +523,59 @@
             </div>
 
         </form>
+
+    </div>
+
+    <!-- ── EMPLOYEES TAB ── -->
+    <div class="tab-panel" id="tab-employees">
+
+        <div class="section-header">
+            <div class="section-title">Team Members</div>
+        </div>
+
+        <table class="order-table" id="empTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Email Type</th>
+                    <th>Joined</th>
+                    <th>Role</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for emp in employees %}
+            {% set domain = company.CompanyEmailDomain or '' %}
+            {% set is_company_email = domain and emp.email.endswith('@' + domain) %}
+            <tr id="emp-row-{{ loop.index }}">
+                <td style="font-weight:600;">{{ emp.firstName }} {{ emp.lastName }}</td>
+                <td style="color:var(--text-2);">{{ emp.email }}</td>
+                <td>
+                    {% if is_company_email %}
+                    <span class="emp-badge emp-badge-company">Company</span>
+                    {% else %}
+                    <span class="emp-badge emp-badge-personal">Personal</span>
+                    {% endif %}
+                </td>
+                <td style="color:var(--muted);font-size:.85rem;">{{ emp.createdAt or '—' }}</td>
+                <td>
+                    {% if emp.isManager %}
+                    <span class="emp-badge emp-badge-manager">Manager</span>
+                    {% else %}
+                    <span style="color:var(--muted);font-size:.82rem;">Employee</span>
+                    {% endif %}
+                </td>
+                <td style="text-align:right;white-space:nowrap;">
+                    <button class="emp-action-btn" onclick="resendLink('{{ emp.email }}', this)">Resend link</button>
+                    <button class="emp-action-btn emp-remove-btn" onclick="removeEmployee('{{ emp.email }}', '{{ emp.firstName }} {{ emp.lastName }}', {{ loop.index }})">Remove</button>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align:center;padding:44px;color:var(--muted);">No employees registered yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
 
     </div>
 
@@ -880,6 +943,44 @@ function printReceipt() {
     win.document.write(html);
     win.document.close();
     win.onload = () => { win.focus(); win.print(); };
+}
+
+// ── Employees tab ──
+async function resendLink(email, btn) {
+    const orig = btn.textContent;
+    btn.textContent = 'Sending…'; btn.disabled = true;
+    try {
+        const r = await fetch('/manager/resend-link', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({email})
+        });
+        const d = await r.json();
+        btn.textContent = d.success ? 'Sent ✓' : 'Failed';
+        setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
+    } catch(e) {
+        btn.textContent = 'Error'; setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+    }
+}
+
+async function removeEmployee(email, name, rowIndex) {
+    if (!confirm(`Remove ${name} from your team?\n\nThey will no longer be able to sign in. This cannot be undone.`)) return;
+    try {
+        const r = await fetch('/manager/remove-employee', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({email})
+        });
+        const d = await r.json();
+        if (d.success) {
+            const row = document.getElementById('emp-row-' + rowIndex);
+            if (row) row.remove();
+            // Update tab count
+            const tbody = document.querySelector('#empTable tbody');
+            const remaining = tbody ? tbody.querySelectorAll('tr[id^="emp-row-"]').length : 0;
+            document.querySelectorAll('.tab-count').forEach(el => el.textContent = remaining);
+        } else {
+            alert(d.error || 'Could not remove employee — try again.');
+        }
+    } catch(e) { alert('Network error — try again.'); }
 }
 </script>
 </body>

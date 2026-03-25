@@ -670,6 +670,9 @@ def manager_dashboard():
     pin_data    = _gas_post({'action': 'get_company_pin', 'company_id': company_id}, timeout=8) or {}
     current_pin = pin_data.get('pin', '')
 
+    emp_data  = _gas_post({'action': 'get_employees', 'company_id': company_id}, timeout=10) or {}
+    employees = emp_data.get('employees', [])
+
     raw = _gas_post({'action': 'get_corporate_orders', 'company_id': company_id}, timeout=15) or []
     if not isinstance(raw, list):
         raw = []
@@ -859,6 +862,7 @@ def manager_dashboard():
                            sorted_monthly=sorted_monthly,
                            orders_json=orders_json,
                            current_pin=current_pin,
+                           employees=employees,
                            saved_tab=saved_tab)
 
 
@@ -876,6 +880,35 @@ def manager_update_account():
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'success': bool(result and result.get('success'))})
     return redirect(url_for('manager_dashboard') + '?saved=account')
+
+
+@app.route('/manager/remove-employee', methods=['POST'])
+@manager_required
+def manager_remove_employee():
+    company_id = session.get('manager_company_id')
+    email = request.get_json(force=True).get('email', '').strip().lower()
+    if not email:
+        return jsonify({'success': False, 'error': 'Missing email'}), 400
+    result = _gas_post({'action': 'remove_employee', 'company_id': company_id, 'email': email}, timeout=12)
+    return jsonify(result or {'success': False, 'error': 'GAS error'})
+
+
+@app.route('/manager/resend-link', methods=['POST'])
+@manager_required
+def manager_resend_link():
+    company_id = session.get('manager_company_id')
+    email = request.get_json(force=True).get('email', '').strip().lower()
+    if not email:
+        return jsonify({'success': False, 'error': 'Missing email'}), 400
+    token      = secrets.token_hex(32)
+    sign_in_url = f"{APP_BASE_URL}/work?token={token}&co={company_id}"
+    _store_magic_token(token, email, company_id)
+    result = _gas_post({
+        'action': 'create_magic_token',
+        'email': email, 'company_id': company_id,
+        'token_override': token, 'sign_in_url': sign_in_url
+    }, timeout=15)
+    return jsonify({'success': bool(result and result.get('success'))})
 
 
 @app.route('/manager/logout')

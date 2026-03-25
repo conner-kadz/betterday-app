@@ -131,6 +131,46 @@ function doPost(e) {
       return jsonOut({success: true, employeeId: empId});
     }
     // ─────────────────────────────────────────
+    // GET EMPLOYEES  (for manager dashboard employees tab)
+    // ─────────────────────────────────────────
+    if (data.action === "get_employees") {
+      var companyId = String(data.company_id || "").trim().toUpperCase();
+      var empSheet  = getOrCreateEmployeesSheet(ssHub);
+      var rows      = empSheet.getDataRange().getValues();
+      var headers   = rows[0];
+      var isManagerIdx = headers.indexOf("IsManager");
+      var result = [];
+      for (var i = 1; i < rows.length; i++) {
+        if (String(rows[i][1]).trim().toUpperCase() !== companyId) continue;
+        result.push({
+          employeeId: rows[i][0],
+          firstName:  rows[i][2],
+          lastName:   rows[i][3],
+          email:      rows[i][4],
+          createdAt:  rows[i][5] ? Utilities.formatDate(new Date(rows[i][5]), Session.getScriptTimeZone(), "yyyy-MM-dd") : "",
+          isManager:  isManagerIdx >= 0 && rows[i][isManagerIdx] === true
+        });
+      }
+      return jsonOut({employees: result});
+    }
+    // ─────────────────────────────────────────
+    // REMOVE EMPLOYEE
+    // ─────────────────────────────────────────
+    if (data.action === "remove_employee") {
+      var companyId = String(data.company_id || "").trim().toUpperCase();
+      var email     = String(data.email || "").trim().toLowerCase();
+      var empSheet  = getOrCreateEmployeesSheet(ssHub);
+      var rows      = empSheet.getDataRange().getValues();
+      for (var i = rows.length - 1; i >= 1; i--) {
+        if (String(rows[i][4]).trim().toLowerCase() === email &&
+            String(rows[i][1]).trim().toUpperCase() === companyId) {
+          empSheet.deleteRow(i + 1);
+          return jsonOut({success: true});
+        }
+      }
+      return jsonOut({success: false, error: "Employee not found"});
+    }
+    // ─────────────────────────────────────────
     // VERIFY COMPANY PIN
     // ─────────────────────────────────────────
     if (data.action === "verify_company_pin") {
