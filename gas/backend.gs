@@ -864,7 +864,7 @@ function getOrCreatePINSheet(ssHub) {
   var sheet = ssHub.getSheetByName("CompanyPINs");
   if (!sheet) {
     sheet = ssHub.insertSheet("CompanyPINs");
-    sheet.appendRow(["CompanyID", "PIN", "UpdatedAt"]);
+    sheet.appendRow(["CompanyID", "CompanyPin", "UpdatedAt"]);
     sheet.setFrozenRows(1);
     sheet.getRange(1, 1, 1, 3).setFontWeight("bold").setBackground("#00465e").setFontColor("#ffffff");
     // Add a note explaining how to set PINs
