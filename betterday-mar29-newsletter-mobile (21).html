@@ -20,6 +20,11 @@ body{margin:0;padding:0;background:#ffffff;line-height:1.2;}
 }
 
 @media only screen and (max-width:620px) {
+  /* Global mobile fix */
+  table { max-width:100% !important; }
+  img { max-width:100% !important; height:auto !important; }
+  body, .wrapper { overflow-x:hidden !important; }
+
   /* Wrapper */
   .wrapper { width:100% !important; border-radius:0 0 20px 20px !important; }
 
@@ -27,8 +32,8 @@ body{margin:0;padding:0;background:#ffffff;line-height:1.2;}
   .nav-hide { display:none !important; }
 
   /* Hero */
-  .hero-img { height:280px !important; }
-  .hero-headline { font-size:30px !important; color:#FAEBDA !important; }
+  .hero-img { width:100% !important; height:auto !important; max-height:280px !important; object-fit:cover !important; }
+  .hero-headline { font-size:26px !important; color:#FAEBDA !important; }
   .hero-sub { font-size:15px !important; color:#FAEBDA !important; }
   .hero-text { bottom:20px !important; left:20px !important; right:20px !important; }
   .hero-eyebrow { top:16px !important; left:16px !important; }
@@ -36,7 +41,7 @@ body{margin:0;padding:0;background:#ffffff;line-height:1.2;}
   /* Spotlight — centred mobile layout, keep gradient bg */
   .spot-cutout { display:none !important; }
   .spot-text { padding-right:20px !important; text-align:center !important; width:100% !important; box-sizing:border-box !important; }
-  .spot-name { font-size:22px !important; }
+  .spot-name { font-size:20px !important; }
   .spot-fastpen { text-align:center !important; }
   .spot-cross { display:none !important; }
   .spot-desc { display:none !important; }
