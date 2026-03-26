@@ -493,9 +493,13 @@ function doPost(e) {
         var anchorIdx  = headers.indexOf("SundayAnchor");
         if (orderIdIdx >= 0 && emailIdx >= 0 && anchorIdx >= 0) {
           for (var i = 1; i < rows.length; i++) {
+            var rawRowAn = rows[i][anchorIdx];
+            var rowAnchorStr = (rawRowAn instanceof Date)
+              ? Utilities.formatDate(rawRowAn, Session.getScriptTimeZone(), "yyyy-MM-dd")
+              : String(rawRowAn).trim();
             if (rows[i][orderIdIdx] &&
                 String(rows[i][emailIdx]).trim().toLowerCase() === email &&
-                String(rows[i][anchorIdx]).trim() === anchor) {
+                rowAnchorStr === anchor) {
               return jsonOut({ order_id: rows[i][orderIdIdx] });
             }
           }
@@ -1096,7 +1100,12 @@ function _buildInvoiceForCompany(ssHub, companyId, sundayAnchor, skipIfExists) {
   for (var i = 1; i < rows.length; i++) {
     if (!rows[i][0]) continue;
     if (String(rows[i][coIdx]).trim().toUpperCase() !== companyId) continue;
-    if (String(rows[i][anIdx]).trim() !== sundayAnchor) continue;
+    // SundayAnchor may be stored as a Date object if Sheets auto-converted it
+    var rawAnchor = rows[i][anIdx];
+    var rowAnchor = rawAnchor instanceof Date
+      ? Utilities.formatDate(rawAnchor, Session.getScriptTimeZone(), "yyyy-MM-dd")
+      : String(rawAnchor).trim();
+    if (rowAnchor !== sundayAnchor) continue;
     meals++;
     empPaid  += parseFloat(rows[i][epIdx]) || 0;
     compOwed += parseFloat(rows[i][ccIdx]) || 0;
@@ -1159,7 +1168,11 @@ function generateWeeklyInvoices() {
   var anIdx   = headers.indexOf("SundayAnchor");
   var companies = {};
   for (var i = 1; i < rows.length; i++) {
-    if (String(rows[i][anIdx]).trim() === sundayAnchor && rows[i][coIdx]) {
+    var rawAn = rows[i][anIdx];
+    var rowAn = rawAn instanceof Date
+      ? Utilities.formatDate(rawAn, Session.getScriptTimeZone(), "yyyy-MM-dd")
+      : String(rawAn).trim();
+    if (rowAn === sundayAnchor && rows[i][coIdx]) {
       companies[String(rows[i][coIdx]).trim().toUpperCase()] = true;
     }
   }
