@@ -337,11 +337,14 @@
         {% if sorted_monthly %}
         <div class="section-header">
             <div class="section-title">Monthly Report</div>
-            <select class="week-select" onchange="filterMonth(this.value)">
-                {% for m in sorted_monthly %}
-                <option value="{{ m.key }}">{{ m.label }}</option>
-                {% endfor %}
-            </select>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <select class="week-select" id="monthSelect" onchange="filterMonth(this.value)">
+                    {% for m in sorted_monthly %}
+                    <option value="{{ m.key }}">{{ m.label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn-pdf" onclick="downloadMonthlyPDF()">Export PDF</button>
+            </div>
         </div>
 
         {% for m in sorted_monthly %}
@@ -725,8 +728,11 @@
 <script>
 const ORDERS       = {{ orders_json | safe }};
 const INVOICES     = {{ invoices | tojson | safe }};
+const MONTHLY      = {{ sorted_monthly | tojson | safe }};
 const COMPANY_NAME = {{ company_name | tojson }};
 const COMPANY_ID   = {{ (company.CompanyID or company_id) | tojson }};
+const COMPANY_ADDR_LINE1 = {{ (company.AddressLine1 or '') | tojson }};
+const COMPANY_CITY       = {{ (company.City or '') | tojson }};
 const COMPANY_ADDR = [
     {{ (company.AddressLine1 or '') | tojson }},
     {{ (company.City or '') | tojson }}
@@ -1085,6 +1091,107 @@ async function removeEmployee(email, name, rowIndex) {
             alert(d.error || 'Could not remove employee — try again.');
         }
     } catch(e) { alert('Network error — try again.'); }
+}
+
+// ── Monthly Report PDF ──
+function downloadMonthlyPDF() {
+    const key = document.getElementById('monthSelect')?.value;
+    const m   = MONTHLY.find(x => x.key === key) || MONTHLY[0];
+    if (!m) return;
+
+    const fmt$ = n => '$' + (parseFloat(n) || 0).toFixed(2);
+    const addr = [COMPANY_ADDR_LINE1, COMPANY_CITY].filter(Boolean).join(', ');
+    const total = (parseFloat(m.emp_spend)||0) + (parseFloat(m.co_spend)||0) + (parseFloat(m.bd_spend)||0);
+
+    const tierRows = (m.tiers || []).map(t => `
+        <tr>
+            <td>${t.name}</td>
+            <td style="text-align:right">${t.meals}</td>
+            <td style="text-align:right">${fmt$(t.emp)}</td>
+            <td style="text-align:right">${fmt$(t.co)}</td>
+            <td style="text-align:right">${fmt$(t.bd)}</td>
+            <td style="text-align:right;font-weight:600">${fmt$(t.total)}</td>
+        </tr>`).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Monthly Report — ${m.label} — ${COMPANY_NAME}</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;color:#222;padding:48px;max-width:800px;margin:0 auto;}
+  .logo{font-size:1.4rem;font-weight:800;color:#00465e;}.logo span{color:#0077a3;}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px;}
+  .report-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#717171;margin-bottom:4px;}
+  .report-title{font-size:1.3rem;font-weight:800;}
+  .meta{display:flex;gap:40px;margin-bottom:32px;font-size:.85rem;color:#484848;line-height:1.7;}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;}
+  .stat{background:#f7f7f7;border-radius:10px;padding:14px 16px;}
+  .stat-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#717171;margin-bottom:4px;}
+  .stat-val{font-size:1.2rem;font-weight:800;color:#00465e;}
+  h2{font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#717171;margin-bottom:12px;}
+  table{width:100%;border-collapse:collapse;margin-bottom:24px;}
+  th{text-align:left;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#717171;padding:8px 10px;border-bottom:1px solid #ebebeb;}
+  td{padding:10px 10px;border-bottom:1px solid #ebebeb;font-size:.88rem;}
+  .total-row td{font-weight:700;background:#fafafa;border-top:2px solid #222;border-bottom:none;}
+  .green{color:#008A05;}.blue{color:#0077A3;}
+  .footer{margin-top:40px;font-size:.75rem;color:#717171;border-top:1px solid #ebebeb;padding-top:14px;}
+  @media print{body{padding:24px}}
+</style></head><body>
+<div class="header">
+  <div>
+    <div class="logo">Better<span>Day</span></div>
+    <div style="font-size:.78rem;color:#717171;margin-top:2px;">Monthly Report</div>
+  </div>
+  <div style="text-align:right;">
+    <div class="report-label">Report Period</div>
+    <div class="report-title">${m.label}</div>
+  </div>
+</div>
+
+<div class="meta">
+  <div><strong>Company</strong><br>${COMPANY_NAME}${addr ? '<br>'+addr : ''}</div>
+  <div><strong>Generated</strong><br>${new Date().toLocaleDateString('en-CA')}</div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-lbl">Total Orders</div><div class="stat-val">${m.orders}</div></div>
+  <div class="stat"><div class="stat-lbl">Total Meals</div><div class="stat-val">${m.meals}</div></div>
+  <div class="stat"><div class="stat-lbl">Company Covered</div><div class="stat-val green">${fmt$(m.co_spend)}</div></div>
+  <div class="stat"><div class="stat-lbl">BD Contributed</div><div class="stat-val blue">${fmt$(m.bd_spend)}</div></div>
+</div>
+
+<h2>Breakdown by Tier</h2>
+<table>
+  <thead><tr>
+    <th>Tier</th>
+    <th style="text-align:right">Meals</th>
+    <th style="text-align:right">Staff Paid</th>
+    <th style="text-align:right">Co. Covered</th>
+    <th style="text-align:right">BD Contributed</th>
+    <th style="text-align:right">Total Value</th>
+  </tr></thead>
+  <tbody>
+    ${tierRows}
+    <tr class="total-row">
+      <td>Total</td>
+      <td style="text-align:right">${m.meals}</td>
+      <td style="text-align:right">${fmt$(m.emp_spend)}</td>
+      <td style="text-align:right" class="green">${fmt$(m.co_spend)}</td>
+      <td style="text-align:right" class="blue">${fmt$(m.bd_spend)}</td>
+      <td style="text-align:right">${fmt$(total)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  BetterDay Corporate · ${COMPANY_NAME} · ${m.label} Monthly Report · Generated ${new Date().toLocaleDateString('en-CA')}
+</div>
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
 }
 
 // ── Weekly Invoices tab ──
