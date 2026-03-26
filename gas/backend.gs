@@ -887,6 +887,38 @@ function doPost(e) {
       return jsonOut({invoices: result});
     }
     // ─────────────────────────────────────────
+    // GET ALL INVOICES  (BD admin — all companies)
+    // ─────────────────────────────────────────
+    if (data.action === "get_all_invoices") {
+      var invSheet = getOrCreateInvoiceSheet(ssHub);
+      var rows     = invSheet.getDataRange().getValues();
+      var result   = [];
+      for (var i = 1; i < rows.length; i++) {
+        if (!rows[i][0]) continue;
+        result.push({
+          invoiceId:      rows[i][0],
+          companyId:      rows[i][1],
+          companyName:    rows[i][2],
+          weekOf:         rows[i][3] ? Utilities.formatDate(new Date(rows[i][3]), Session.getScriptTimeZone(), "yyyy-MM-dd") : "",
+          sundayAnchor:   rows[i][4],
+          totalOrders:    rows[i][5],
+          totalMeals:     rows[i][6],
+          totalEmployees: rows[i][7],
+          employeePaid:   rows[i][8],
+          companyOwed:    rows[i][9],
+          bdContributed:  rows[i][10],
+          breakdown:      rows[i][11] ? JSON.parse(rows[i][11]) : [],
+          status:         rows[i][12] || "pending",
+          createdAt:      rows[i][13] ? Utilities.formatDate(new Date(rows[i][13]), Session.getScriptTimeZone(), "yyyy-MM-dd") : "",
+          paidAt:         rows[i][14] ? Utilities.formatDate(new Date(rows[i][14]), Session.getScriptTimeZone(), "yyyy-MM-dd") : "",
+          paymentMethod:  rows[i][15] || "",
+          notes:          rows[i][16] || ""
+        });
+      }
+      result.sort(function(a,b){ return b.weekOf.localeCompare(a.weekOf); });
+      return jsonOut({invoices: result});
+    }
+    // ─────────────────────────────────────────
     // UPDATE INVOICE STATUS  (admin — mark paid/sent)
     // ─────────────────────────────────────────
     if (data.action === "update_invoice_status") {

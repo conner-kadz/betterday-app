@@ -404,6 +404,201 @@ def bd_admin():
     return render_template('admin.html', weeks=sorted_weeks, toggle_weeks=toggle_weeks)
 
 
+# ─────────────────────────────────────────────────────────────
+# BD ADMIN DASHBOARD  (new — corporate + system-wide view)
+# ─────────────────────────────────────────────────────────────
+@app.route('/bd-admin/dashboard')
+@admin_required
+def bd_admin_dashboard():
+    import json as _json
+    from collections import defaultdict
+
+    # ── Companies from cache (instant) ──────────────────────
+    with _company_cache_lock:
+        companies = [
+            entry['data']['company']
+            for entry in _company_cache.values()
+            if entry.get('data') and entry['data'].get('found') and entry['data'].get('company')
+        ]
+    companies.sort(key=lambda c: (c.get('CompanyName') or c.get('CompanyID') or '').lower())
+
+    # ── Parallel GAS calls ───────────────────────────────────
+    results = {}
+    def _fetch(key, payload, timeout):
+        results[key] = _gas_post(payload, timeout=timeout) or {}
+
+    threads = [
+        threading.Thread(target=_fetch, args=('orders',   {'action': 'get_corporate_orders'}, 20)),
+        threading.Thread(target=_fetch, args=('invoices', {'action': 'get_all_invoices'},     12)),
+    ]
+    for t in threads: t.start()
+    for t in threads: t.join()
+
+    invoices = results.get('invoices', {}).get('invoices', [])
+    raw = results.get('orders', {})
+    if not isinstance(raw, list): raw = []
+
+    # ── Group meal rows by OrderID ───────────────────────────
+    order_map = {}
+    for row in raw:
+        oid = str(row.get('OrderID') or '').strip()
+        if not oid:
+            oid = f"{row.get('EmployeeEmail','anon')}-{row.get('SundayAnchor','')}"
+        if oid not in order_map:
+            order_map[oid] = {
+                'order_id':       oid,
+                'company_id':     str(row.get('CompanyID', '') or '').upper(),
+                'employee_name':  row.get('EmployeeName', ''),
+                'employee_email': row.get('EmployeeEmail', ''),
+                'delivery_date':  str(row.get('DeliveryDate', '') or ''),
+                'sunday_anchor':  str(row.get('SundayAnchor', '') or ''),
+                'status':         row.get('Status', ''),
+                'meals':          [],
+                'emp_total':      0.0,
+                'co_total':       0.0,
+                'bd_total':       0.0,
+            }
+        rec = order_map[oid]
+        emp = float(row.get('EmployeePrice')   or 0)
+        co  = float(row.get('CompanyCoverage') or 0)
+        bd  = float(row.get('BDCoverage')      or 0)
+        rec['meals'].append({'dish_name': row.get('DishName', ''), 'tier': row.get('Tier', ''),
+                             'emp_price': emp, 'co_coverage': co, 'bd_coverage': bd})
+        rec['emp_total'] += emp
+        rec['co_total']  += co
+        rec['bd_total']  += bd
+
+    all_orders = sorted(order_map.values(), key=lambda o: o['delivery_date'], reverse=True)
+
+    # ── Per-company stats ────────────────────────────────────
+    co_stats = {}
+    for o in all_orders:
+        cid = o['company_id']
+        if not cid:
+            continue
+        if cid not in co_stats:
+            co_stats[cid] = {'meals': 0, 'orders': 0, 'employees': set(),
+                             'co_spend': 0.0, 'bd_spend': 0.0, 'emp_spend': 0.0, 'last_order': ''}
+        s = co_stats[cid]
+        s['meals']    += len(o['meals'])
+        s['orders']   += 1
+        s['employees'].add(o['employee_email'])
+        s['co_spend'] += o['co_total']
+        s['bd_spend'] += o['bd_total']
+        s['emp_spend'] += o['emp_total']
+        if o['delivery_date'] > s['last_order']:
+            s['last_order'] = o['delivery_date']
+    for s in co_stats.values():
+        s['employee_count'] = len(s['employees'])
+        del s['employees']
+
+    # ── Group by week ────────────────────────────────────────
+    week_map = defaultdict(list)
+    for o in all_orders:
+        if o['sunday_anchor']:
+            week_map[o['sunday_anchor']].append(o)
+
+    sorted_weeks = []
+    for anchor in sorted(week_map.keys(), reverse=True):
+        try:
+            monday = datetime.strptime(anchor, '%Y-%m-%d') + timedelta(days=1)
+            nice_label = f"Week of {monday.strftime('%b %d, %Y')}"
+        except Exception:
+            nice_label = anchor
+        wo = week_map[anchor]
+        sorted_weeks.append({
+            'anchor':      anchor,
+            'label':       nice_label,
+            'orders':      wo,
+            'order_count': len(wo),
+            'meal_count':  sum(len(o['meals']) for o in wo),
+            'emp_spend':   round(sum(o['emp_total'] for o in wo), 2),
+            'co_spend':    round(sum(o['co_total']  for o in wo), 2),
+            'bd_spend':    round(sum(o['bd_total']  for o in wo), 2),
+        })
+
+    empty_week = {'orders': [], 'order_count': 0, 'meal_count': 0,
+                  'emp_spend': 0.0, 'co_spend': 0.0, 'bd_spend': 0.0, 'label': '—', 'anchor': ''}
+    active_week = sorted_weeks[0] if sorted_weeks else empty_week
+
+    # ── Week snapshot by company ─────────────────────────────
+    week_by_co = {}
+    for o in active_week['orders']:
+        cid = o['company_id']
+        if not cid: continue
+        if cid not in week_by_co:
+            week_by_co[cid] = {'meals': 0, 'employees': set(), 'co_spend': 0.0, 'bd_spend': 0.0}
+        week_by_co[cid]['meals']    += len(o['meals'])
+        week_by_co[cid]['employees'].add(o['employee_email'])
+        week_by_co[cid]['co_spend'] += o['co_total']
+        week_by_co[cid]['bd_spend'] += o['bd_total']
+    week_snapshot = sorted([
+        {'company_id': cid, 'meals': s['meals'],
+         'employee_count': len(s['employees']),
+         'co_spend': round(s['co_spend'], 2), 'bd_spend': round(s['bd_spend'], 2)}
+        for cid, s in week_by_co.items()
+    ], key=lambda x: x['meals'], reverse=True)
+
+    # ── System-wide stats ────────────────────────────────────
+    total_meals            = sum(len(o['meals']) for o in all_orders)
+    total_co_spend         = round(sum(o['co_total'] for o in all_orders), 2)
+    total_bd_spend         = round(sum(o['bd_total'] for o in all_orders), 2)
+    total_unique_employees = len(set(o['employee_email'] for o in all_orders if o['employee_email']))
+    total_companies        = len(companies)
+    active_companies_week  = len(set(o['company_id'] for o in active_week['orders']))
+    pending_invoices_value = round(sum(
+        float(inv.get('companyOwed', 0) or 0)
+        for inv in invoices if (inv.get('status') or 'pending') == 'pending'
+    ), 2)
+
+    co_names = {
+        c.get('CompanyID', '').upper(): c.get('CompanyName') or c.get('CompanyID', '')
+        for c in companies
+    }
+
+    orders_json   = _json.dumps([{
+        'order_id': o['order_id'], 'company_id': o['company_id'],
+        'employee_name': o['employee_name'], 'employee_email': o['employee_email'],
+        'delivery_date': o['delivery_date'], 'sunday_anchor': o['sunday_anchor'],
+        'emp_total': round(o['emp_total'], 2),
+        'co_total':  round(o['co_total'],  2),
+        'bd_total':  round(o['bd_total'],  2),
+        'meals': [{'dish_name': m['dish_name'], 'tier': m['tier'],
+                   'emp_price': round(m['emp_price'], 2),
+                   'co_coverage': round(m['co_coverage'], 2),
+                   'bd_coverage': round(m['bd_coverage'], 2)} for m in o['meals']],
+    } for o in all_orders])
+    invoices_json  = _json.dumps(invoices)
+    companies_json = _json.dumps(companies)
+
+    return render_template('bd_admin_dashboard.html',
+        companies=companies, companies_json=companies_json,
+        co_names=co_names, co_stats=co_stats, week_snapshot=week_snapshot,
+        all_orders=all_orders, sorted_weeks=sorted_weeks, active_week=active_week,
+        invoices=invoices, invoices_json=invoices_json,
+        orders_json=orders_json,
+        total_companies=total_companies, active_companies_week=active_companies_week,
+        total_meals=total_meals, total_co_spend=total_co_spend, total_bd_spend=total_bd_spend,
+        total_unique_employees=total_unique_employees,
+        pending_invoices_value=pending_invoices_value,
+    )
+
+
+@app.route('/bd-admin/invoice-status', methods=['POST'])
+@admin_required
+def bd_admin_invoice_status():
+    invoice_id     = request.form.get('invoice_id', '').strip()
+    status         = request.form.get('status', '').strip()
+    payment_method = request.form.get('payment_method', '').strip()
+    notes          = request.form.get('notes', '').strip()
+    result = _gas_post({
+        'action': 'update_invoice_status',
+        'invoice_id': invoice_id, 'status': status,
+        'payment_method': payment_method, 'notes': notes,
+    }, timeout=12)
+    return jsonify({'success': bool(result and result.get('success'))})
+
+
 @app.route('/toggle-date', methods=['POST'])
 @admin_required
 def toggle_date():
