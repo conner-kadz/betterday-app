@@ -43,17 +43,33 @@
         .page-title { font-size: 1.55rem; font-weight: 700; color: var(--text); margin-bottom: 32px; }
 
         /* ── STATS ROW ── */
-        .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 36px; }
+        .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 10px; }
         @media (max-width: 900px) { .stats-row { grid-template-columns: 1fr 1fr; } }
-        .stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
-        .stat-label { font-size: .72rem; font-weight: 800; color: var(--text); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
-        .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--brand); line-height: 1; margin-bottom: 5px; }
-        .stat-sub { font-size: .72rem; color: var(--muted); font-weight: 500; }
-        .stat-card.c-teal  .stat-value { color: var(--brand); }
-        .stat-card.c-sky   .stat-value { color: #0284c7; }
-        .stat-card.c-purple .stat-value { color: #7c3aed; }
-        .stat-card.c-bd    .stat-value { color: var(--bd-color); }
-        .stat-card.c-green .stat-value { color: var(--green); }
+        .stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; border-left: 3px solid transparent; }
+        .stat-label { font-size: .67rem; font-weight: 700; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
+        .stat-value { font-size: 1.65rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+        .stat-sub { font-size: .7rem; color: var(--muted); font-weight: 500; }
+        .stat-card.c-teal  { border-left-color: var(--brand); }    .stat-card.c-teal  .stat-value { color: var(--brand); }
+        .stat-card.c-sky   { border-left-color: #0284c7; }         .stat-card.c-sky   .stat-value { color: #0284c7; }
+        .stat-card.c-purple{ border-left-color: #7c3aed; }         .stat-card.c-purple .stat-value { color: #7c3aed; }
+        .stat-card.c-bd    { border-left-color: var(--bd-color); } .stat-card.c-bd    .stat-value { color: var(--bd-color); }
+        .stat-card.c-green { border-left-color: var(--green); }    .stat-card.c-green .stat-value { color: var(--green); }
+
+        /* ── IMPACT BANNER ── */
+        .impact-banner { background: linear-gradient(130deg, #00465e 0%, #005f7a 60%, #006e8a 100%); border-radius: 18px; padding: 26px 32px; display: flex; align-items: center; gap: 0; margin-bottom: 24px; position: relative; overflow: hidden; }
+        .impact-banner::before { content:''; position:absolute; top:-60px; right:-60px; width:280px; height:280px; background: radial-gradient(circle, rgba(255,255,255,.06) 0%, transparent 65%); pointer-events:none; }
+        .impact-banner::after  { content:''; position:absolute; bottom:-80px; left:20%; width:200px; height:200px; background: radial-gradient(circle, rgba(0,180,220,.08) 0%, transparent 65%); pointer-events:none; }
+        .impact-left { flex-shrink:0; padding-right: 32px; border-right: 1px solid rgba(255,255,255,.12); }
+        .impact-eyebrow { font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,.5); margin-bottom:6px; }
+        .impact-headline { font-size:.95rem; font-weight:800; color:#fff; line-height:1.35; max-width:160px; }
+        .impact-sub { font-size:.68rem; color:rgba(255,255,255,.45); margin-top:6px; }
+        .impact-metrics { display:flex; flex:1; }
+        .impact-metric { flex:1; padding: 0 28px; border-right: 1px solid rgba(255,255,255,.1); }
+        .impact-metric:last-child { border-right:none; }
+        .impact-metric-val { font-size:2rem; font-weight:900; color:#fff; line-height:1; letter-spacing:-.5px; }
+        .impact-metric-val .unit { font-size:1.1rem; font-weight:800; vertical-align:super; font-size:.9rem; }
+        .impact-metric-lbl { font-size:.72rem; font-weight:700; color:rgba(255,255,255,.8); margin-top:5px; }
+        .impact-metric-src { font-size:.6rem; color:rgba(255,255,255,.35); margin-top:3px; font-style:italic; }
 
         /* ── TABS ── */
         .tabs-wrap { border-bottom: 1px solid var(--border); margin-bottom: 28px; }
@@ -240,29 +256,62 @@
     <!-- STATS -->
     <div class="stats-row">
         <div class="stat-card c-teal">
-            <div class="stat-label">Total Meals</div>
+            <div class="stat-label">Meals This Week</div>
             <div class="stat-value">{{ active_week.meal_count }}</div>
-            <div class="stat-sub">this week</div>
+            <div class="stat-sub">current delivery week</div>
         </div>
         <div class="stat-card c-sky">
-            <div class="stat-label">Staff Participation</div>
+            <div class="stat-label">Participation</div>
             <div class="stat-value">{{ active_week_pct }}%</div>
-            <div class="stat-sub">this week</div>
-        </div>
-        <div class="stat-card c-purple">
-            <div class="stat-label">Avg Participation</div>
-            <div class="stat-value">{{ avg_participation_pct }}%</div>
-            <div class="stat-sub">all-time</div>
+            <div class="stat-sub">this week · {{ avg_participation_pct }}% avg</div>
         </div>
         <div class="stat-card c-bd">
-            <div class="stat-label">Company Spend</div>
-            <div class="stat-value">${{ '%.2f'|format(active_week.co_spend|float) }}</div>
+            <div class="stat-label">Company Covered</div>
+            <div class="stat-value">${{ '%.0f'|format(active_week.co_spend|float) }}</div>
             <div class="stat-sub">this week</div>
         </div>
         <div class="stat-card c-green">
-            <div class="stat-label">BetterDay Contribution</div>
-            <div class="stat-value">${{ '%.2f'|format(total_bd_spend|float) }}</div>
+            <div class="stat-label">BD Contributed</div>
+            <div class="stat-value">${{ '%.0f'|format(total_bd_spend|float) }}</div>
             <div class="stat-sub">all time</div>
+        </div>
+        <div class="stat-card c-purple">
+            <div class="stat-label">Total Meals</div>
+            <div class="stat-value">{{ total_meals }}</div>
+            <div class="stat-sub">all time</div>
+        </div>
+    </div>
+
+    <!-- IMPACT BANNER -->
+    <div class="impact-banner">
+        <div class="impact-left">
+            <div class="impact-eyebrow">Program ROI</div>
+            <div class="impact-headline">What BetterDay is doing for your team</div>
+            <div class="impact-sub">Based on {{ total_meals }} meals delivered</div>
+        </div>
+        <div class="impact-metrics">
+            <div class="impact-metric">
+                <div class="impact-metric-val">
+                    <span class="count-up" data-target="{{ (total_meals * 0.75) | int }}" data-format="number">0</span>
+                    <span class="unit"> hrs</span>
+                </div>
+                <div class="impact-metric-lbl">Kept at the office</div>
+                <div class="impact-metric-src">45 min saved per meal · Fooda ROI Report</div>
+            </div>
+            <div class="impact-metric">
+                <div class="impact-metric-val">
+                    <span class="unit">$</span><span class="count-up" data-target="{{ (total_meals * 0.75 * 32) | int }}" data-format="money">0</span>
+                </div>
+                <div class="impact-metric-lbl">Productivity value recovered</div>
+                <div class="impact-metric-src">Hours × avg salary rate · Harvard Business Review</div>
+            </div>
+            <div class="impact-metric">
+                <div class="impact-metric-val">
+                    <span class="unit">$</span><span class="count-up" data-target="{{ (total_unique_employees * 0.2 * 75000) | int }}" data-format="money">0</span>
+                </div>
+                <div class="impact-metric-lbl">Annual retention cost at stake</div>
+                <div class="impact-metric-src">1 in 5 leave yearly · $75K avg cost · Gallup</div>
+            </div>
         </div>
     </div>
 
@@ -737,6 +786,34 @@ const COMPANY_ADDR = [
     {{ (company.AddressLine1 or '') | tojson }},
     {{ (company.City or '') | tojson }}
 ].filter(Boolean).join(', ');
+
+// ── Impact banner count-up ──
+(function() {
+    function fmt(n, format) {
+        if (format === 'money') {
+            if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+            if (n >= 1000)    return (n/1000).toFixed(0) + 'K';
+            return n.toLocaleString();
+        }
+        return n.toLocaleString();
+    }
+    function countUp(el, target, duration) {
+        const start = performance.now();
+        const format = el.dataset.format || 'number';
+        ;(function update(now) {
+            const p = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = fmt(Math.round(eased * target), format);
+            if (p < 1) requestAnimationFrame(update);
+        })(performance.now());
+    }
+    window.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.count-up').forEach(function(el) {
+            const target = parseInt(el.dataset.target, 10) || 0;
+            setTimeout(function() { countUp(el, target, 1400); }, 300);
+        });
+    });
+})();
 
 // ── Tab switching ──
 function showTab(name, el) {
