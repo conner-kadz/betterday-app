@@ -62,11 +62,11 @@
         .stat-card {
             background: var(--card); border-radius: 14px;
             padding: 22px 24px; position: relative;
-            box-shadow: 0 1px 3px rgba(0,49,65,.06), 0 8px 24px rgba(0,49,65,.04);
+            box-shadow: 0 2px 6px rgba(0,49,65,.08), 0 12px 32px rgba(0,49,65,.06);
             border: none;
             transition: transform .15s, box-shadow .15s;
         }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,49,65,.08), 0 12px 32px rgba(0,49,65,.06); }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,49,65,.1), 0 20px 48px rgba(0,49,65,.08); }
 
         .stat-label { font-size: .62rem; font-weight: 700; color: var(--muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .7px; }
         .stat-value { font-size: 1.8rem; font-weight: 900; line-height: 1; margin-bottom: 6px; letter-spacing: -.5px; }
@@ -102,7 +102,7 @@
         .tab.active .tab-count { background: rgba(255,255,255,.2); color: rgba(255,255,255,.9); }
         .tab:not(.active) .tab-count { background: var(--cream-mid); color: var(--muted); }
         .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
+        .tab-panel.active { display: block; min-height: 60vh; }
 
         /* ═══════ SECTION ═══════ */
         .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
@@ -112,7 +112,7 @@
         .table-wrap {
             background: var(--card); border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,49,65,.05), 0 4px 16px rgba(0,49,65,.03);
+            box-shadow: 0 2px 6px rgba(0,49,65,.07), 0 10px 28px rgba(0,49,65,.05);
             border: none;
         }
         .table-empty { padding: 48px 40px; text-align: center; color: var(--muted); font-size: .88rem; }
@@ -156,6 +156,7 @@
             padding: 8px 22px; cursor: pointer; font-family: 'DM Sans', sans-serif;
             transition: transform .12s, box-shadow .12s;
             box-shadow: 0 2px 8px rgba(255,198,0,.3);
+            text-decoration: none;
         }
         .btn-sm:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,198,0,.4); }
         .btn-outline {
@@ -167,25 +168,36 @@
 
         /* ═══════ SUMMARY BAR ═══════ */
         .summary-bar {
-            display: flex; background: var(--dark-navy);
+            display: flex; background: var(--card);
             border-radius: 14px 14px 0 0; overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,49,65,.07);
         }
-        .sb-cell { padding: 18px 24px; flex: 1; border-right: 1px solid rgba(255,255,255,.08); }
+        .sb-cell { padding: 18px 24px; flex: 1; border-right: 1px solid var(--border); }
         .sb-cell:last-child { border-right: none; }
-        .sb-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: rgba(255,255,255,.45); margin-bottom: 6px; }
-        .sb-val { font-size: 1.15rem; font-weight: 800; color: #fff; }
-        .sb-val.green { color: var(--green-light); }
-        .sb-val.bd { color: var(--sky); }
+        .sb-label { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 6px; }
+        .sb-val { font-size: 1.2rem; font-weight: 900; color: var(--dark-navy); }
+        /* Per-cell color accents */
+        .sb-cell.c-navy .sb-val  { color: var(--navy); }
+        .sb-cell.c-yellow .sb-val { color: var(--dark-navy); }
+        .sb-cell.c-yellow { background: #FFF9E6; }
+        .sb-cell.c-purple .sb-val { color: #7C3AED; }
+        .sb-cell.c-purple { background: #F5F0FF; }
+        .sb-cell.c-green .sb-val { color: var(--green); }
+        .sb-cell.c-green { background: #F0FAF0; }
+        .sb-cell.c-sky .sb-val { color: var(--bd-teal); }
+        .sb-cell.c-sky { background: #EEF8FC; }
+        .sb-val.green { color: var(--green); }
+        .sb-val.bd { color: var(--bd-teal); }
 
         /* ═══════ COMPANY CARDS ═══════ */
         .co-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
         .co-card {
             background: var(--card); border-radius: 14px;
             padding: 22px; transition: .2s;
-            box-shadow: 0 1px 3px rgba(0,49,65,.05), 0 4px 16px rgba(0,49,65,.03);
+            box-shadow: 0 2px 6px rgba(0,49,65,.07), 0 10px 28px rgba(0,49,65,.05);
             border: none;
         }
-        .co-card:hover { box-shadow: 0 8px 32px rgba(0,49,65,.1); transform: translateY(-3px); }
+        .co-card:hover { box-shadow: 0 10px 36px rgba(0,49,65,.12); transform: translateY(-3px); }
         .co-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
         .co-card-name { font-size: 1rem; font-weight: 800; color: var(--dark-navy); }
         .co-card-id { font-size: .68rem; color: var(--muted); margin-top: 3px; }
@@ -216,6 +228,48 @@
         /* ═══════ INVOICE ACTIONS ═══════ */
         .inv-actions { display: flex; gap: 6px; align-items: center; }
         .inv-actions .btn-outline { font-size: .7rem; padding: 5px 12px; }
+
+        /* ═══════ LAYOUT TOGGLE ═══════ */
+        .layout-toggle {
+            display: flex; align-items: center; gap: 8px; margin-right: 20px;
+        }
+        .layout-toggle-label { font-size: .7rem; color: rgba(250,235,218,.5); font-weight: 600; }
+        .toggle-switch {
+            width: 40px; height: 22px; background: rgba(255,255,255,.15); border-radius: 99px;
+            position: relative; cursor: pointer; transition: background .2s; border: 1px solid rgba(255,255,255,.2);
+        }
+        .toggle-switch.on { background: var(--sky); border-color: var(--sky); }
+        .toggle-switch::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 16px; height: 16px; background: #fff; border-radius: 50%;
+            transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+        }
+        .toggle-switch.on::after { transform: translateX(18px); }
+
+        /* ═══════ SIDEBAR MODE ═══════ */
+        .sidebar { display: none; }
+        body.sidebar-mode .sidebar {
+            display: flex; flex-direction: column;
+            position: fixed; top: 58px; left: 0; bottom: 0; width: 220px;
+            background: var(--card); border-right: 1px solid var(--border);
+            box-shadow: 2px 0 12px rgba(0,49,65,.04);
+            padding: 24px 0; z-index: 100;
+        }
+        body.sidebar-mode .container { margin-left: 220px; max-width: 1000px; }
+        body.sidebar-mode .tabs-wrap { display: none; }
+        body.sidebar-mode .tab-panel { display: block; min-height: auto; }
+        body.sidebar-mode .tab-panel:not(.active) { display: none; }
+
+        .sidebar-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 24px; font-size: .85rem; font-weight: 600;
+            color: var(--muted); cursor: pointer; transition: .12s;
+            text-decoration: none; border-left: 3px solid transparent;
+        }
+        .sidebar-item:hover { color: var(--navy); background: #FAF6F0; }
+        .sidebar-item.active { color: var(--navy); background: var(--sky-light); border-left-color: var(--sky); font-weight: 700; }
+        .sidebar-item-icon { font-size: 1rem; width: 20px; text-align: center; }
+        .sidebar-divider { height: 1px; background: var(--border); margin: 12px 24px; }
     </style>
 </head>
 <body>
@@ -225,9 +279,33 @@
     <div class="nav-sep"></div>
     <span class="nav-title">Admin Dashboard</span>
     <div class="nav-right">
+        <div class="layout-toggle">
+            <span class="layout-toggle-label">Sidebar</span>
+            <div class="toggle-switch" id="layoutToggle" onclick="toggleLayout()"></div>
+        </div>
         <a href="/admin-logout" class="btn-logout">Sign out</a>
     </div>
 </nav>
+
+<!-- ═══════ SIDEBAR (hidden by default) ═══════ -->
+<aside class="sidebar">
+    <div class="sidebar-item active" onclick="sidebarNav('overview')">
+        <span class="sidebar-item-icon">&#9632;</span> Overview
+    </div>
+    <div class="sidebar-item" onclick="sidebarNav('companies')">
+        <span class="sidebar-item-icon">&#9733;</span> Companies
+    </div>
+    <div class="sidebar-item" onclick="sidebarNav('invoices')">
+        <span class="sidebar-item-icon">&#9830;</span> Invoices
+    </div>
+    <div class="sidebar-item" onclick="sidebarNav('orders')">
+        <span class="sidebar-item-icon">&#9776;</span> Orders
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-item" onclick="window.location='/admin-logout'">
+        <span class="sidebar-item-icon">&#8594;</span> Sign out
+    </div>
+</aside>
 
 <div class="container">
     <!-- ═══════ STATS ═══════ -->
@@ -277,10 +355,10 @@
 
         {% if week_snapshot %}
         <div class="summary-bar">
-            <div class="sb-cell"><div class="sb-label">Companies</div><div class="sb-val">{{ active_companies_week }}</div></div>
-            <div class="sb-cell"><div class="sb-label">Meals</div><div class="sb-val">{{ active_week.meal_count }}</div></div>
-            <div class="sb-cell"><div class="sb-label">Company Spend</div><div class="sb-val green">${{ "%.2f"|format(active_week.co_spend) }}</div></div>
-            <div class="sb-cell"><div class="sb-label">BD Contributed</div><div class="sb-val bd">${{ "%.2f"|format(active_week.bd_spend) }}</div></div>
+            <div class="sb-cell c-navy"><div class="sb-label">Companies</div><div class="sb-val">{{ active_companies_week }}</div></div>
+            <div class="sb-cell c-yellow"><div class="sb-label">Meals</div><div class="sb-val">{{ active_week.meal_count }}</div></div>
+            <div class="sb-cell c-green"><div class="sb-label">Company Spend</div><div class="sb-val">${{ "%.2f"|format(active_week.co_spend) }}</div></div>
+            <div class="sb-cell c-sky"><div class="sb-label">BD Contributed</div><div class="sb-val">${{ "%.2f"|format(active_week.bd_spend) }}</div></div>
         </div>
         <div class="table-wrap" style="border-radius: 0 0 14px 14px;">
             <table>
@@ -473,11 +551,11 @@
         </div>
 
         <div id="orderSummaryBar" class="summary-bar">
-            <div class="sb-cell"><div class="sb-label">Orders</div><div class="sb-val" id="ordSumOrders">0</div></div>
-            <div class="sb-cell"><div class="sb-label">Meals</div><div class="sb-val" id="ordSumMeals">0</div></div>
-            <div class="sb-cell"><div class="sb-label">Emp Paid</div><div class="sb-val" id="ordSumEmp">$0</div></div>
-            <div class="sb-cell"><div class="sb-label">Company Covered</div><div class="sb-val green" id="ordSumCo">$0</div></div>
-            <div class="sb-cell"><div class="sb-label">BD Contributed</div><div class="sb-val bd" id="ordSumBd">$0</div></div>
+            <div class="sb-cell c-navy"><div class="sb-label">Orders</div><div class="sb-val" id="ordSumOrders">0</div></div>
+            <div class="sb-cell c-yellow"><div class="sb-label">Meals</div><div class="sb-val" id="ordSumMeals">0</div></div>
+            <div class="sb-cell c-purple"><div class="sb-label">Emp Paid</div><div class="sb-val" id="ordSumEmp">$0</div></div>
+            <div class="sb-cell c-green"><div class="sb-label">Company Covered</div><div class="sb-val" id="ordSumCo">$0</div></div>
+            <div class="sb-cell c-sky"><div class="sb-label">BD Contributed</div><div class="sb-val" id="ordSumBd">$0</div></div>
         </div>
         <div class="table-wrap" style="border-radius: 0 0 14px 14px;">
             <table>
@@ -619,6 +697,30 @@ function ordPage(dir) {
 
 // Init orders on load
 filterOrders();
+
+/* ── Layout Toggle ── */
+function toggleLayout() {
+    var toggle = document.getElementById('layoutToggle');
+    var isSidebar = document.body.classList.toggle('sidebar-mode');
+    toggle.classList.toggle('on', isSidebar);
+    localStorage.setItem('bd_admin_layout', isSidebar ? 'sidebar' : 'tabs');
+}
+
+function sidebarNav(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (id === 'orders') filterOrders();
+}
+
+// Restore layout preference
+(function() {
+    if (localStorage.getItem('bd_admin_layout') === 'sidebar') {
+        document.body.classList.add('sidebar-mode');
+        document.getElementById('layoutToggle').classList.add('on');
+    }
+})();
 </script>
 </body>
 </html>
