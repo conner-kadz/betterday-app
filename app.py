@@ -1403,11 +1403,6 @@ def work_admin():
 @app.route('/menubuilder')
 @admin_required
 def menubuilder():
-    return render_template('menubuilder.html')
-
-@app.route('/menubuilder-chef')
-@admin_required
-def menubuilder_chef():
     return render_template('menubuilder-chef.html')
 
 
