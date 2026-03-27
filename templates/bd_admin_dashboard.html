@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>BetterDay Admin — Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #00465e;
+            --brand-mid: #005878;
+            --cream: #FFF8F0;
+            --text: #222222;
+            --text-2: #484848;
+            --muted: #717171;
+            --border: #EBEBEB;
+            --bg: #F7F7F7;
+            --white: #FFFFFF;
+            --green: #008A05;
+            --green-bg: #F0FBF0;
+            --blue-bg: #EFF6FF;
+            --blue: #1D4ED8;
+            --bd-color: #0077A3;
+            --bd-bg: #E8F4FA;
+            --amber: #b56b10;
+            --amber-bg: #fff3e0;
+            --red: #c0392b;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* ── NAV ── */
+        .nav { background: var(--brand-mid); padding: 0 40px; height: 62px; display: flex; align-items: center; position: sticky; top: 0; z-index: 200; }
+        .nav-logo { height: 22px; margin-right: 20px; filter: brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(10deg) brightness(1.15); }
+        .nav-sep { width: 1px; height: 20px; background: rgba(255,255,255,.2); margin-right: 20px; }
+        .nav-title { font-weight: 700; font-size: .9rem; color: var(--cream); }
+        .nav-right { margin-left: auto; }
+        .btn-logout { font-size: .82rem; font-weight: 600; color: rgba(255,255,255,.75); text-decoration: none; padding: 7px 16px; border: 1px solid rgba(255,255,255,.25); border-radius: 20px; transition: .15s; }
+        .btn-logout:hover { border-color: rgba(255,255,255,.6); color: #fff; }
+
+        /* ── CONTAINER ── */
+        .container { max-width: 1200px; margin: 0 auto; padding: 32px 40px 80px; }
+
+        /* ── STATS ROW ── */
+        .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+        @media (max-width: 900px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+        .stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; border-left: 3px solid transparent; }
+        .stat-label { font-size: .65rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+        .stat-value { font-size: 1.6rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+        .stat-sub { font-size: .68rem; color: var(--muted); font-weight: 500; }
+        .stat-card.c-teal   { border-left-color: var(--brand); }    .stat-card.c-teal   .stat-value { color: var(--brand); }
+        .stat-card.c-green  { border-left-color: var(--green); }    .stat-card.c-green  .stat-value { color: var(--green); }
+        .stat-card.c-blue   { border-left-color: var(--blue); }     .stat-card.c-blue   .stat-value { color: var(--blue); }
+        .stat-card.c-amber  { border-left-color: var(--amber); }    .stat-card.c-amber  .stat-value { color: var(--amber); }
+        .stat-card.c-bd     { border-left-color: var(--bd-color); } .stat-card.c-bd     .stat-value { color: var(--bd-color); }
+
+        /* ── TABS ── */
+        .tabs-wrap { border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+        .tabs { display: flex; }
+        .tab { padding: 12px 20px; font-size: .85rem; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s; user-select: none; }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+        .tab-count { display: inline-block; background: var(--border); color: var(--text-2); font-size: .6rem; font-weight: 700; padding: 1px 6px; border-radius: 99px; margin-left: 4px; vertical-align: middle; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── SECTION ── */
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+        .section-title { font-size: .95rem; font-weight: 700; }
+
+        /* ── TABLE ── */
+        .table-wrap { background: var(--white); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .table-empty { padding: 48px 40px; text-align: center; color: var(--muted); font-size: .88rem; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #FAFAFA; }
+        thead tr { border-bottom: 1px solid var(--border); }
+        th { text-align: left; padding: 10px 14px; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); white-space: nowrap; }
+        td { padding: 12px 14px; font-size: .84rem; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text-2); }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr.clickable { cursor: pointer; transition: background .1s; }
+        tbody tr.clickable:hover { background: #FAFAFA; }
+        .td-name { font-weight: 600; color: var(--text); }
+        .td-co { font-weight: 600; color: var(--green); }
+        .td-bd { font-weight: 600; color: var(--bd-color); }
+
+        /* ── BADGES ── */
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: .65rem; font-weight: 700; }
+        .badge-active  { background: var(--green-bg); color: var(--green); }
+        .badge-pending { background: var(--amber-bg); color: var(--amber); }
+        .badge-paid    { background: var(--green-bg); color: var(--green); }
+        .badge-sent    { background: var(--blue-bg); color: var(--blue); }
+
+        /* ── CONTROLS ── */
+        .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .ctrl-input { padding: 7px 11px; border: 1.5px solid var(--border); border-radius: 9px; font-size: .76rem; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--white); outline: none; }
+        .ctrl-input:focus { border-color: var(--brand); }
+        .ctrl-select { padding: 7px 11px; border: 1.5px solid var(--border); border-radius: 9px; font-size: .76rem; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--white); outline: none; cursor: pointer; min-width: 140px; }
+        .btn-sm { font-size: .75rem; font-weight: 700; color: #fff; background: var(--brand); border: none; border-radius: 7px; padding: 6px 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        .btn-sm:hover { background: var(--brand-mid); }
+        .btn-outline { font-size: .75rem; font-weight: 600; color: var(--brand); background: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        .btn-outline:hover { background: var(--bg); border-color: var(--brand); }
+
+        /* ── SUMMARY BAR ── */
+        .summary-bar { display: flex; background: #FAFAFA; border: 1px solid var(--border); border-radius: 14px 14px 0 0; border-bottom: none; overflow: hidden; }
+        .sb-cell { padding: 12px 16px; flex: 1; border-right: 1px solid var(--border); }
+        .sb-cell:last-child { border-right: none; }
+        .sb-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: var(--muted); margin-bottom: 3px; }
+        .sb-val { font-size: .9rem; font-weight: 700; color: var(--text); }
+        .sb-val.green { color: var(--green); }
+        .sb-val.bd { color: var(--bd-color); }
+
+        /* ── COMPANY CARD ── */
+        .co-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+        .co-card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 20px; transition: box-shadow .15s; }
+        .co-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+        .co-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+        .co-card-name { font-size: .95rem; font-weight: 700; color: var(--text); }
+        .co-card-id { font-size: .68rem; color: var(--muted); margin-top: 2px; }
+        .co-card-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .co-mini { padding: 8px 10px; background: var(--bg); border-radius: 8px; }
+        .co-mini-label { font-size: .6rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+        .co-mini-val { font-size: .9rem; font-weight: 700; margin-top: 2px; }
+        .co-mini-val.green { color: var(--green); }
+        .co-mini-val.bd { color: var(--bd-color); }
+
+        /* ── INVOICE DETAIL ── */
+        .inv-detail { display: none; background: var(--bg); border-top: 1px solid var(--border); }
+        .inv-detail td { padding: 14px 18px; }
+        .inv-tier-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+        .inv-tier-table th { text-align: left; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); padding: 5px 8px; border-bottom: 1px solid var(--border); }
+        .inv-tier-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); }
+
+        /* ── PAGINATION ── */
+        .pag-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-top: 1px solid var(--border); font-size: .8rem; color: var(--muted); }
+        .pag-btn { font-size: .78rem; font-weight: 600; color: var(--brand); background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        .pag-btn:disabled { opacity: .4; cursor: default; }
+        .pag-btn:hover:not(:disabled) { border-color: var(--brand); }
+
+        /* ── ACTION BUTTONS (invoices) ── */
+        .inv-actions { display: flex; gap: 6px; align-items: center; }
+        .inv-actions .btn-outline { font-size: .7rem; padding: 4px 10px; }
+    </style>
+</head>
+<body>
+<!-- ═══════ NAV ═══════ -->
+<nav class="nav">
+    <img src="/static/logo.png" class="nav-logo" alt="BetterDay">
+    <div class="nav-sep"></div>
+    <span class="nav-title">Admin Dashboard</span>
+    <div class="nav-right">
+        <a href="/admin-logout" class="btn-logout">Sign out</a>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- ═══════ STATS ═══════ -->
+    <div class="stats-row">
+        <div class="stat-card c-teal">
+            <div class="stat-label">Active Companies</div>
+            <div class="stat-value">{{ total_companies }}</div>
+            <div class="stat-sub">{{ active_companies_week }} ordered this week</div>
+        </div>
+        <div class="stat-card c-green">
+            <div class="stat-label">Total Meals</div>
+            <div class="stat-value">{{ total_meals }}</div>
+            <div class="stat-sub">across all companies</div>
+        </div>
+        <div class="stat-card c-blue">
+            <div class="stat-label">Employees</div>
+            <div class="stat-value">{{ total_unique_employees }}</div>
+            <div class="stat-sub">unique across all clients</div>
+        </div>
+        <div class="stat-card c-amber">
+            <div class="stat-label">Pending Invoices</div>
+            <div class="stat-value">${{ "%.2f"|format(pending_invoices_value) }}</div>
+            <div class="stat-sub">awaiting payment</div>
+        </div>
+        <div class="stat-card c-bd">
+            <div class="stat-label">BD Contribution</div>
+            <div class="stat-value">${{ "%.2f"|format(total_bd_spend) }}</div>
+            <div class="stat-sub">total program subsidy</div>
+        </div>
+    </div>
+
+    <!-- ═══════ TABS ═══════ -->
+    <div class="tabs-wrap">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('overview')">Overview</div>
+            <div class="tab" onclick="switchTab('companies')">Companies <span class="tab-count">{{ total_companies }}</span></div>
+            <div class="tab" onclick="switchTab('invoices')">Invoices <span class="tab-count">{{ invoices|length }}</span></div>
+            <div class="tab" onclick="switchTab('orders')">Orders</div>
+        </div>
+    </div>
+
+    <!-- ═══════ OVERVIEW TAB ═══════ -->
+    <div id="tab-overview" class="tab-panel active">
+        <div class="section-header">
+            <div class="section-title">This Week — {{ active_week.label }}</div>
+        </div>
+
+        {% if week_snapshot %}
+        <div class="summary-bar">
+            <div class="sb-cell"><div class="sb-label">Companies</div><div class="sb-val">{{ active_companies_week }}</div></div>
+            <div class="sb-cell"><div class="sb-label">Meals</div><div class="sb-val">{{ active_week.meal_count }}</div></div>
+            <div class="sb-cell"><div class="sb-label">Company Spend</div><div class="sb-val green">${{ "%.2f"|format(active_week.co_spend) }}</div></div>
+            <div class="sb-cell"><div class="sb-label">BD Contributed</div><div class="sb-val bd">${{ "%.2f"|format(active_week.bd_spend) }}</div></div>
+        </div>
+        <div class="table-wrap" style="border-radius: 0 0 14px 14px;">
+            <table>
+                <thead><tr>
+                    <th>Company</th><th>Meals</th><th>Employees</th><th>Company Spend</th><th>BD Contributed</th>
+                </tr></thead>
+                <tbody>
+                {% for s in week_snapshot %}
+                <tr>
+                    <td class="td-name">{{ co_names.get(s.company_id, s.company_id) }}</td>
+                    <td>{{ s.meals }}</td>
+                    <td>{{ s.employee_count }}</td>
+                    <td class="td-co">${{ "%.2f"|format(s.co_spend) }}</td>
+                    <td class="td-bd">${{ "%.2f"|format(s.bd_spend) }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="table-wrap"><div class="table-empty">No orders this week yet.</div></div>
+        {% endif %}
+
+        <!-- Recent Orders -->
+        <div class="section-header" style="margin-top:28px;">
+            <div class="section-title">Recent Orders</div>
+        </div>
+        <div class="table-wrap">
+            {% if all_orders[:10] %}
+            <table>
+                <thead><tr>
+                    <th>Order #</th><th>Employee</th><th>Company</th><th>Delivery</th><th>Meals</th><th>Emp Paid</th><th>Co Covered</th><th>BD</th>
+                </tr></thead>
+                <tbody>
+                {% for o in all_orders[:10] %}
+                <tr>
+                    <td style="font-weight:600;">{{ o.order_id[:12] }}</td>
+                    <td class="td-name">{{ o.employee_name }}</td>
+                    <td>{{ co_names.get(o.company_id, o.company_id) }}</td>
+                    <td>{{ o.delivery_date }}</td>
+                    <td>{{ o.meals|length }}</td>
+                    <td class="td-emp">${{ "%.2f"|format(o.emp_total) }}</td>
+                    <td class="td-co">${{ "%.2f"|format(o.co_total) }}</td>
+                    <td class="td-bd">${{ "%.2f"|format(o.bd_total) }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="table-empty">No orders yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ═══════ COMPANIES TAB ═══════ -->
+    <div id="tab-companies" class="tab-panel">
+        <div class="section-header">
+            <div class="section-title">All Companies</div>
+            <a href="/work/company/new" class="btn-sm">+ Add Company</a>
+        </div>
+        <div class="co-grid">
+        {% for c in companies %}
+            {% set cid = c.CompanyID|default('')|upper %}
+            {% set cs = co_stats.get(cid, {}) %}
+            <div class="co-card">
+                <div class="co-card-header">
+                    <div>
+                        <div class="co-card-name">{{ c.CompanyName or cid }}</div>
+                        <div class="co-card-id">{{ cid }} · {{ c.CompanyEmailDomain or '—' }}</div>
+                    </div>
+                    <span class="badge badge-active">{{ c.Status or 'Active' }}</span>
+                </div>
+                <div class="co-card-stats">
+                    <div class="co-mini">
+                        <div class="co-mini-label">Total Meals</div>
+                        <div class="co-mini-val">{{ cs.get('meals', 0) }}</div>
+                    </div>
+                    <div class="co-mini">
+                        <div class="co-mini-label">Employees</div>
+                        <div class="co-mini-val">{{ cs.get('employee_count', 0) }}</div>
+                    </div>
+                    <div class="co-mini">
+                        <div class="co-mini-label">Company Spend</div>
+                        <div class="co-mini-val green">${{ "%.2f"|format(cs.get('co_spend', 0)) }}</div>
+                    </div>
+                    <div class="co-mini">
+                        <div class="co-mini-label">BD Contributed</div>
+                        <div class="co-mini-val bd">${{ "%.2f"|format(cs.get('bd_spend', 0)) }}</div>
+                    </div>
+                </div>
+                <div style="margin-top:12px;display:flex;gap:8px;">
+                    <a href="/work/company/{{ cid }}" class="btn-outline">Edit</a>
+                    <a href="/manager/dashboard?co={{ cid }}" class="btn-outline">Manager View</a>
+                </div>
+            </div>
+        {% endfor %}
+        {% if not companies %}
+            <div class="table-wrap" style="grid-column:1/-1;"><div class="table-empty">No companies yet. <a href="/work/company/new">Add one</a>.</div></div>
+        {% endif %}
+        </div>
+    </div>
+
+    <!-- ═══════ INVOICES TAB ═══════ -->
+    <div id="tab-invoices" class="tab-panel">
+        <div class="section-header">
+            <div class="section-title">All Invoices</div>
+            <div class="controls">
+                <select class="ctrl-select" id="invCompanyFilter" onchange="filterInvoices()">
+                    <option value="">All Companies</option>
+                    {% for c in companies %}
+                    <option value="{{ c.CompanyID|default('')|upper }}">{{ c.CompanyName or c.CompanyID }}</option>
+                    {% endfor %}
+                </select>
+                <select class="ctrl-select" id="invStatusFilter" onchange="filterInvoices()">
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="sent">Sent</option>
+                    <option value="paid">Paid</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+        {% if invoices %}
+            <table id="invoiceTable">
+                <thead><tr>
+                    <th>Invoice #</th><th>Company</th><th>Week Of</th><th>Meals</th><th>Company Owes</th><th>BD Contributed</th><th>Status</th><th>Actions</th>
+                </tr></thead>
+                <tbody id="invoiceBody">
+                {% for inv in invoices %}
+                    {% set iid = inv.invoiceId|default('') %}
+                    {% set cid = inv.companyId|default('')|upper %}
+                    {% set status = inv.status|default('pending') %}
+                <tr class="clickable inv-row" data-iid="{{ iid }}" data-co="{{ cid }}" data-status="{{ status }}" onclick="toggleInvDetail('{{ iid }}')">
+                    <td style="font-weight:600;">{{ iid }}</td>
+                    <td class="td-name">{{ co_names.get(cid, inv.companyName|default(cid)) }}</td>
+                    <td>{{ inv.weekOf|default('—') }}</td>
+                    <td>{{ inv.totalMeals|default(0) }}</td>
+                    <td class="td-co">${{ "%.2f"|format(inv.companyOwed|default(0)|float) }}</td>
+                    <td class="td-bd">${{ "%.2f"|format(inv.bdContributed|default(0)|float) }}</td>
+                    <td><span class="badge badge-{{ status }}">{{ status|capitalize }}</span></td>
+                    <td class="inv-actions" onclick="event.stopPropagation();">
+                        {% if status == 'pending' %}
+                        <button class="btn-outline" onclick="markInvoice('{{ iid }}','sent')">Mark Sent</button>
+                        <button class="btn-outline" onclick="markInvoice('{{ iid }}','paid')">Mark Paid</button>
+                        {% elif status == 'sent' %}
+                        <button class="btn-outline" onclick="markInvoice('{{ iid }}','paid')">Mark Paid</button>
+                        {% else %}
+                        <span style="color:var(--muted);font-size:.75rem;">Paid</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr class="inv-detail" id="inv-detail-{{ iid }}">
+                    <td colspan="8">
+                        {% set bd = inv.breakdown|default('[]') %}
+                        <table class="inv-tier-table">
+                            <thead><tr><th>Tier</th><th>Meals</th><th>Company Total</th></tr></thead>
+                            <tbody id="inv-bd-{{ iid }}"></tbody>
+                        </table>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="table-empty">No invoices generated yet. Invoices auto-generate every Thursday morning.</div>
+        {% endif %}
+        </div>
+    </div>
+
+    <!-- ═══════ ORDERS TAB ═══════ -->
+    <div id="tab-orders" class="tab-panel">
+        <div class="section-header">
+            <div class="section-title">All Orders</div>
+            <div class="controls">
+                <input type="text" class="ctrl-input" id="orderSearch" placeholder="Search employee or order #..." oninput="filterOrders()" style="min-width:260px;">
+                <select class="ctrl-select" id="orderCoFilter" onchange="filterOrders()">
+                    <option value="">All Companies</option>
+                    {% for c in companies %}
+                    <option value="{{ c.CompanyID|default('')|upper }}">{{ c.CompanyName or c.CompanyID }}</option>
+                    {% endfor %}
+                </select>
+                <select class="ctrl-select" id="orderWeekFilter" onchange="filterOrders()">
+                    <option value="">All Weeks</option>
+                    {% for w in sorted_weeks %}
+                    <option value="{{ w.anchor }}">{{ w.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div id="orderSummaryBar" class="summary-bar">
+            <div class="sb-cell"><div class="sb-label">Orders</div><div class="sb-val" id="ordSumOrders">0</div></div>
+            <div class="sb-cell"><div class="sb-label">Meals</div><div class="sb-val" id="ordSumMeals">0</div></div>
+            <div class="sb-cell"><div class="sb-label">Emp Paid</div><div class="sb-val" id="ordSumEmp">$0</div></div>
+            <div class="sb-cell"><div class="sb-label">Company Covered</div><div class="sb-val green" id="ordSumCo">$0</div></div>
+            <div class="sb-cell"><div class="sb-label">BD Contributed</div><div class="sb-val bd" id="ordSumBd">$0</div></div>
+        </div>
+        <div class="table-wrap" style="border-radius: 0 0 14px 14px;">
+            <table>
+                <thead><tr>
+                    <th>Order #</th><th>Employee</th><th>Company</th><th>Delivery</th><th>Meals</th><th>Emp Paid</th><th>Co Covered</th><th>BD</th>
+                </tr></thead>
+                <tbody id="ordersBody"></tbody>
+            </table>
+            <div class="pag-row">
+                <button class="pag-btn" id="ordPrev" onclick="ordPage(-1)">← Prev</button>
+                <span id="ordPageInfo"></span>
+                <button class="pag-btn" id="ordNext" onclick="ordPage(1)">Next →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const ALL_ORDERS  = {{ orders_json|safe }};
+const ALL_INVOICES = {{ invoices_json|safe }};
+const CO_NAMES = {{ co_names|tojson|safe }};
+
+/* ── Tab Switching ── */
+function switchTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    document.querySelectorAll('.tab')[['overview','companies','invoices','orders'].indexOf(id)].classList.add('active');
+    if (id === 'orders') filterOrders();
+}
+
+/* ── Invoice Detail Toggle ── */
+function toggleInvDetail(iid) {
+    var el = document.getElementById('inv-detail-' + iid);
+    if (!el) return;
+    var open = el.style.display === 'table-row';
+    el.style.display = open ? 'none' : 'table-row';
+    if (!open) {
+        var inv = ALL_INVOICES.find(i => i.invoiceId === iid);
+        if (inv) {
+            var bd = [];
+            try { bd = typeof inv.breakdown === 'string' ? JSON.parse(inv.breakdown) : (inv.breakdown || []); } catch(e) {}
+            var html = '';
+            bd.forEach(function(t) {
+                html += '<tr><td>' + (t.tier||'—') + '</td><td>' + (t.meals||0) + '</td><td class="td-co">$' + (t.companyTotal||0).toFixed(2) + '</td></tr>';
+            });
+            if (!html) html = '<tr><td colspan="3" style="color:var(--muted);">No breakdown data</td></tr>';
+            document.getElementById('inv-bd-' + iid).innerHTML = html;
+        }
+    }
+}
+
+/* ── Invoice Filter ── */
+function filterInvoices() {
+    var co = document.getElementById('invCompanyFilter').value;
+    var st = document.getElementById('invStatusFilter').value;
+    document.querySelectorAll('.inv-row').forEach(function(row) {
+        var match = true;
+        if (co && row.dataset.co !== co) match = false;
+        if (st && row.dataset.status !== st) match = false;
+        row.style.display = match ? '' : 'none';
+        var detail = document.getElementById('inv-detail-' + row.dataset.iid);
+        if (detail && !match) detail.style.display = 'none';
+    });
+}
+
+/* ── Mark Invoice Status ── */
+function markInvoice(iid, newStatus) {
+    fetch('/bd-admin/invoice-status', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({invoice_id: iid, status: newStatus})
+    }).then(r => r.json()).then(function(d) {
+        if (d.success) location.reload();
+        else alert('Error: ' + (d.error || 'Unknown'));
+    }).catch(function(e) { alert('Network error'); });
+}
+
+/* ── Orders Tab ── */
+var ordFiltered = [];
+var ordPageNum = 0;
+var ORD_PER_PAGE = 25;
+
+function filterOrders() {
+    var q  = (document.getElementById('orderSearch').value || '').toLowerCase();
+    var co = document.getElementById('orderCoFilter').value;
+    var wk = document.getElementById('orderWeekFilter').value;
+    ordFiltered = ALL_ORDERS.filter(function(o) {
+        if (co && o.company_id !== co) return false;
+        if (wk && o.sunday_anchor !== wk) return false;
+        if (q && o.employee_name.toLowerCase().indexOf(q) < 0 && o.order_id.toLowerCase().indexOf(q) < 0 && o.employee_email.toLowerCase().indexOf(q) < 0) return false;
+        return true;
+    });
+    ordPageNum = 0;
+    renderOrders();
+}
+
+function renderOrders() {
+    var start = ordPageNum * ORD_PER_PAGE;
+    var page = ordFiltered.slice(start, start + ORD_PER_PAGE);
+    var html = '';
+    if (page.length === 0) {
+        html = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">No orders match your filters.</td></tr>';
+    }
+    page.forEach(function(o) {
+        html += '<tr>'
+            + '<td style="font-weight:600;">' + String(o.order_id).substring(0,12) + '</td>'
+            + '<td class="td-name">' + o.employee_name + '</td>'
+            + '<td>' + (CO_NAMES[o.company_id] || o.company_id) + '</td>'
+            + '<td>' + o.delivery_date + '</td>'
+            + '<td>' + o.meals.length + '</td>'
+            + '<td>$' + o.emp_total.toFixed(2) + '</td>'
+            + '<td class="td-co">$' + o.co_total.toFixed(2) + '</td>'
+            + '<td class="td-bd">$' + o.bd_total.toFixed(2) + '</td>'
+            + '</tr>';
+    });
+    document.getElementById('ordersBody').innerHTML = html;
+
+    // Summary
+    var totO = ordFiltered.length, totM = 0, totE = 0, totC = 0, totB = 0;
+    ordFiltered.forEach(function(o) { totM += o.meals.length; totE += o.emp_total; totC += o.co_total; totB += o.bd_total; });
+    document.getElementById('ordSumOrders').textContent = totO;
+    document.getElementById('ordSumMeals').textContent = totM;
+    document.getElementById('ordSumEmp').textContent = '$' + totE.toFixed(2);
+    document.getElementById('ordSumCo').textContent = '$' + totC.toFixed(2);
+    document.getElementById('ordSumBd').textContent = '$' + totB.toFixed(2);
+
+    // Pagination
+    var total = ordFiltered.length;
+    document.getElementById('ordPageInfo').textContent = total ? (start+1) + '–' + Math.min(start+ORD_PER_PAGE, total) + ' of ' + total + ' orders' : 'No orders';
+    document.getElementById('ordPrev').disabled = ordPageNum === 0;
+    document.getElementById('ordNext').disabled = start + ORD_PER_PAGE >= total;
+}
+
+function ordPage(dir) {
+    ordPageNum += dir;
+    renderOrders();
+}
+
+// Init orders on load
+filterOrders();
+</script>
+</body>
+</html>
