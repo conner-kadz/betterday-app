@@ -543,6 +543,7 @@ def bd_admin_dashboard():
     total_meals            = sum(len(o['meals']) for o in all_orders)
     total_co_spend         = round(sum(o['co_total'] for o in all_orders), 2)
     total_bd_spend         = round(sum(o['bd_total'] for o in all_orders), 2)
+    total_emp_spend        = round(sum(o['emp_total'] for o in all_orders), 2)
     total_unique_employees = len(set(o['employee_email'] for o in all_orders if o['employee_email']))
     total_companies        = len(companies)
     active_companies_week  = len(set(o['company_id'] for o in active_week['orders']))
@@ -550,6 +551,64 @@ def bd_admin_dashboard():
         float(inv.get('companyOwed', 0) or 0)
         for inv in invoices if (inv.get('status') or 'pending') == 'pending'
     ), 2)
+    pending_invoices_count = sum(1 for inv in invoices if (inv.get('status') or 'pending') == 'pending')
+
+    # This week stats
+    week_orders      = active_week['orders']
+    week_order_count = len(week_orders)
+    week_meal_count  = sum(len(o['meals']) for o in week_orders)
+    week_employees   = len(set(o['employee_email'] for o in week_orders if o['employee_email']))
+    week_revenue     = round(sum(o['emp_total'] + o['co_total'] for o in week_orders), 2)
+
+    # All-time revenue & avg order value
+    total_revenue    = round(total_emp_spend + total_co_spend, 2)
+    total_orders     = len(all_orders)
+    avg_order_value  = round(total_revenue / total_orders, 2) if total_orders else 0
+
+    # Growth / fun stats
+    # Top company (most meals this month)
+    from collections import Counter
+    co_meal_counts = Counter()
+    for o in all_orders:
+        co_meal_counts[o['company_id']] += len(o['meals'])
+    top_company_id = co_meal_counts.most_common(1)[0][0] if co_meal_counts else ''
+
+    # Most popular meal
+    dish_counts = Counter()
+    for o in all_orders:
+        for m in o['meals']:
+            if m['dish_name']:
+                dish_counts[m['dish_name']] += 1
+    top_meal = dish_counts.most_common(1)[0][0] if dish_counts else '—'
+    top_meal_short = top_meal[:22] + ('...' if len(top_meal) > 22 else '')
+
+    # New employees this week (first-time orderers)
+    all_emails_before = set()
+    for o in all_orders:
+        if o['sunday_anchor'] != active_week.get('anchor', ''):
+            all_emails_before.add(o['employee_email'])
+    new_employees_week = len(set(o['employee_email'] for o in week_orders if o['employee_email']) - all_emails_before)
+
+    # Busiest week ever
+    busiest_week_label = '—'
+    busiest_week_meals = 0
+    for w in sorted_weeks:
+        if w['meal_count'] > busiest_week_meals:
+            busiest_week_meals = w['meal_count']
+            busiest_week_label = w['label']
+
+    # Repeat order rate
+    emp_order_counts = Counter(o['employee_email'] for o in all_orders if o['employee_email'])
+    repeat_employees = sum(1 for c in emp_order_counts.values() if c > 1)
+    repeat_rate = round(repeat_employees / len(emp_order_counts) * 100) if emp_order_counts else 0
+
+    # Program growth (% change vs previous week)
+    program_growth = 0
+    if len(sorted_weeks) >= 2:
+        curr = sorted_weeks[0]['meal_count']
+        prev = sorted_weeks[1]['meal_count']
+        if prev > 0:
+            program_growth = round((curr - prev) / prev * 100)
 
     co_names = {
         c.get('CompanyID', '').upper(): c.get('CompanyName') or c.get('CompanyID', '')
@@ -579,8 +638,15 @@ def bd_admin_dashboard():
         orders_json=orders_json,
         total_companies=total_companies, active_companies_week=active_companies_week,
         total_meals=total_meals, total_co_spend=total_co_spend, total_bd_spend=total_bd_spend,
-        total_unique_employees=total_unique_employees,
-        pending_invoices_value=pending_invoices_value,
+        total_emp_spend=total_emp_spend, total_unique_employees=total_unique_employees,
+        pending_invoices_value=pending_invoices_value, pending_invoices_count=pending_invoices_count,
+        week_order_count=week_order_count, week_meal_count=week_meal_count,
+        week_employees=week_employees, week_revenue=week_revenue,
+        total_revenue=total_revenue, total_orders=total_orders, avg_order_value=avg_order_value,
+        top_company=co_names.get(top_company_id, top_company_id),
+        top_meal=top_meal_short, new_employees_week=new_employees_week,
+        busiest_week=busiest_week_label, busiest_week_meals=busiest_week_meals,
+        repeat_rate=repeat_rate, program_growth=program_growth,
     )
 
 
