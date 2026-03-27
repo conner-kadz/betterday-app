@@ -1405,6 +1405,11 @@ def work_admin():
 def menubuilder():
     return render_template('menubuilder.html')
 
+@app.route('/menubuilder-chef')
+@admin_required
+def menubuilder_chef():
+    return render_template('menubuilder-chef.html')
+
 
 # ─────────────────────────────────────────────────────────────
 # ENTRYPOINT
