@@ -24,23 +24,64 @@
             --bd-bg: #E8F4FA;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
 
-        /* ── NAV ── */
-        .nav { background: var(--brand-mid); border-bottom: 1px solid rgba(0,0,0,.15); padding: 0 40px; height: 62px; display: flex; align-items: center; position: sticky; top: 0; z-index: 200; }
-        .nav-logo { height: 22px; margin-right: 20px; filter: brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(10deg) brightness(1.15); }
-        .nav-sep { width: 1px; height: 20px; background: rgba(255,255,255,.2); margin-right: 20px; }
-        .nav-company { font-weight: 700; font-size: .9rem; color: #FFF8F0; }
-        .nav-right { margin-left: auto; }
-        .btn-logout { font-size: .82rem; font-weight: 600; color: rgba(255,255,255,.75); text-decoration: none; padding: 7px 16px; border: 1px solid rgba(255,255,255,.25); border-radius: 20px; transition: .15s; }
-        .btn-logout:hover { border-color: rgba(255,255,255,.6); color: #fff; }
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 218px; background: #003141;
+            position: fixed; top: 0; left: 0; bottom: 0; z-index: 10;
+            display: flex; flex-direction: column; padding-top: 20px;
+        }
+        .sb-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; }
+        .sb-logo img { height: 20px; filter: brightness(0) invert(1) sepia(1) saturate(0.3) hue-rotate(10deg) brightness(1.6); }
+        .sb-logo-text { font-size: 13px; font-weight: 700; color: #FAEBDA; }
+        .sb-sec { font-size: .5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: rgba(250,235,218,.35); padding: 14px 20px 5px; }
+        .sb-div { height: 1px; background: rgba(255,255,255,.07); margin: 8px 20px; }
+        .sb-item {
+            display: flex; align-items: center; gap: 9px;
+            padding: 10px 20px; font-size: .82rem; font-weight: 600;
+            color: rgba(250,235,218,.65); cursor: pointer;
+            border-left: 3px solid transparent; transition: .12s;
+        }
+        .sb-item:hover { color: #FAEBDA; background: rgba(255,255,255,.06); }
+        .sb-item.active { color: #FFC600; background: rgba(253,196,1,.12); border-left-color: #FFC600; font-weight: 800; }
+        .sb-badge { font-size: .5rem; font-weight: 800; padding: 1px 6px; border-radius: 99px; margin-left: auto; background: rgba(253,196,1,.18); color: #FFC600; }
+
+        /* ── MAIN AREA ── */
+        .main { margin-left: 218px; flex: 1; min-height: 100vh; }
+
+        /* ── TOP BAR ── */
+        .topbar {
+            height: 52px; background: #003141;
+            display: flex; align-items: center; padding: 0 26px; gap: 12px;
+            position: sticky; top: 0; z-index: 5;
+            box-shadow: 0 2px 12px rgba(0,0,0,.18);
+        }
+        .tb-title { font-size: .9rem; font-weight: 900; color: #FAEBDA; letter-spacing: -.2px; }
+        .tb-title b { color: #FFC600; }
+        .tb-pill { font-size: .52rem; font-weight: 800; text-transform: uppercase; letter-spacing: .8px; color: rgba(250,235,218,.35); background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); border-radius: 99px; padding: 2px 8px; }
+        .tb-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+        .btn-logout {
+            font-size: .68rem; font-weight: 700; color: rgba(250,235,218,.4);
+            border: 1px solid rgba(250,235,218,.14); border-radius: 99px;
+            padding: 5px 14px; text-decoration: none; transition: .14s;
+        }
+        .btn-logout:hover { color: #FAEBDA; border-color: rgba(250,235,218,.4); }
+
+        @media (max-width: 1000px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+        }
 
         /* ── CONTAINER ── */
-        .container { max-width: 1120px; margin: 0 auto; padding: 40px 40px 80px; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 24px 28px 80px; }
 
         /* ── PAGE HEADER ── */
         .page-eyebrow { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
         .page-title { font-size: 1.55rem; font-weight: 700; color: var(--text); margin-bottom: 32px; }
+
+        /* Tabs hidden — sidebar handles navigation */
+        .tabs-wrap { display: none; }
 
         /* ── STATS ROW ── */
         .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
@@ -241,15 +282,32 @@
 </head>
 <body>
 
-<nav class="nav">
-    <img src="{{ url_for('static', filename='Logo.svg') }}" class="nav-logo" alt="BetterDay">
-    <div class="nav-sep"></div>
-    <span class="nav-company">{{ company_name }}</span>
-    <span style="font-size:.75rem;font-weight:600;color:var(--muted);margin-left:10px;padding-left:10px;border-left:1px solid var(--border);">Manager Portal</span>
-    <div class="nav-right">
+<!-- ═══════ SIDEBAR ═══════ -->
+<aside class="sidebar">
+    <div class="sb-logo">
+        <img src="{{ url_for('static', filename='Logo.svg') }}" alt="BD">
+        <span class="sb-logo-text">{{ company_name }}</span>
+    </div>
+    <div class="sb-sec">Dashboard</div>
+    <div class="sb-item active" onclick="sidebarNav('orders', this)">&#9776; &nbsp;Orders</div>
+    <div class="sb-item" onclick="sidebarNav('invoices', this)">&#9670; &nbsp;Invoices <span class="sb-badge">{{ invoices|length }}</span></div>
+    <div class="sb-item" onclick="sidebarNav('monthly', this)">&#9733; &nbsp;Monthly Report</div>
+    <div class="sb-item" onclick="sidebarNav('employees', this)">&#9632; &nbsp;Employees <span class="sb-badge">{{ employees|length }}</span></div>
+    <div class="sb-div"></div>
+    <div class="sb-sec">Settings</div>
+    <div class="sb-item" onclick="sidebarNav('account', this)">&#9881; &nbsp;Account Details</div>
+    <div class="sb-item" onclick="window.location='/manager/logout'">&#8594; &nbsp;Sign out</div>
+</aside>
+
+<!-- ═══════ MAIN ═══════ -->
+<div class="main">
+<div class="topbar">
+    <span class="tb-title">Better<b>Day</b></span>
+    <span class="tb-pill">Manager</span>
+    <div class="tb-right">
         <a href="/manager/logout" class="btn-logout">Sign out</a>
     </div>
-</nav>
+</div>
 
 <div class="container">
 
@@ -729,7 +787,8 @@
 
     </div>
 
-</div>
+</div><!-- /container -->
+</div><!-- /main -->
 
 <!-- ── STICKY SAVE BANNER ── -->
 <div class="save-sticky" id="saveBanner">
@@ -810,11 +869,17 @@ const COMPANY_ADDR = [
     });
 })();
 
-// ── Tab switching ──
+// ── Tab switching (via sidebar) ──
 function showTab(name, el) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
+    if (el) el.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+}
+function sidebarNav(name, el) {
+    document.querySelectorAll('.sb-item').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    if (el) el.classList.add('active');
     document.getElementById('tab-' + name).classList.add('active');
 }
 
@@ -823,8 +888,8 @@ function showTab(name, el) {
     const params = new URLSearchParams(window.location.search);
     const saved = params.get('saved');
     if (saved) {
-        const tabEl = document.querySelector(`.tab[onclick*="'${saved}'"]`);
-        if (tabEl) showTab(saved, tabEl);
+        const sbItem = document.querySelector(`.sb-item[onclick*="'${saved}'"]`);
+        if (sbItem) sidebarNav(saved, sbItem);
     }
 })();
 
