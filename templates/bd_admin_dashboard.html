@@ -86,11 +86,12 @@
 
         /* ═══════ TABS ═══════ */
         .tabs-wrap { margin-bottom: 26px; }
-        .tabs { display: flex; gap: 6px; background: var(--card); border-radius: 12px; padding: 4px; box-shadow: 0 1px 3px rgba(0,49,65,.05); display: inline-flex; }
+        .tabs { display: inline-flex; gap: 4px; background: var(--card); border-radius: 12px; padding: 4px; box-shadow: 0 1px 3px rgba(0,49,65,.05); }
         .tab {
             padding: 10px 22px; font-size: .84rem; font-weight: 600;
-            color: var(--muted); cursor: pointer; border: none; border-bottom: none;
+            color: var(--muted); cursor: pointer; border: none;
             transition: .15s; user-select: none; border-radius: 9px;
+            min-width: 100px; text-align: center;
         }
         .tab:hover { color: var(--navy); }
         .tab.active { color: #fff; background: var(--navy); box-shadow: 0 2px 8px rgba(0,70,94,.2); }
@@ -168,10 +169,10 @@
             display: flex; background: var(--dark-navy);
             border-radius: 14px 14px 0 0; overflow: hidden;
         }
-        .sb-cell { padding: 14px 18px; flex: 1; border-right: 1px solid rgba(255,255,255,.08); }
+        .sb-cell { padding: 18px 24px; flex: 1; border-right: 1px solid rgba(255,255,255,.08); }
         .sb-cell:last-child { border-right: none; }
-        .sb-label { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: rgba(255,255,255,.4); margin-bottom: 4px; }
-        .sb-val { font-size: .95rem; font-weight: 800; color: #fff; }
+        .sb-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: rgba(255,255,255,.45); margin-bottom: 6px; }
+        .sb-val { font-size: 1.15rem; font-weight: 800; color: #fff; }
         .sb-val.green { color: var(--green-light); }
         .sb-val.bd { color: var(--sky); }
 
